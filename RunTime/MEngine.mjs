@@ -39,8 +39,8 @@ export class MEngine
 	constructor(runTime, SEngine, shaderPath="shaders/", useSEngine = true, width = screen.width, height = screen.height)
 	{
 		this.shader         = new Shader({
-			fragment: shaderPath + "customised.frag.glsl",
-			vertex: shaderPath + "customised.vert.glsl"});
+			fragmentFile: shaderPath + "customised.frag.glsl",
+			vertexFile: shaderPath + "customised.vert.glsl"});
 		this.s_width        = width;
 		this.s_height       = height;
 		this.useTransform   = false;

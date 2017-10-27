@@ -71,8 +71,8 @@ export class SEngine
 		this._renders     = [];
 		this.waiting      = 0;
 		this.shader       = new Shader({
-			fragment: shaderPath + "customised.frag.glsl",
-			vertex: shaderPath + "customised.vert.glsl"});
+			fragmentFile: shaderPath + "customised.frag.glsl",
+			vertexFile: shaderPath + "customised.vert.glsl"});
 		this.useCEngine   = useCEngine;
 		if(useCEngine)
 		{

@@ -62,8 +62,8 @@ export class HUDSystem
 			this.dynamics = [];
 			this.dynamicsAfterStatics = true;
 			this.shader = new Shader({
-				fragment: "#/shaders/tintedImage.frag.glsl",
-				vertex:   "#/shaders/tintedImage.vert.glsl"
+				fragmentFile: "#/shaders/tintedImage.frag.glsl",
+				vertexFile:   "#/shaders/tintedImage.vert.glsl"
 			});
 		}
 
