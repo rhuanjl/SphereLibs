@@ -2,6 +2,7 @@
 Modules written for use with miniSphere https://github.com/fatcerberus/minisphere/
 
 **Scripts include:**
+
 A map engine (MEngine.mjs)
 A sprite engine (SEngine.mjs)
 A collisions system (CEngine.mjs)
@@ -17,7 +18,7 @@ Other modules as examples
 
 Note various of the modules are depndent on others of them - see import{} instructions at top of each file
 
-**All code is copyright Richard Lawrence by permisively licensed and free to use - see license.md file**
+**All code is copyright Richard Lawrence and permisively licensed and free to use - see license.md file**
 
 
 
