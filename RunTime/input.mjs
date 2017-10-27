@@ -1,5 +1,3 @@
-//@ts-check
-
 /* File: Input.mjs
  * Author: Rhuan
  * Date: 30/09/2017

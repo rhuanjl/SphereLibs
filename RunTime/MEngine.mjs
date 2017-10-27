@@ -1,5 +1,3 @@
-//@ts-check
-
 /* File: MEngine.mjs
  * Author: Rhuan
  * Date: 17/09/2017
@@ -30,17 +28,9 @@
  * dealings in this Software without prior written authorization.
  */
 
-/* to do list
-- make an RMP loader
-- complete/test polygon functions
-- write comments
-
-*/
 
 import {MapBuffer, TileBuffer} from "$/PixelBuffer";
 import DataStream from "dataStream";
-//import  "@/maps/scripts/Albrook.mjs";//#FIX MEdelete this when dynamic import works MUST BE FIXED before release
-
 
 
 //key class for external use

@@ -1,6 +1,7 @@
-//@ts-check
-
 /*"The CEngine" i.e sphere v2 Collision Engine
+Copyright Richard Lawrence - see license details in MEngine.mjs
+Same license applies
+
 CEngine is designed to:
 - handle collision between polygons of any shape
 - be as efficient as possible

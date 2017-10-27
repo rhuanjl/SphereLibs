@@ -1,40 +1,82 @@
+/*Template map script file for use with MEngine and SEngine,
+Copyright Richard Lawrence, please see MEngine.mjs for license details
+
+Usage:
+Each map must have a mapscript with the same name (except for the extension)
+
+Currently two types of map scripts are supported:
+1. Trigger scripts
+2. Person scripts
+
+An object should be exported for each, see comments below that explain
+how to set up these objects*/
+
+
+/*trigger scripts for this map, object must be named triggerScripts
+Each property should:
+a) be named with the name of the trigger
+b) itself have two properties: onPlayer() and onOther()
+	when the player steps on the trigger onPLayer() will be called
+	when a different entitiy steps on the trigger onOther will be called
+
+Each function takes two parameters:
+1. runTime - this is an object you pass
+to the SEngine constructor attach any runtime functions you want to call
+from mapscripts as properites of it.
+2. player/other - this is the entity triggering the script - see SEngine.mjs
+for the properites they have, you can also store private data on them as extra
+properties*/
+
 export const triggerScripts =
 {
-	layerToOne :
+	nameOfTriggerOne :
 	{
 		onPlayer(runTime, player)
 		{
-			player.layer = 1;
+
 		},
 		onOther(runTime, other)
 		{
-			other.layer = 1;
+
 		}
 	},
-	layerToZero :
+	nameOfTriggerTwo :
 	{
 		onPlayer(runTime, player)
 		{
-			player.layer = 0;
+
 		},
 		onOther(runTime, other)
 		{
-			other.layer = 0;
+
 		}
 	}
 };
 
+/*Entity scripts for this map, object must be named entityScripts
+Each property should:
+a) be named with the name of the entity
+b) itself have six properties:
+	onSetup()
+	onDestroy()
+	onTouchPlayer()
+	onTouchOther()
+	onTalk()
+	onIdle()
+
+	If you want a function to involve a delayed action try making it async
+	see example below (any of the scripts can be async)
+
+TODO: add more documentation here -for now see comments in personTwo below*/
+
+
 export const entityScripts =
 {
-	Girl :
+	personOne :
 	{
 		onSetup (runTime, self)
 		{
-			self.text = [
-				"I love shopping!", "Should I buy a new hat?",
-				"Or should buy a new dress instead?",
-				"Oh wait! There's a sale! I'll just buy \none of everything." ];
-			self.textNum = 0;
+
 		},
 		onDestroy (runTime, self)
 		{
@@ -48,16 +90,16 @@ export const entityScripts =
 		{
 
 		},
-		async onTalk (runTime, self, player)
+		async onTalk (runTime, self, player)//example async function
 		{
-			self.frozen = true;
-			self.faceEntity(player);
-			await runTime.talk(self.id, self.text[self.textNum]);
-			self.frozen = false;
-			self.textNum = (self.textNum + 1) % 4;
+			self.frozen = true;//entity doesn't move when frozen (see SENgine.mjs)
+			self.faceEntity(player);//face the player - see SEngine.mjs
+			await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
+			//see talk.mjs for example talk function that works this way
+			self.frozen = false;//unfreeze when the talking is over
 		},
 		onIdle (runTime, self)
-		{
+		{//example random movement code
 			let chance = (Math.random() * 10)|0;
 			let dir = "";
 			if(chance < 6)
@@ -73,190 +115,31 @@ export const entityScripts =
 			self.queueMove(dir, 8);
 		}
 	},
-	Merchant :
+	personTwo :
 	{
 		onSetup (runTime, self)
 		{
-
+			//on creation
 		},
 		onDestroy (runTime, self)
 		{
-
+			//on destruction
 		},
 		onTouchPlayer (runTime, self, player)
 		{
-
+			//when touched by the player
 		},
 		onTouchOther (runTime, self, other)
 		{
-
+			//when touching a different entity - not the player
 		},
-		async onTalk (runTime, self, player)
+		onTalk (runTime, self, player)
 		{
-			self.frozen = true;
-			self.faceEntity(player);
-			await runTime.talk(self.id, "I'm all out of goods come back \nlater");
-			self.frozen = false;
+			//when the player talks to them (touches + presses action key)
 		},
 		onIdle (runTime, self)
 		{
-			
-		}
-	},
-	Sentry :
-	{
-		onSetup (runTime, self)
-		{
-			self.talkNum = 0;
-		},
-		onDestroy (runTime, self)
-		{
-
-		},
-		onTouchPlayer (runTime, self, player)
-		{
-
-		},
-		onTouchOther (runTime, self, other)
-		{
-
-		},
-		async onTalk(runTime, self, player)
-		{
-			self.frozen = true;
-			self.faceEntity(player);
-			if(self.talkNum === 0)
-			{
-				await runTime.talk(self.id, "I'm so lost!");
-				self.talkNum = 1;
-			}
-			else
-			{
-				await runTime.talk(self.id, "Let me tell you something. Those guys from Narshe are really tough! But get this, they really seem to go crazy for fast food.");
-				self.talkNum = 0;
-			}
-			
-			self.frozen = false;			
-		},
-		onIdle (runTime, self)
-		{
-			if (self.direction === "east")
-			{
-				self.queueMove("west", 60);
-			}
-			else
-			{
-				self.queueMove("east", 60);
-			}
-		}
-	},
-	birdnerd :
-	{
-		onSetup (runTime, self)
-		{
-			self.flying = (Math.random() > 0.4);
-			let dirChoice = (Math.random() * 4)|0;
-			if(self.flying === true)
-			{
-				self.layer = 3;
-				let dirs = ["flynorth", "flysouth", "flywest", "flyeast"];
-				self.queueMove(dirs[dirChoice], 16);
-			}
-			else
-			{
-				self.layer = 1;
-				let dirs = ["north", "south", "west", "east"];
-				self.queueMove(dirs[dirChoice], 8);
-			}
-		},
-		onDestroy (runTime, self)
-		{
-
-		},
-		onTouchPlayer (runTime, self, player)
-		{
-
-		},
-		onTouchOther (runTime, self, other)
-		{
-
-		},
-		async onTalk (runTime, self, player)
-		{
-			self.frozen = true;
-			self.faceEntity(player);
-			//implement a bird sound here
-			//await runTime.queueTalk(self.id, ["This is my first message for you, yes you, you clown", "And here is a second message for good measure"]);
-			self.frozen = false;
-		},
-		onIdle (runTime, self)
-		{
-			let chance = (Math.random() * 12)|0;
-			let dir = "";
-			if(chance < 7)
-			{
-				dir = self.direction;
-			}
-			else
-			{
-				let dirs = [];
-				if(chance > 9)
-				{
-					if(self.flying === true)
-					{
-						if(self.obstructedOnLayer(1) !== true)
-						{
-							self.flying = false;
-						}
-					}
-					else
-					{
-						self.flying = true;
-					}
-				}
-				let dirChoice = (Math.random() * 4)|0;
-				if(self.flying === true)
-				{
-					self.layer = 3;
-					dirs = ["flynorth", "flysouth", "flywest", "flyeast"];
-				}
-				else
-				{
-					self.layer = 1;
-					dirs = ["north", "south", "west", "east"];
-				}
-				dir = dirs[dirChoice];
-			}
-			self.queueMove(dir, 8);
-		}
-	},
-	Sign1 :
-	{
-		onSetup (runTime, self)
-		{
-			
-		},
-		onDestroy (runTime, self)
-		{
-
-		},
-		onTouchPlayer (runTime, self, player)
-		{
-
-		},
-		onTouchOther (runTime, self, other)
-		{
-
-		},
-		async onTalk (runTime, self, player)
-		{
-			self.frozen = true;
-			await runTime.talk("Sign", "NORTH: Administration and Law Enforcement \nWEST: Wilderness \nSOUTH: Albrook Towers");
-			self.frozen = false;
-		},
-		onIdle (runTime, self)
-		{
-			
+			//when their queue is empty
 		}
 	}
 };

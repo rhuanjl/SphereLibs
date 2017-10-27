@@ -1,4 +1,7 @@
-//@ts-check
+/*Example talk script for demo purposes with MEngine.mjs
+Copyright Richard Lawrence, see MEngine.mjs for full license details*/
+
+
 import {Input} from "$/input";
 
 export class Talking
