@@ -1,9 +1,9 @@
 /* File: MEngine.mjs
  * Author: Rhuan
- * Date: 17/09/2017
- * 2D map engine for miniSphere game engine
+ * Date: 27/10/2017
+ * 2D Map Engine for miniSphere game engine
  * Usage: FIX ME - WRITE USAGE HERE OR EXTERNAL GUIDE DOC
- * License for MEngine.mjs, SEngine.mjs and CEngine.mjs
+ * License for MEngine.mjs, SEngine.mjs and CEngine.mjs and related files
  * Copyright (c) 2017 Richard Lawrence (Rhuan)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,6 +1,6 @@
 /* File: Input.mjs
  * Author: Rhuan
- * Date: 30/09/2017
+ * Date: 27/10/2017
  * Input handling routines including priority handling for miniSphere 5.0
  * Usage: FIX ME - WRITE USAGE HERE OR EXTERNAL GUIDE DOC
  * License for input.mjs

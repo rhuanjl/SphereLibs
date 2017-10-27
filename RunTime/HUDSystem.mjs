@@ -1,6 +1,6 @@
 /* File: HUDSystem.mjs
  * Author: Rhuan
- * Date: 23/09/2017
+ * Date: 27/10/2017
  * This script allows the creation of a HUD - a combination of one or more images
  * windows, pieces of text, or other graphics that can be drawn and manipulated 
  * as if they were one object.

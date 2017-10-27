@@ -1,11 +1,9 @@
-//@ts-check
-
-/* File: MSngine.mjs
+/* File: SEngine.mjs
  * Author: Rhuan
- * Date: 17/09/2017
- * 2D map engine for miniSphere game engine
+ * Date: 27/10/2017
+ * Sprite Engine for miniSphere game engine
  * Usage: FIX ME - WRITE USAGE HERE OR EXTERNAL GUIDE DOC
- * License for MEngine.mjs, SEngine.mjs and CEngine.mjs
+ * License for MEngine.mjs, SEngine.mjs and CEngine.mjs and related files
  * Copyright (c) 2017 Richard Lawrence (Rhuan)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,22 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-
-/*key class for external use
-**Params are:
-**shader: a reference to the correct shader object
-**layers: number of layers to display entities on - seperate layers don"t collide and higher numbered layers are drawn later
-**use_MEngine: a boolean, true if you want the SEngine to interact with MEngine
-**use_CEngine: a boolean, true if you want the SEngine to interact with CEngine (to have collisions)
-**tileMovement: a boolean, true for tile based movement, false for direction/pixel based
-**CONDITIONAL: IF tileMovement is true
-**tSize: an integer, width/height of tiles your map uses (I've assumed square tiles only)
-**m_tiles_accross: largest number of tiles accross for any map your intending to use - only used if doing tile based collisions
-** IF tileMovement is false
-**tSize: an integer width/height to use for collision segments for sprites - should be 2-3x the size of your sprites
-**m_tiles_accross: the maximum/width of a map you intend to use when divided by tSize
-**max_per_segment: a number higher than the most sprites you expect to fit in a segment
-*/
 
 
 import DataStream from "dataStream";
