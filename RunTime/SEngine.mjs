@@ -120,7 +120,7 @@ export class SEngine
 				persistantEntities.push(this.entities[i]);
 			}
 		}
-		this.entities = [];
+		this.entities.length = 0;
 		for(let i = 0; i < mapLayers; ++i)
 		{
 			this._renders[i] = [];
