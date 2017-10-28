@@ -152,7 +152,6 @@ export class MenuSystem extends HUDSystem
 	{
 		this.waiting = true;
 		let key = await this.input.waitForInput(this.keys);
-		SSj.log(key);
 		this.effects[this.keys.indexOf(key)]();
 		if(this.selection !== this.lastSelection)
 		{
