@@ -34,9 +34,28 @@ import DataStream from "dataStream";
 
 
 //key class for external use
+/**
+ * Map Engine class
+ * One MEngine can only draw one map at a time
+ * create an instance - normally just one for your game
+ * See documentaiton below
+ * 
+ * @export
+ * @class MEngine
+ */
 export class MEngine
 {
-	constructor(runTime, SEngine, shaderPath="shaders/", useSEngine = true, width = screen.width, height = screen.height)
+	/**
+	 * Creates an instance of MEngine.
+	 * @param {any} runTime - object to be given to map scripts when they're called - not currently used
+	 * @param {any} SEngine - instance of SEngine class to handle sprites
+	 * @param {any} [CEngine=null] - instance of CENgine class to handle collisions (must be shared with the SEngine instance)
+	 * @param {string} [shaderPath="shaders/"] - path to customised shaders
+	 * @param {any} [width=screen.width] -dimensions of the surface this will draw on
+	 * @param {any} [height=screen.height]
+	 * @memberof MEngine
+	 */
+	constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = screen.width, height = screen.height)
 	{
 		this.shader         = new Shader({
 			fragmentFile: shaderPath + "customised.frag.glsl",
@@ -50,28 +69,35 @@ export class MEngine
 		this.rmpScheme      = null;
 		this.DEBUG_MODE     = false;
 		this.col_tile_size  = 100;
-		this.useSEngine     = useSEngine;
-		if(useSEngine === true)
+		this.useSEngine     = false;
+		if(SEngine !== null)
 		{
 			this.SEngine = SEngine;
+			this.useSEngine = true;
+		}
+		if(CEngine !== null)
+		{
+			CEngine.MEngine = this;
 		}
 		this.runTime        = runTime;
 	}
 
-
-	//Update the map
-	//must be called once before the map can be drawn
-	//must be called again if the zoom factor has changed OR if the point to centre the map on has changed
-	//in a "normal" game you would call this in an update script that runs every frame
-	//centre = [x, y] - on map x and y coordinates to aim to focus camera on
-	//map coordinates will be adjusted to centre on this point
-	//unless distance from point to edge of map is less than distance from centre of surface to edge of surface
-	//in that case nearest point that means map edge reaches surface edge will be chosen
-
-	update(centre, zoom)
+	/**
+	 * update(centre=[0,0], zoom=1)
+	 * Called to update the map should be done every frame designed to be used via Dispatch.onUpdate
+	 * #FINISH ME - this should include calling a map update script if one exists
+	 * 
+	 * If using SEngine this automatically calls SEngine#update passing on the coordinates and zoom
+	 * 
+	 * @param {any} [centre=[0,0]] - coordinates on map to attempt to centre the screen on
+	 * @param {number} [zoom=1] - zoom scale factor, increase to make things bigger...
+	 * @memberof MEngine
+	 */
+	update(centre=[0,0], zoom=1)
 	{
 		zoom = Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom);
 		//#FIX ME this needs adjustment - to allow for repeating maps (other things do too :( - though mostly this + sprite coordinate code also Collision code)
+		//#FIX ME WHY ON EARTH does this have a 2.1 in it as a factor - this must be wrong (though it works...)
 		this.map.x = Math.min(this.map.width  - this.s_width * zoom, Math.max(-this.s_width * zoom  / (2.1) + centre[0],0));
 		this.map.y = Math.min(this.map.height - this.s_height * zoom, Math.max(-this.s_height * zoom  / (2.1) + centre[1],0));
 		this.map.zoom = zoom;
@@ -92,7 +118,42 @@ export class MEngine
 		}
 	}
 
-	renderLayer(surface, layer)
+	/**
+	 * render(surface=screen, start_layer=0, end_layer=(this.map.layers.length-1))
+	 * Draw the whole map onto surface
+	 * Intended to be used via Dispatch.onRender
+	 * start_layer and end_layer allow you to draw a specified range of layers only if wanted
+	 * Note if using SEngine the call to this.renderLayer calls on to SEngine.renderLayer as well
+	 * See below for more detail
+	 * @param {any} [surface=screen] 
+	 * @param {number} [start_layer=0] 
+	 * @param {number} [end_layer=(this.map.layers.length-1)] 
+	 * @memberof MEngine
+	 */
+	render(surface=screen, start_layer=0, end_layer=(this.map.layers.length-1))
+	{
+		++end_layer;
+		for(let i = start_layer; i < end_layer; ++i)
+		{
+			this.renderLayer(surface, i);
+		}
+		if(this.DEBUG_MODE === true)
+		{
+			this.map.layers[1].obsModel.draw();
+		}
+	}
+
+
+	/**
+	 * Draw one layer of the map onto the specified surface
+	 * 
+	 * If using SEngine this also draws the entities for the layer via calling SEngine#renderLayer
+	 * 
+	 * @param {any} [surface=screen] 
+	 * @param {number} [layer=0] 
+	 * @memberof MEngine
+	 */
+	renderLayer(surface=screen, layer=0)
 	{
 		let thisLayer = this.map.layers[layer];
 		if(this.useTransformation)
@@ -108,6 +169,18 @@ export class MEngine
 		}
 	}
 
+	//#IMPROVE ME - could the next two methods be combined and made into a setter?
+
+	/**
+	 * Attach a transformation object to the whole map
+	 * Use this to rotate or translate or scale the rectangle the map is drawn in
+	 * For transititions or shrinking to a miniMap or the like
+	 * 
+	 * #EXPERIMENTAL feature - not fully tested
+	 * 
+	 * @param {object} transformation - a Sphere Transform object
+	 * @memberof MEngine
+	 */
 	attachTransformation(transformation)
 	{
 		this.useTransformation = true;
@@ -119,6 +192,11 @@ export class MEngine
 		}
 	}
 
+	/**
+	 * Use this to remove a Transfom that was set with attachTransformation
+	 * 
+	 * @memberof MEngine
+	 */
 	detachTransformation()
 	{
 		this.useTransformation = false;
@@ -130,30 +208,19 @@ export class MEngine
 		}
 	}
 
-	//draw the map
-	//make sure you call the update function first
-	//surface = surface to draw to (normally "screen")
-	//start_layer = first layer to draw
-	//end_layer = last layer to draw
-	//you can do ranges if you wish to draw part of the map under other entities and part on top
-	//transformation = a transformation to apply to the whole map, points to note:
-	//**if no transofmration is needed pass an identity i.e. foo as created by: (var foo = new Transform(); foo.identity();)
-	//**if using SEngine you must pass the same transformation to the SEngine render function
-	//**you don't need to pass a transformation for zooming and moving around the map
-	//**a transofmraiton here is for things like making the map slide off the edge of the screen e.g. as a transition into a battle
-	render(surface=screen, start_layer=0, end_layer=(this.map.layers.length-1))
-	{
-		++end_layer;
-		for(let i = start_layer; i < end_layer; ++i)
-		{
-			this.renderLayer(surface, i);
-		}
-		if(this.DEBUG_MODE === true)
-		{
-			this.map.layers[1].obsModel.draw();
-		}
-	}
 
+
+	/**
+	 * changeRes(width, height)
+	 * 
+	 * Change the standard width and height of the box the map is drawn in
+	 * 
+	 * #Experimental feature, not full tested
+	 * 
+	 * @param {any} width 
+	 * @param {any} height 
+	 * @memberof MEngine
+	 */
 	changeRes(width, height)
 	{
 		if(width >= this.map.width && height >= this.map.height)
@@ -176,6 +243,23 @@ export class MEngine
 		}
 	}
 
+	/**
+	 * setMap(fileName)
+	 * 
+	 * Set a map - used to set the first map and to change map later
+	 * Note this is an async function use it with an await or a .then
+	 * if you wish to chedule anything to happen after the map loads
+	 * 
+	 * This should take 1 tick of the event loop/one frame to resolve 
+	 * I note however that if you do
+	 * MEngine#setMap("new map");
+	 * //other function calls
+	 * 
+	 * That the "other function calls" will resolve BEFORE the map is set
+	 * 
+	 * @param {string} fileName -path/name of map to load
+	 * @memberof MEngine
+	 */
 	async setMap(fileName)
 	{
 		let inputFile = new DataStream(fileName, FileOp.Read);
@@ -382,7 +466,7 @@ export class MEngine
 				this.map.layers[i].obsModel.transform = this.map.obsTransform;
 			}
 		}
-
+		return true;
 	}
 
 	static error(description)
@@ -392,7 +476,7 @@ export class MEngine
 }
 
 
-//#FIX ME this doesn't work - should do it with Uint32 (or 8) arrays instead
+//#FIX ME this doesn't work at all- should do it with Uint32 (or 8) arrays instead
 //ideally should be able to do it at runtime - though would need to think
 //how to interopt with other things being drawn
 function scale(image, mode)

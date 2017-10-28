@@ -1,11 +1,40 @@
 /*Example talk script for demo purposes with MEngine.mjs
 Copyright Richard Lawrence, see MEngine.mjs for full license details*/
 
+/*This code is intended as an example and not part of the main libs,
+whilst you may use it please be aware that I may make breaking changes
+to it in the future with no or minimal warning.
 
+The purpose of this code is to show how an asynch talk function can be written
+that would work well with MEngine and SEngine.*/
+
+
+//Use input.mjs for input handling
+//May need to update path for this in any specific game
+//Note this is also dependent on HUDSystem.mjs
+//But takes a pre-created instance of the HUD as an input so doesn't need to import it
 import {Input} from "$/input";
 
+/*Wrap all the features as a class
+- enables initialisation that sets key properties
+- enables briefactual talk commands
+- unfortunately means the talk commands are class methods not bare functions*/
+
+//There may be a better way to do this
 export class Talking
 {
+	/**
+	 * Creates an instance of Talking.
+	 * @param {object} HUD - instance of HUDSystem class
+	 * @param {object} windowStyle - instance of windowStyle class from HUDsystem.mjs
+	 * @param {number} [x=5] -x coordiante for text boxes
+	 * @param {number} [y=(screen.height * 2/3)] - y coordinate for textboxes
+	 * @param {array} [keys=[Key.Enter, Key.Space]] - allowed Keys for closing a textbox
+	 * @param {number} [width=screen.width - 10] - width of textboxes
+	 * @param {number} [height=screen.height /3 - 10] -height of textboxes
+	 * @param {object} [font=Font.Default] -font to use for text
+	 * @memberof Talking
+	 */
 	constructor(HUD, windowStyle, x = 5, y = (screen.height * 2/3), keys = [Key.Enter, Key.Space],
 		width = screen.width - 10, height = screen.height /3 - 10, font = Font.Default)
 	{
@@ -21,11 +50,31 @@ export class Talking
 		this.keys        = keys;
 	}
 
+	/**
+	 * async Talk function
+	 * call this with await if you want to pause your current function untll the talk completes
+	 * as this is asynch it does not block the event loop
+	 * @param {string} speaker - name of person speaking appears on first line
+	 * @param {string} text - appears on second line (and on - auto wordwrapped)
+	 * @returns {promise} - resolves when textbox closed
+	 * @memberof Talking
+	 */
 	async talk(speaker, text)
 	{
 		return await this.queueTalk(speaker, [text]);
 	}
 
+	
+	/**
+	 * async multi-talk function
+	 * call this with await if you want to pause your current function untll the talk completes
+	 * as this is asynch it does not block the event loop
+	 * @param {string} speaker  - name of person speaking appears on first line
+	 * @param {array} textQueue - array of different things to say - each entry is drawn as one text box
+	 * 							- when each textbox is closed the next one opens
+	 * @returns {promise} - resolves when textbox closed
+	 * @memberof Talking
+	 */
 	async queueTalk(speaker, textQueue)
 	{
 		for(let i = 0; i < textQueue.length; ++i)
@@ -37,6 +86,18 @@ export class Talking
 		return await this.processQueue();
 	}
 
+	/**
+	 * proxess Queue - internal function do not call this
+	 * This is the logic used for the above talk operations
+	 * 1. Removes the first queued talk from the queue
+	 * 2. Adds that talk to the HUDSystem
+	 * 3. yields to the event loop untill input is recieved
+	 * 4. upon reciving input removes the talk from the HUD
+	 * 5. Return to 1 untill queue empty
+	 * 6. Surrenders control of input and returns
+	 * @returns {promise} - resovles when all talking is finished
+	 * @memberof Talking
+	 */
 	async processQueue()
 	{
 		while(this.queue.length > 0)

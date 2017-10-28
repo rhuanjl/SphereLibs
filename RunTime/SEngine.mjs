@@ -29,24 +29,51 @@
  */
 
 
+/*Direct dependencies
+input.mjs - for input handling
+DataStream (from sphere Run time) for loading sprite files
 
+May need to change paths depending on your setup*/
 import DataStream from "dataStream";
 import {Input} from "$/input";
 
-//Queued action types
+/*Queued action types
+These are used to indicate what type of action a sprite has queued
+to aid readability over using bare id numbers, and improve performance vs string compares*/
 export const spriteMOVE = 0;
 export const spriteANIMATE = 1;
 export const spriteSCRIPT = 2;
 export const spriteFACE = 3;
-const spriteDESTROY = 7;
+const spriteDESTROY = 7;//bottom 4 not exported as should not be used externally
 const spriteY = 8;
 const spriteX = 9;
-const spriteLAYER = 10;//not exported as should not be used externally
+const spriteLAYER = 10;
 
 
 
+/**
+ * Key class - SEngine
+ * An instnace of SEngine is an environment for Sprites
+ * Any given map can only use one instance at a time
+ * In most games just one instance will be required
+ * 
+ * @export
+ * @class SEngine
+ */
 export class SEngine
 {
+	/**
+	 * Creates an instance of SEngine.
+	 * @param {object} runTime - object to be available in entity scripts
+	 * @param {object} CEngine - instance of CEngine class (unless you don't need collisions)
+	 * @param {number} tSize  - size of collision segment, if using tileMovement this should be tile width
+	 * 							For normal movement use a number 4-5x the width of your sprites
+	 * @param {boolean} [useCEngine=true] -true for collisions
+	 * @param {boolean} [tileMovement=false] -currently tileMovement is broken, must be false
+	 * @param {number} [maxPerSeg=20] - future feature for now always leave as 20
+	 * @param {string} [shaderPath="shaders/"] -path to where the customised shaders can be found
+	 * @memberof SEngine
+	 */
 	constructor(runTime, CEngine, tSize, useCEngine=true, tileMovement=false, maxPerSeg=20, shaderPath="shaders/")
 	{
 		this.entities     = [];
@@ -80,12 +107,22 @@ export class SEngine
 		this.maxPerSeg    = maxPerSeg;
 	}
 
-	static error (description)
-	{
-		throw new Error("SEngine error: " + description);
-	}
-
-
+	/**
+	 * Add an entity to your SEngine
+	 * This is a wrapper around new Entity that supplies certain required environment variables
+	 * use this instead of calling new Entity diretly
+	 * 
+	 * @param {any} id -id/name for the entity, 
+	 * @param {any} sprites -array of sprite objects (see Sprite class below) #MayChange to single sprite object
+	 * @param {boolean} [persist=false] -true to keep it when changing map, false to delete on map change
+	 * @param {number} [x=0] -initial coordinates
+	 * @param {number} [y=0] 
+	 * @param {any} [scale=[1, 1]] -x/y scaling to apply
+	 * @param {number} [layer=0] -initial layer
+	 * @param {any} [scripts=blankScripts] -entity scripts object - see blankScripts object for template
+	 * @returns instance of Entity
+	 * @memberof SEngine
+	 */
 	addEntity (id, sprites, persist=false, x=0, y=0, scale=[1, 1], layer=0, scripts=blankScripts)
 	{
 		if(scale[0] < 0 || scale[1] < 0)
@@ -107,6 +144,22 @@ export class SEngine
 	}
 
 
+	/**
+	 * reset(mapWidth, mapHeight,mapLayers, surface)
+	 * Initialises/Resets SEngine for a new map
+	 * When using SEngine with MEngine
+	 * MEngine will call this when yous et a map
+	 * If not using MEngine you must call this yourself
+	 * Use it to set the width, height and number of layers of the map your sprites can move on
+	 * This initialises collision detection and sets this.ready to true
+	 * calling it also deletes any entities for whom persist = false
+	 * 
+	 * @param {number} mapWidth 
+	 * @param {number} mapHeight 
+	 * @param {number} mapLayers 
+	 * @param {object} [surface=screen] - surface to draw to
+	 * @memberof SEngine
+	 */
 	reset(mapWidth, mapHeight, mapLayers, surface = screen)
 	{
 		this.width = surface.width;
@@ -139,12 +192,36 @@ export class SEngine
 		this.ready = true;
 	}
 
+	/**
+	 * getEntity(id)
+	 * Returns the entity object represented by the supplied id
+	 * 
+	 * #FIX ME could this use a WeakMap for better performance?
+	 * @param {any} id 
+	 * @returns 
+	 * @memberof SEngine
+	 */
 	getEntity(id)
 	{
 		for(var i = 0; i < this.entities.length && this.entities[i].id !== id; ++i);
 		return this.entities[i];
 	}
 
+	/**
+	 * addInput(key, continuous, parameter, script)
+	 * Binds the function: script to the key: key
+	 * if continuous is false the function will only be called once each time the key is pressed
+	 * if continous is true the function will be called every frame as long as the key is pressed
+	 * the parameter object will be passed to the function as its second parameter the runtime
+	 * object as its first
+	 * 
+	 * @param {number} key 
+	 * @param {boolean} continuous 
+	 * @param {object} parameter 
+	 * @param {function} script 
+	 * @returns 
+	 * @memberof SEngine
+	 */
 	addInput(key, continuous, parameter, script)
 	{
 		this.inputs.push({
@@ -157,13 +234,25 @@ export class SEngine
 		return this.inputs.length - 1;
 	}
 
-	//probably a waste of time making this a function....
-	//does a simple logic check to tell you if all movement/animation queues are empty
+	/**
+	 * idle ()
+	 * this.waiting = number of entities with no action queued
+	 * this returns true if that is all entities - i.e. if nothing is happening
+	 * 
+	 * @returns 
+	 * @memberof SEngine
+	 */
 	idle ()
 	{
 		return (this.waiting === this.entities.length);
 	}
 
+	/**
+	 * Adds simple 4 directional movement + talk activation to the supplied entity
+	 * 
+	 * @param {object} entity - object representing an entity within this SEngine instance
+	 * @memberof SEngine
+	 */
 	addDefaultInput(entity)
 	{
 		this.input.takeInput();
@@ -217,7 +306,26 @@ export class SEngine
 		}
 	}
 
-	//update the system, process everyone's queues etc
+	/**
+	 * update (offset = [0, 0], scale = 1)
+	 * updates the system this does the following things
+	 * 1. checks for any inputs added with addINput above
+	 * 2. loops through all entities processing the first action in their queues
+	 * 		- if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
+	 * 		- i.e. the next action is processed too
+	 * 3. sets scale and offset ready for rendering
+	 * scale = zoom in/out for everything
+	 * offset = translation for everything - used to move around a map
+	 * 
+	 * NOTE when using MEngine with SEngine MEngine.update calls this function
+	 * Only call this yourself if not using MENgine
+	 * 
+	 * #FIX ME - add a feature to freeze the whole SEngine?
+	 * #FIX ME - move these params to render?
+	 * @param {any} [offset=[0, 0]] 
+	 * @param {number} [scale=1] 
+	 * @memberof SEngine
+	 */
 	update (offset = [0, 0], scale = 1)
 	{
 		if(this.useCEngine === true)
@@ -528,14 +636,17 @@ export class SEngine
 				else if (action.type === spriteDESTROY)
 				{
 					entity.scripts.onDestroy(this.runTime, entity);
-					if (this.CEngine.ctype === 1) {
+					if (this.CEngine.ctype === 1)
+					{
 						this.updateCollisions(i, entity._x, entity._y, 0, 0, entity.internalLayer, entity.internalLayer, false, true);
 					}
-					else if (cType === 0) {
+					else if (cType === 0)
+					{
 						this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
 					}
 					this._renders[entity.internalLayer].splice(entity.position, 1);
 					entity.inUse = false;
+					entity.frozen = true;
 					//this.entities.splice(i,1);//#FIX ME should we actually remove?
 					//at the moment splicing the entity from the array will break stuff
 				}
@@ -571,7 +682,21 @@ export class SEngine
 		this.offset = offset;
 	}
 
-	renderLayer(surface, layer)
+
+	/**
+	 * Draw one layer of entities
+	 * Self explanatory
+	 * 
+	 * Note when using MEngine this is called by MEngine#render
+	 * Only call it yourself if using SEngine without MEngine
+	 * 
+	 * If you have multiple layers of entities and are not using MEngine
+	 * You will need to call it once per layer
+	 * @param {object} [surface=screen] 
+	 * @param {number} [layer=0] 
+	 * @memberof SEngine
+	 */
+	renderLayer(surface = screen, layer = 0)
 	{
 		let thisLength = this._renders[layer].length;
 		let currentRender;
@@ -632,7 +757,15 @@ export class SEngine
 		}
 	}
 
-	//load a list of entities (i.e. from a map or other data file)
+	/**
+	 * loadMapEntities (list, scripts)
+	 * This is called when setting a map in MEngine to load all the map entities
+	 * 
+	 * #DOCUMENT me - this needs better explanation for use without MEngine
+	 * @param {any} list 
+	 * @param {any} scripts 
+	 * @memberof SEngine
+	 */
 	loadMapEntities (list, scripts)
 	{//#FIX ME add exception catching
 		let length = list.length;
@@ -651,7 +784,16 @@ export class SEngine
 		}
 	}
 
-	//lazy load spritesets
+	/**
+	 * lazyLoadSprite (fileName)
+	 * Checks an array of pre-loaded spritesets for the requested sprite
+	 * If the sprite is found returns it
+	 * If not found loads the sprite, adds it to the array and returns it
+	 * 
+	 * @param {any} fileName 
+	 * @returns 
+	 * @memberof SEngine
+	 */
 	lazyLoadSprite (fileName)
 	{//#FIX ME add exception catching
 		let name = fileName.substring(fileName.lastIndexOf("/") + 1);
@@ -661,6 +803,9 @@ export class SEngine
 		}
 		return this.sprites[name];
 	}
+
+	//Remaining SENgine functions are internal use only
+	//scroll down to Entity class to see more external use functions
 
 	//for internal use only - this function initialises collision information
 	//pulled out into a seperate function from reset() for neatness/intelligibility
@@ -837,12 +982,27 @@ export class SEngine
 	}
 
 
+	static error (description)
+	{
+		throw new Error("SEngine error: " + description);
+	}
+
 
 }
 
 //this class is intentionally not exported
 //always create Entities via the SEngine#addEntity method
 //it uses this constructor and returns the object but sets lots of default values based on the SEngine instance
+/**
+ * A class representing an Entity
+ * this class is intentionally not exported
+ * always create Entities via the SEngine#addEntity method
+ * 
+ * However each entity you create that way will be an instance of this class
+ * Read down for methods and properites available for use
+ * 
+ * @class Entity
+ */
 class Entity
 {
 	constructor (id, sprites, x, y, persist, scale, scripts, SEngine, shader, tSize, layer, tileMovement, DEBUG_MODE)
@@ -939,9 +1099,19 @@ class Entity
 		this.attached = false;
 	}
 
-	//#FINISH ME need similar mechanism for sprite swaps
+	//#FINISH ME need mechanism for sprite swaps
 	//#REFACTOR ME should we bin the sprite array?
 
+	/**
+	 * faceEntity(entity, immediate = true)
+	 * makes this Entity face towards entity
+	 * if immediate is true this is done by setting properties immediately
+	 * if immediate is false it is queued to happen after any other queued movements
+	 * 
+	 * @param {any} entity 
+	 * @param {boolean} [immediate=true] 
+	 * @memberof Entity
+	 */
 	faceEntity(entity, immediate = true)
 	{
 		let dx = entity._x - this._x;
@@ -968,7 +1138,15 @@ class Entity
 		}
 
 	}
+	
 	//#FIX Me this will show triggers as obstructions, could that be misleading?
+	/**
+	 * Entity#obstructions
+	 * an array of items obstructing the entity
+	 * 
+	 * @readonly
+	 * @memberof Entity
+	 */
 	get obstructions ()
 	{
 		if(this.inUse === true)
@@ -994,6 +1172,13 @@ class Entity
 	}
 
 	//#Finalise me - experimental method
+	/**
+	 * Specifies whether the entity would be obstructed with it's crurent x,y on the specified layer
+	 * 
+	 * @param {any} layer 
+	 * @returns 
+	 * @memberof Entity
+	 */
 	obstructedOnLayer(layer)
 	{
 		if(this.inUse === true)
@@ -1006,6 +1191,15 @@ class Entity
 		}
 	}
 
+	/**
+	 * obstructionsInDirection(direction)
+	 * Specifies whether the entity would be obstructed
+	 * if it attempted to move in the specified direction
+	 * 
+	 * @param {any} direction 
+	 * @returns 
+	 * @memberof Entity
+	 */
 	obstructionsInDirection(direction)
 	{
 		let dirs = this.sprites[this.sprite].dirs;
@@ -1018,6 +1212,12 @@ class Entity
 		return this.SEngine.CEngine.collide(this.id, this.internalLayer, this._x, this._y, vec[0], vec[1], this.poly);
 	}
 	
+	/**
+	 * Entity#layer
+	 * queues a teleport to the specified layer
+	 * 
+	 * @memberof Entity
+	 */
 	set layer(value)
 	{
 		if(value !== this.internalLayer)
@@ -1027,9 +1227,15 @@ class Entity
 		}
 	}
 
+	/**
+	 * Entity#x
+	 * queues a teleport to the specified x
+	 * 
+	 * @memberof Entity
+	 */
 	set x (value)
 	{
-		if(value !== this._x)
+		if(value !== this._x || this.waiting === false)
 		{
 			this.queueMove(this.dir, value, spriteX);
 		}
@@ -1040,9 +1246,15 @@ class Entity
 		return this._x;
 	}
 
+	/**
+	 * Entity#y
+	 * queues a teleport to the specified y
+	 * 
+	 * @memberof Entity
+	 */
 	set y (value)
 	{
-		if(value !== this._y)
+		if(value !== this._y || this.waiting === false)
 		{
 			this.queueMove(this.dir, value, spriteY);
 		}
@@ -1058,11 +1270,37 @@ class Entity
 		return this.internalLayer;
 	}
 
+	/**
+	 * Entity#waiting
+	 * True if the entity has no actions queued
+	 * Teleports are not counted as they are executed for free
+	 * 
+	 * @readonly
+	 * @memberof Entity
+	 */
 	get waiting()
 	{
 		return (this.queueLength === 0);
 	}
 
+	/**
+	 * Entity#fullyWaiting
+	 * True if entity has nothing queued at all (including teleports)
+	 * 
+	 * @readonly
+	 * @memberof Entity
+	 */
+	get fullyWaiting()
+	{
+		return (this.insert === this.end);
+	}
+
+	/**
+	 * Returns number of actions queued excluding teleports
+	 * 
+	 * @readonly
+	 * @memberof Entity
+	 */
 	get queueLength()
 	{
 		if(this.insert === this.end)
@@ -1084,6 +1322,20 @@ class Entity
 		}
 	}
 
+
+	/**
+	 * Entity#fullQueueLength
+	 * Returns the number of actions queued
+	 * Including teleports
+	 * 
+	 * @readonly
+	 * @memberof Entity
+	 */
+	get fullQueueLength()
+	{
+		return this.insert - this.end;
+	}
+
 	//wipe out an entity's queue - cancels any planned actions
 	clearQueue()
 	{
@@ -1091,6 +1343,13 @@ class Entity
 		this.end = 0;
 	}
 
+	/**
+	 * Entity#direction
+	 * The name of the ddirection the entity is facing e.g. "north"
+	 * 
+	 * #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
+	 * @memberof Entity
+	 */
 	get direction()
 	{
 		return this.sprites[this.sprite].dirs[this.dir].id;
@@ -1105,9 +1364,22 @@ class Entity
 		}
 	}
 
-	//remove entity from SEngine
-	//if processQueue is true any remaining actions are completed first
-	//if it's false or omitted remaining actions are cancelled 
+	/**
+	 * Entity#destroy()
+	 * "remove" entity from SEngine
+	 * if processQueue is true any remaining actions are completed first
+	 * if it's false or omitted remaining actions are cancelled 
+	 * 
+	 * Entity is not fully removed, however it is removed from:
+	 * - collision detection and
+	 * - the render list and
+	 * - it's queue will no longer be processed
+	 * 
+	 * NOTE THERE IS CURRENTLY NO METHOD to reverse this #FIX ME?
+	 * 
+	 * @param {boolean} [processQueue=false] 
+	 * @memberof Entity
+	 */
 	destroy(processQueue = false)
 	{
 		if(processQueue === false)
@@ -1117,22 +1389,26 @@ class Entity
 		this.queueMove(this.dir, 1, spriteDESTROY);
 	}
 
-	//function for queuing movement commands
-	//dir = name of direction
-	//units = how far to move
-	//note specifying 0 (or negative )units = move forever or untill clearQueue is called
-	//type 0 (or no specified type) = move
-	//type 1 = animate without moving
-	//type 2 = execute the function passed as the script parameter
-	//			- note 1 : assumed to be a function already - don't pass a string,
-	//          - note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
-	//type 3 = face specified direction
-	//...space for future options
-	//type 10 is reserved for layers changes 0 don't use it directly though
-	//- just do entity.layer = new_layer to trigger the setter
-	//NOTE in tile movement mode units = number of tiles
-	//when not in tile movement mode units = number of vectors
-	//(most directions should be defined with 1 or 2 pixel vectors)
+	/**
+	 * queueMove (dir, units = 1, type = 0, script)
+	 * function for queuing movement commands
+	 * dir = name of direction
+	 * units = how far to move
+	 * note specifying 0 (or negative )units = move forever or untill clearQueue is called
+	 * type 0 (or no specified type) = move
+	 * type 1 = animate without moving
+	 * type 2 = execute the function passed as the script parameter
+	 * 			- note 1 : assumed to be a function already - don't pass a string,
+	 * 			- note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
+	 * type 3 = face specified direction
+	 * ...space for future options
+	 * Note 7-10 are reserved for features used through other Entity methods, don't use directly
+	 * @param {any} dir 
+	 * @param {number} [units=1] 
+	 * @param {number} [type=0] 
+	 * @param {any} script 
+	 * @memberof Entity
+	 */
 	queueMove (dir, units = 1, type = 0, script)
 	{//TEST ME - OTT optimisation because why not
 		if(this.insert === this.queue.length)
@@ -1184,11 +1460,15 @@ class Entity
 	}
 }
 
-//create a sprite object
-//atlas = texture object containing all the frames
-//template = template object to use - see below
-//id = id for referencing
-
+/**
+ * a sprite object
+ * atlas = texture object containing all the frames
+ * template = template object to use - see below
+ * id = id for referencing (not currently used afaik)
+ * Look further down for LoadSES function - to load sprite from file
+ * @export
+ * @class Sprite
+ */
 export class Sprite
 {
 	constructor (id, atlas, template)
@@ -1283,6 +1563,13 @@ export class STemplate
 	}
 }
 
+/**
+ * Load a sprite from a .ses File
+ * 
+ * @export
+ * @param {string} inputFile path/name
+ * @returns 
+ */
 export function loadSES(inputFile)
 {
 	let source = new DataStream(inputFile, FileOp.Read);
@@ -1328,14 +1615,16 @@ export function loadSES(inputFile)
 	return new Sprite(inputFile.substring(inputFile.lastIndexOf("/")), image, template);
 }
 
+//Template object for entity scripts
+//Make your own entity scripts normally via a MapScript file
 const blankScripts =
 {
-	onSetup : function(){},
-	onDestroy : function(){},
-	onTouchPlayer : function(){},
-	onTouchOther : function(){},
-	onTalk : function(){},
-	onIdle : function(){}
+	onSetup : function(runTime, self){},
+	onDestroy : function(runTime, self){},
+	onTouchPlayer : function(runTime, self, player){},
+	onTouchOther : function(runTime, self, other){},
+	onTalk : function(runTime, self){},
+	onIdle : function(runTime, self){}
 };
 
 //create a Direction object

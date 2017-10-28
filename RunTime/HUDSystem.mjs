@@ -44,6 +44,13 @@ import DataStream from "dataStream";
 
 export class HUDSystem
 {
+	/**
+	 * Creates an instance of HUDSystem.
+	 * All instances support static objects (objects that once added never change)
+	 * Enable Dynamic to also support dynamic objects which you can edit
+	 * @param {boolean} [enableDynamic=false]
+	 * @memberof HUDSystem
+	 */
 	constructor(enableDynamic = false)
 	{
 		this.staticShapes = [];
@@ -77,8 +84,13 @@ export class HUDSystem
 	}
 
 
-	//add a pre-created shape to the HUD as a static object
-	//returns an ID number that can be used to remove it
+	/**
+	 * addStatic(shape)
+	 * add a pre-created shape to the HUD as a static object
+	 * @param {object} shape - must be a Sphere shape object
+	 * @returns {number} an ID number that can be used to remove it
+	 * @memberof HUDSystem
+	 */
 	addStatic(shape)
 	{
 		this.enableStatic = true;
@@ -91,16 +103,22 @@ export class HUDSystem
 		return (this.nextID - 1);
 	}
 
-	//add a dynamic object to the HUD
-	//it must define a draw function which takes transform as a paremeter
-	//where transform is the HUD's transformation object
-	//Inputs/updates it needs should be other properties of the object
-	//returns an ID number which can be used:
-	//a) to remove the object AND
-	//b) to access the object with getDynamic (see below)
-	//Note dynamics are drawn on top of statics by default
-	//can be swapped to under by changing HUDSystem#dynamicsAfterStatics to false
-	//cannot do half and half with one HUD object
+	/**
+	 * addDynamic(dynamicData)
+	 * add a dynamic object to the HUD
+	 * The dynamic object must:
+	 * - define a draw function which takes transform as a paremeter
+	 * - the transform will be the HUD's transform object and should
+	 * 		be applied to the object every draw
+	 * Any other inputs or updates the object needs should be properites of it
+	 * 
+	 * Note dynamics are drawn on top of statics by default
+	 * can be swapped to under by changing HUDSystem#dynamicsAfterStatics to false
+	 * cannot do half and half with one HUD object
+	 * @param {object} dynamicData 
+	 * @returns {number} ID can be used to remove this object from the HUD or to get access to the object
+	 * @memberof HUDSystem
+	 */
 	addDynamic(dynamicData)
 	{
 		if(this.enableDynamic === true)
@@ -118,6 +136,15 @@ export class HUDSystem
 		}
 	}
 
+
+	/**
+	 * getDynamic(id)
+	 * Returns the dynamic object at the specified id i.e. the parameter given to addDynamic
+	 * 
+	 * @param {number} id 
+	 * @returns 
+	 * @memberof HUDSystem
+	 */
 	getDynamic(id)
 	{
 		if(this.enableDynamic === true)
@@ -138,7 +165,13 @@ export class HUDSystem
 		}
 	}
 
-	//remove a shape from the HUD
+	/**
+	 * remove(id)
+	 * remove a shape from the HUD
+	 * id must be the number returned when you added the shape
+	 * @param {number} id 
+	 * @memberof HUDSystem
+	 */
 	remove(id)
 	{
 		let position = this.ids.indexOf(id);
@@ -167,7 +200,12 @@ export class HUDSystem
 		}
 	}
 
-	//draw the HUD - call this from your render function
+	/**
+	 * draw()
+	 * Call this from your render function or dispatch it with dispatch#onRender
+	 * 
+	 * @memberof HUDSystem
+	 */
 	draw()
 	{
 		if(this.ready === false)
@@ -201,6 +239,13 @@ export class HUDSystem
 		}
 	}
 
+	/**
+	 * drawDynamics()
+	 * draw the Dynamics only - don't call this
+	 * let draw() call it internally
+	 * 
+	 * @memberof HUDSystem
+	 */
 	drawDynamics()
 	{
 		let length = this.dynamics.length;
@@ -210,6 +255,23 @@ export class HUDSystem
 		}
 	}
 
+	//Helper functions for setup
+
+
+	/**
+	 * addVariableText()
+	 * Creates a dynamic object for text that can be changed or moved
+	 * Adds the object immediately to the HUD and returns its ID number
+	 * See class DynamicText below for more info
+	 * @param {string} text - the initial text to draw
+	 * @param {number} x -initial coordinates
+	 * @param {number} y 
+	 * @param {number} [wrapWidth=screen.width] -wordwrap width
+	 * @param {object} [font=Font.Default] - initial font to use
+	 * @param {object} [colour=Color.White] -initial colour
+	 * @returns 
+	 * @memberof HUDSystem
+	 */
 	addVariableText(text, x, y, wrapWidth = screen.width, font = Font.Default, colour=Color.White)
 	{
 		if(this.enableDynamic === true)
@@ -223,6 +285,24 @@ export class HUDSystem
 	}
 
 
+	/**
+	 * addVariableBar()
+	 * Creates a dynamic object rectangle that can grow larger and smaller
+	 * Adds the object immediately to the HUD and returns its ID number
+	 * Designed to be used as a heath bar or the like
+	 * See class DynamicBar below for more info
+	 * 
+	 * @param {number} x -top left corner coordinate
+	 * @param {number} y 
+	 * @param {number} width -full size dimensions
+	 * @param {number} height 
+	 * @param {number} [fadeDirection=0] - 0 = fade right to left, 1 = fade left to right, 2 top to bottom, 3 bottom to top
+	 * @param {object} [colourOne=Color.Green] - colour at full size
+	 * @param {object} [colourTwo=Color.Red]  - colour to fade to as it shrinks
+	 * @param {object} [texture=null] -texture to use
+	 * @returns 
+	 * @memberof HUDSystem
+	 */
 	addVariableBar(x, y, width, height, fadeDirection = 0, colourOne = Color.Green, colourTwo = Color.Red, texture = null)
 	{
 		if(this.enableDynamic === true)
@@ -235,42 +315,78 @@ export class HUDSystem
 		}
 	}
 
-	//write text to the HUD at x, y
-	addText(x, y, text, font, wrapWidth, colour)
+	/**
+	 * addText()
+	 * Creates a static text object
+	 * Immediately adds this object to the HUD and returns the id number
+	 * 
+	 * @param {number} x  - top left coordinate
+	 * @param {number} y 
+	 * @param {string} text  - string to draw
+	 * @param {any} [font=Font.Default]  - font to use
+	 * @param {any} [wrapWidth=screen.width]  - word wrap width
+	 * @param {any} [colour=Color.White] 
+	 * @returns {number} - id
+	 * @memberof HUDSystem
+	 */
+	addText(x, y, text, font=Font.Default, wrapWidth=screen.width, colour=Color.White)
 	{
-		if(!colour)
-		{
-			colour = Color.White;
-		}
-		if(!wrapWidth)
-		{
-			wrapWidth = screen.width;
-		}
-		if(!font)
-		{
-			font = Font.Default;
-		}
 		return this.addStatic(HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), x, y));
 	}
 
-	//add an already loaded image/texture to the HUD at x, y with colour mask, mask
-	//mask is an optional parameter
+	/**
+	 * addImage(texture, x, y, mask)
+	 * Add a Sphere Texture object to the HUD as an image
+	 * at x,y with colour, mask (note if no mask is supplied it defaults to white)
+	 * returns the id number
+	 * 
+	 * @param {object} texture 
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @param {object} mask 
+	 * @returns  {number} - id
+	 * @memberof HUDSystem
+	 */
 	addImage(texture, x, y, mask)
 	{
 		return this.addStatic(HUDSystem.render(texture, x, y, mask));
 	}
 
-	//render a DrawingBuffer as an image and add it to the HUD at x, y
+	/**
+	 * addBuffer(buffer, x, y, mask)
+	 * render a DrawingBuffer as an image and add it to the HUD at x, y as a static object
+	 * See PixelBuffer.mjs for explanation of Drawing Buffers
+	 * returns the id number in the HUD
+	 * @param {object} buffer - instance of DrawingBuffer
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @param {object} mask -Sphere colour object(defaults to white)
+	 * @returns 
+	 * @memberof HUDSystem
+	 */
 	addBuffer(buffer, x, y, mask)
 	{
 		return this.addStatic(HUDSystem.render(new Texture(buffer.data, buffer.width, buffer.height), x, y, mask));
 	}
 
-	//load an image from a file and add it to the HUD at x, y
+	/**
+	 * addImageFromFile(filename, x, y, mask)
+	 * Loads an image from a file, and immediately adds it to the HUD as a static object
+	 * returns the id number in the HID
+	 * @param {string} filename - SphereFS path for image
+	 * @param {number} x -top left corner
+	 * @param {number} y 
+	 * @param {object} mask -Sphere colour object - defaults to white
+	 * @returns {number} -id
+	 * @memberof HUDSystem
+	 */
 	addImageFromFile(filename, x, y, mask)
 	{
 		return this.addStatic(HUDSystem.render(new Texture(filename), x, y, mask));
 	}
+
+	//STATIC methods - below helper functions are used internally
+	
 
 	static text(text, font, wrapWidth, colour)
 	{
@@ -305,8 +421,23 @@ export class HUDSystem
 	}
 }
 
+/**
+ * WindowStyle class
+ * Sphere v2 implementation of SPherev1 windowstyles
+ * uses PixelBuffer.mjs for composition
+ * 
+ * @export
+ * @class WindowStyle
+ */
 export class WindowStyle
 {
+	/**
+	 * Creates an instance of WindowStyle.
+	 * This can then be used for drawing windows
+	 * (Think sphere v1 LoadWindowStyle)
+	 * @param {string} filename path to a .rws file
+	 * @memberof WindowStyle
+	 */
 	constructor(filename)
 	{
 		let data = new DataStream(filename, FileOp.Read);
@@ -341,14 +472,34 @@ export class WindowStyle
 
 	}
 
-	renderWindow(x, y, width, height, applyMask, mask)
+	/**
+	 *renderWindow(x, y, width, height, mask)
+	 * returns a Sphere shape object made from the windowStyle
+	 * @param {number} x - top left coordinate
+	 * @param {number} y 
+	 * @param {number} width - dimensions
+	 * @param {number} height 
+	 * @param {object} mask - Sphere colour object
+	 * @returns {object} - SPhere shape
+	 * @memberof WindowStyle
+	 */
+	renderWindow(x, y, width, height, mask)
 	{
-		let drawnBuffer = this.compose(width, height, applyMask, mask);
-		
+		let drawnBuffer = this.compose(width, height, mask);
 		return HUDSystem.renderImage(new Texture(width, height, drawnBuffer.data), x, y);
 	}
 
-	compose(width, height, applyMask, mask)
+	/**
+	 * compose(width, height, mask=Color.White)
+	 * Returns a DrawingBuffer that is the windowStyle with the provided dimensions
+	 * Use via renderWindow for simple cases
+	 * @param {any} width 
+	 * @param {any} height 
+	 * @param {any} [mask=Color.White] 
+	 * @returns 
+	 * @memberof WindowStyle
+	 */
+	compose(width, height, mask=Color.White)
 	{
 		if(((this.upper_left.width  + this.upper_right.width) > width) ||
 			(this.upper_left.height + this.lower_left,height) > height)
@@ -395,14 +546,26 @@ export class WindowStyle
 		output.drawBuffer(width - this.lower_right.width, height - this.lower_right.height, this.lower_right);
 		
 		//mask it
-		if(applyMask === true)
+		if(mask !== Color.White)
 		{
-			output.mask(mask);
+			let maskArray = [mask.Red, mask.Green, mask.Blue, mask.Alpha];
+			output.mask(maskArray);
 		}
 		return output;
 	}
 }
 
+/**
+ * A dynamic Bar for the HudSystem
+ * Create via HUDSystem.addVariableBar
+ * Generally should not directly instantiate this class
+ * Then change this.fraction (between 1 and 0) to shrink/fade the bar
+ * Note you will need to use HUDSystem#getDynamic to get a copy of the object
+ * ...may enable translating it as a future feature
+ * 
+ * @export
+ * @class DynamicBar
+ */
 export class DynamicBar
 {
 	constructor(x, y, width, height, fadeDirection, colourOne, colourTwo, texture = null, shader)
@@ -465,6 +628,18 @@ export class DynamicBar
 	}
 }
 
+/**
+ * Dynamic text
+ * create with and add to HUD with HUDSystem#addVariableText()
+ * Generally should not directly instantiate this class
+ * see comments below for what you can do after creation
+ * Note you will need to use HUDSystem#getDynamic to get a copy of the object
+ * 
+ * Most changes are done via getters and setters SO you can just write to the relevant properites
+ * e.g. to change the text do instanceOfDynamicText.text = "This text is different now";
+ * @export
+ * @class DynamicText
+ */
 export class DynamicText
 {
 	constructor(text, x, y, wrapWidth = screen.width, font = Font.Default, colour=Color.White)
@@ -483,7 +658,12 @@ export class DynamicText
 		this.currentTransform = new Transform();
 		this.model.transform  = this.currentTransform;
 	}
-
+	
+	/**
+	 * Change the text being drawn
+	 * instance.text = "new text";
+	 * @memberof DynamicText
+	 */
 	set text (value)
 	{
 		if(this._text !== value)
@@ -498,6 +678,11 @@ export class DynamicText
 		return this._text;
 	}
 
+	/**
+	 * Change the font being used
+	 * instance.font = newFontObject
+	 * @memberof DynamicText
+	 */
 	set font (value)
 	{
 		if(this._font !== value)
@@ -511,7 +696,12 @@ export class DynamicText
 	{
 		return this._font;
 	}
-
+	
+	/**
+	 * change the wrapWidth
+	 * 
+	 * @memberof DynamicText
+	 */
 	set wrapWidth (value)
 	{
 		if(this._wrapWidth !== value)
@@ -526,6 +716,11 @@ export class DynamicText
 		return this._wrapWidth;
 	}
 
+	/**
+	 * Change the colour being used
+	 * 
+	 * @memberof DynamicText
+	 */
 	set colour (value)
 	{
 		if(this._colour !== value)
@@ -540,6 +735,11 @@ export class DynamicText
 		return this._colour;
 	}
 
+	/**
+	 * Move the text
+	 * 
+	 * @memberof DynamicText
+	 */
 	set x (value)
 	{
 		if(this._x !== value)
@@ -554,6 +754,11 @@ export class DynamicText
 		return this._x;
 	}
 
+	/**
+	 * Move the text
+	 * 
+	 * @memberof DynamicText
+	 */
 	set y (value)
 	{
 		if(this._y !== value)
@@ -568,6 +773,30 @@ export class DynamicText
 		return this._y;
 	}
 
+
+	/**
+	 * draw the text
+	 * This will normally be called by HUDSystem#draw
+	 * So you should not call it directly
+	 * 
+	 * @param {any} transform 
+	 * @memberof DynamicText
+	 */
+	draw(transform)
+	{
+		this.update();
+		this.currentTransform.identity();
+		this.currentTransform.compose(this.mainTransform);
+		this.currentTransform.compose(transform);
+		this.model.draw();
+	}
+
+	/**
+	 * Updates the text if values have been changed
+	 * Don't call this directly
+	 * 
+	 * @memberof DynamicText
+	 */
 	update()
 	{
 		if(this._needsUpdate === true)
@@ -581,14 +810,5 @@ export class DynamicText
 			this.mainTransform.translate(this._x, this._y);
 			this._needsMove = false;
 		}
-	}
-
-	draw(transform)
-	{
-		this.update();
-		this.currentTransform.identity();
-		this.currentTransform.compose(this.mainTransform);
-		this.currentTransform.compose(transform);
-		this.model.draw();
 	}
 }

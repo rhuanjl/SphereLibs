@@ -44,9 +44,7 @@ let collisionSystem = new CEngine(5, 1);
 //3rd param = how big segments to use for tracking sprite collisions - leave at 50 unless you know what you're doing
 let spriteSystem = new SEngine(talking, collisionSystem, 50);
 //initiate mapSystem, takes runTIme object (NOT USED AT THE MOMENT) and spriteSystem
-let mapSystem = new MEngine({}, spriteSystem);
-//this is a bodge - set Map Engine on to Collision system - will fix this to not be needed
-collisionSystem.MEngine = mapSystem;
+let mapSystem = new MEngine({}, spriteSystem, collisionSystem);
 //Debug mode = draw collisions at runtime it's very slow - must be on before you load a map if you want it
 //spriteSystem.DEBUG_MODE = true;
 //mapSystem.DEBUG_MODE = true;
