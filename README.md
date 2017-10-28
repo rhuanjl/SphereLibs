@@ -1,6 +1,9 @@
 # SphereLibs
 Modules written for use with miniSphere https://github.com/fatcerberus/minisphere/
 
+**See templates/main.mjs and templates/cellscript.mjs for example usage of everything**
+
+
 **Scripts include:**
 
 A map engine (MEngine.mjs)
@@ -16,9 +19,9 @@ Helper scripts for preparing resources for use with the map and sprite system (s
 
 Other modules as examples
 
-Note various of the modules are depndent on others of them - see import{} instructions at top of each file
+Note various of the modules are dependent on others of them - see import{} instructions at top of each file
 
-**All code is copyright Richard Lawrence and permisively licensed and free to use - see license.md file**
+**All code is permisively licensed and free to use - see license.md file for detail**
 
 
 

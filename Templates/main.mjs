@@ -37,8 +37,8 @@ menu.addTextOption("Just why?");
 
 Sphere.frameRate = 120;//Map speed is controlled by sphere framerate
 
-//initiate collisionSysyem #FIX ME - the parameters are stupid
-let collisionSystem = new CEngine(5, 1);
+//initiate collisionSysyem
+let collisionSystem = new CEngine();
 //first param = highest number of layers in all game maps, second param = always 1 (mode polygons or tiles but tile mode is broken)
 //initiate the sprite system, give it a runtime object (for a simple example - talking) and a collision system
 //3rd param = how big segments to use for tracking sprite collisions - leave at 50 unless you know what you're doing

@@ -43,9 +43,18 @@ CEngine is designed to:
 //primary class for external use
 export class CEngine
 {
-	constructor(layers, cType)
+	/**
+	 * Creates an instance of CEngine.
+	 * 
+	 * cType = collision type 0 = tiles, 1 = polys
+	 * 
+	 * currently only type 1 works
+	 * 
+	 * @param {number} cType 
+	 * @memberof CEngine
+	 */
+	constructor(cType=1)
 	{
-		this.layers     = layers;
 		this.SEngine    = null;
 		this.MEngine    = null;
 		this.cType      = cType;
@@ -56,7 +65,23 @@ export class CEngine
 		throw new Error("CEngine error: " + description);
 	}
 
-	collide(ref, layer, x, y, d_x, d_y, polygons)
+	/**
+	 * Function for colliding an entity from SEngine with other entities and Map Obstructions
+	 * Returns an array of all found collisions
+	 * 
+	 * #needs better documentation
+	 * 
+	 * @param {any} ref 
+	 * @param {any} layer 
+	 * @param {any} x 
+	 * @param {any} y 
+	 * @param {number} [d_x=0] 
+	 * @param {number} [d_y=0] 
+	 * @param {any} polygons 
+	 * @returns 
+	 * @memberof CEngine
+	 */
+	collide(ref, layer, x, y, d_x=0, d_y=0, polygons)
 	{
 		var i = 0, j = 0, k = 0, l = 0;
 		var collisions = [];
@@ -67,8 +92,8 @@ export class CEngine
 		var tile_map = map.layers[layer].tileMap;
 		let triggers = map.layers[layer].triggers;
 		let maxCoord = this.SEngine.table[layer].length;
-		var tile_x = (x/tile_size)|0;
-		var tile_y = (y/tile_size)|0;
+		var tile_x = Math.floor(x/tile_size);
+		var tile_y = Math.floor(y/tile_size);
 
 		var c1 = 0, c2 = 0, c3 = 0;
 		switch(this.cType)
@@ -130,19 +155,6 @@ export class CEngine
 		case(1):
 			for (l = 0; l < polygons.length; ++ l)
 			{
-				/*for(n = 0; n < this.SEngine.entities.length; ++n)
-				{//#DELETE ME - slow version kept for ref
-					if(n !== ref)
-					{
-						for(m = 0; m < this.SEngine.entities[n].poly.length; ++m)
-						{
-							if(CEngine.polysCollide(d_x, d_y, polygons[l], this.SEngine.entities[n].poly[m]))
-							{
-								collisions.push(new Collision(spriteCollision, n));
-							}
-						}
-					}
-				}*/
 				if(polygons[l].type === 0)
 				{
 					s_x = polygons[l].x - polygons[l].w + d_x;
@@ -265,7 +277,21 @@ export class CEngine
 		return collisions;
 	}
 
-	static polysCollide(x, y, _one, two)
+	/**
+	 * Static method for colliding two polys
+	 * the first poly is translated by x, y before the comparison
+	 * 
+	 * Supports rectangles and circles only
+	 * 
+	 * @static
+	 * @param {number} [x=0] 
+	 * @param {number} [y=0] 
+	 * @param {any} _one 
+	 * @param {any} two 
+	 * @returns 
+	 * @memberof CEngine
+	 */
+	static polysCollide(x=0, y=0, _one, two)
 	{
 		let result = false;
 		let one = {x: _one.x + x, y:_one.y + y, type: _one.type, w:_one.w, h:_one.h};
@@ -352,10 +378,6 @@ export class CEngine
 }
 
 
-
-
-
-
 //#FIX ME make collision returns consistent
 //this needs more thought # FINISH ME
 
@@ -376,6 +398,12 @@ class Collision
 		this.scripts   = scripts;
 	}
 }
+
+
+
+
+//Everything below here is incomplete/not yet usable
+
 
 //add type, source and polygon
 
@@ -426,7 +454,7 @@ function Segment(x, y, w, h, max_length)
 	this.h    = h;
 }
 */
-
+/*
 var heap = new ArrayBuffer(0x10000);
 var stdlib = { Math: Math, Int32Array : Int32Array};
 var lib = new asmJS(stdlib, null, heap);
@@ -586,4 +614,4 @@ function asmJS(stdlib, foreign, heap)
 	}
 
 	return {seperatingAxisTheorem : seperatingAxisTheorem};
-}
+}*/
