@@ -50,7 +50,7 @@ let mapSystem = new MEngine({}, spriteSystem, collisionSystem);
 //mapSystem.DEBUG_MODE = true;
 
 //add a window to the HUD
-HUD.addStatic(window.renderWindow(10, 10, 100, 40, true, [0.8,1,1,0.7]));
+HUD.addStatic(window.renderWindow(10, 10, 100, 40, true, new Color(0.8,1,1,0.7)));
 //add some text to the hud
 let textRef = HUD.addVariableText("Text in top corner\n" + "00:00:00",20, 15, 100);
 //get access to the text so you can change it
