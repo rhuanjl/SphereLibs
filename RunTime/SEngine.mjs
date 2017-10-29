@@ -34,7 +34,7 @@ input.mjs - for input handling
 DataStream (from sphere Run time) for loading sprite files
 
 May need to change paths depending on your setup*/
-import DataStream from "dataStream";
+import DataStream from "data-stream";
 import {Input} from "$/input";
 
 /*Queued action types

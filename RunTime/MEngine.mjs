@@ -30,7 +30,7 @@
 
 
 import {MapBuffer, TileBuffer} from "$/PixelBuffer";
-import DataStream from "dataStream";
+import DataStream from "data-stream";
 
 
 //key class for external use

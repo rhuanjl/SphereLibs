@@ -38,7 +38,7 @@
  */
 
 import {DrawingBuffer} from "$/PixelBuffer";
-import DataStream from "dataStream";
+import DataStream from "data-stream";
 
 
 
