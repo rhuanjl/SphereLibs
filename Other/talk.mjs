@@ -48,6 +48,7 @@ export class Talking
 		this.height      = height |0;
 		this.queue       = [];
 		this.keys        = keys;
+		this.mask = new Color(0.8, 1, 1, 0.8);
 	}
 
 	/**
@@ -111,10 +112,10 @@ export class Talking
 			let hudRefs = [];
 			
 			let current = this.queue.shift();
-			hudRefs.push(HUD.addStatic(ws.renderWindow(x, y, width, height, true, [0.8, 1, 1, 0.8])));
+			hudRefs.push(HUD.addStatic(ws.renderWindow(x, y, width, height, this.mask)));
 			if(current.speaker.length > 0)
 			{
-				hudRefs.push(HUD.addStatic(ws.renderWindow(x + 20,y - 10, 80, 20, true, [0.8, 1, 1, 0.8])));
+				hudRefs.push(HUD.addStatic(ws.renderWindow(x + 20,y - 10, 80, 20, this.mask)));
 				hudRefs.push(HUD.addText(x + 25, y -7, current.speaker, this.font, 70));
 			}
 			hudRefs.push(HUD.addText(x + 10, y + 15, current.text, this.font, width - 20));

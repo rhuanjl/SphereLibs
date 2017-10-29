@@ -548,7 +548,7 @@ export class WindowStyle
 		//mask it
 		if(mask !== Color.White)
 		{
-			let maskArray = [mask.Red, mask.Green, mask.Blue, mask.Alpha];
+			let maskArray = [mask.r, mask.g, mask.b, mask.a];
 			output.mask(maskArray);
 		}
 		return output;

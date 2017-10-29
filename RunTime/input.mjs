@@ -28,86 +28,37 @@
  * dealings in this Software without prior written authorization.
  */
 
-let inputUsers = [];
-let userPriorities = [];
-let nextID     = 0;
-let usePriority = false;
+import Focus from "focus-target";
 let kb = Keyboard.Default;
 
 export class Input
 {
 	constructor(priority = 0)
 	{
-		inputUsers.push(nextID);
-		userPriorities.push(priority);
-		if(priority > 0)
-		{
-			usePriority = true;	
-		}
-		this.ID     = nextID;
-		this.token  = 0;
 		this.keys;
 		this.state = 0;
 		this.value = 0;
-		this.priority = priority;
-		nextID = nextID + 1;
+		this.focus = new Focus({priority});
 	}
 
-	dispose()
+	disposeInput()
 	{
-		let position = inputUsers.indexOf(this.ID);
-		if(position === -1)
-		{
-			Input.error("non-existent input disposed");
-		}
-		inputUsers.splice(position, 1);
-		userPriorities.splice(position,1);
+		this.focus.dispose();
 	}
 
 	takeInput()
 	{
-		let position = inputUsers.indexOf(this.ID);
-		let target = 0;
-		if(position === -1)
-		{
-			Input.error("input requested by non-existent process");
-		}
-		if(usePriority === true)
-		{
-			for(; target < position && userPriorities[target] > this.priority; ++target);
-		}
-		if(target === 0)
-		{
-			inputUsers.splice(position, 1);
-			inputUsers.unshift(this.ID);
-			userPriorities.splice(position,1);
-			userPriorities.unshift(this.priority);
-		}
-		else if(target !== position)
-		{
-			inputUsers.splice(position, 1);
-			inputUsers.splice(target, 0, this.ID);
-			userPriorities.splice(position,1);
-			userPriorities.splice(target, 0, this.priority);
-		}
+		this.focus.takeFocus();
 	}
 
 	yieldInput()
 	{
-		let position = inputUsers.indexOf(this.ID);
-		if(position === -1)
-		{
-			Input.error("input surrendered by non-existent process");
-		}
-		inputUsers.splice(position, 1);
-		inputUsers.push(this.ID);
-		userPriorities.splice(position,1);
-		userPriorities.push(this.priority);
+		this.focus.dispose();//#Change to yield if it's updated
 	}
 
 	clearQueue()
 	{
-		if(inputUsers[0] === this.ID)
+		if(this.focus.hasFocus)
 		{
 			kb.clearQueue();
 		}
@@ -115,7 +66,7 @@ export class Input
 
 	getKey()
 	{
-		if(inputUsers[0] === this.ID)
+		if(this.focus.hasFocus)
 		{
 			return kb.getKey();
 		}
@@ -132,7 +83,7 @@ export class Input
 
 	isPressed(key)
 	{
-		if(inputUsers[0] === this.ID)
+		if(this.focus.hasFocus)
 		{
 			return kb.isPressed(key);
 		}
@@ -263,13 +214,17 @@ export class Input
 		});
 	}
 
-	waitForPriority()
+	waitForPriority(askForIt = true)
 	{
+		if(askForIt === true)
+		{
+			this.focus.takeFocus();
+		}
 		return new Promise((resolve) =>
 		{
 			let job = Dispatch.onUpdate(() =>
 			{
-				if(inputUsers[0] === this.ID)
+				if(this.focus.hasFocus)
 				{
 					job.cancel();
 					resolve(true);
