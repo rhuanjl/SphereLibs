@@ -157,10 +157,10 @@ export class SEngine
 	 * @param {number} mapWidth 
 	 * @param {number} mapHeight 
 	 * @param {number} mapLayers 
-	 * @param {object} [surface=screen] - surface to draw to
+	 * @param {object} [surface=Surface.Screen] - surface to draw to
 	 * @memberof SEngine
 	 */
-	reset(mapWidth, mapHeight, mapLayers, surface = screen)
+	reset(mapWidth, mapHeight, mapLayers, surface = Surface.Screen)
 	{
 		this.width = surface.width;
 		this.height = surface.height;
@@ -692,11 +692,11 @@ export class SEngine
 	 * 
 	 * If you have multiple layers of entities and are not using MEngine
 	 * You will need to call it once per layer
-	 * @param {object} [surface=screen] 
+	 * @param {object} [surface=Surface.Screen] 
 	 * @param {number} [layer=0] 
 	 * @memberof SEngine
 	 */
-	renderLayer(surface = screen, layer = 0)
+	renderLayer(surface = Surface.Screen, layer = 0)
 	{
 		let thisLength = this._renders[layer].length;
 		let currentRender;
@@ -717,8 +717,8 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				coords = [Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender.sprites[currentRender.sprite].o[0])) / sScale) - offset[0],
-					Math.floor((currentRender._y - (currentRender.scale[1] *  currentRender.sprites[currentRender.sprite].o[1])) / sScale) - offset[1]];
+				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender.sprites[currentRender.sprite].o[0])) / sScale) - offset[0] / sScale;
+				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender.sprites[currentRender.sprite].o[1])) / sScale) - offset[1] / sScale;
 
 				let w_scale = (currentRender.scale[0] / sScale);
 				let h_scale = (currentRender.scale[1] / sScale);

@@ -35,16 +35,92 @@ menu.addTextOption("Boring times");
 menu.addTextOption("Weird times");
 menu.addTextOption("Just why?");
 
-Sphere.frameRate = 120;//Map speed is controlled by sphere framerate
+//Sphere.frameRate = 60;//Map speed is controlled by sphere framerate defaults to 60, set something else if you want to go fasterslower
 
-//initiate collisionSysyem
-let collisionSystem = new CEngine();
+class MapSystem
+{
+	constructor(runTime)
+	{
+		this.collisionSystem = new CEngine();//initiate collisionSysyem
+		this.spriteSystem = new SEngine(runTime, this.collisionSystem, 50);//initiate SEngine
+		this.mapSystem = new MEngine(runTime, this.spriteSystem, this.collisionSystem);//initiate MEngine
+		this.started = false;
+		this.paused = false;
+	}
+
+	createCharacter(name, spriteSet, x, y, layer)
+	{
+		return this.spriteSystem.addEntity(name, [loadSES(spriteSet)],true,x, y, [1,1], layer);
+	}
+
+	start(firstMap, mainCharacter)
+	{
+		//Make Q = close down
+		this.spriteSystem.addInput(Key.Q, true, null, ()=>Sphere.shutDown());
+		//attach standard movement to the hero
+		this.spriteSystem.addDefaultInput(mainCharacter);
+		this.mainCharacter = mainCharacter;
+		this.mapSystem.setMap(firstMap).then(()=>
+		{
+			this.updateToken = Dispatch.onUpdate(()=>this.update());
+			this.renderToken = Dispatch.onRender(()=>this.render());
+			this.started = true;
+		});
+	}
+
+	async changeMap(newMap)
+	{
+		await this.mapSystem.setMap(newMap);
+	}
+
+	pause()
+	{
+		if(this.started && !this.paused)
+		{
+			this.updateToken.cancel();
+			this.renderToken.cancel();
+		}
+		else
+		{
+			//error message here?
+		}
+	}
+
+	resume()
+	{
+		if(this.started && this.paused)
+		{
+			this.updateToken = Dispatch.onUpdate(()=>this.update());
+			this.renderToken = Dispatch.onRender(()=>this.render());
+		}
+		else
+		{
+			//error message here
+		}
+	}
+
+	update()
+	{
+		this.mapSystem.update([this.mainCharacter.x, this.mainCharacter.y], 1);//update the map and center it on the hero - second parameter is zoom		
+	}
+
+	render()
+	{
+		this.mapSystem.render();
+		//draw anything on top of the map (e.g. a HUD) here
+	}
+
+}
+
+
+
+
 //first param = highest number of layers in all game maps, second param = always 1 (mode polygons or tiles but tile mode is broken)
 //initiate the sprite system, give it a runtime object (for a simple example - talking) and a collision system
 //3rd param = how big segments to use for tracking sprite collisions - leave at 50 unless you know what you're doing
-let spriteSystem = new SEngine(talking, collisionSystem, 50);
+
 //initiate mapSystem, takes runTIme object (NOT USED AT THE MOMENT) and spriteSystem
-let mapSystem = new MEngine({}, spriteSystem, collisionSystem);
+
 //Debug mode = draw collisions at runtime it's very slow - must be on before you load a map if you want it
 //spriteSystem.DEBUG_MODE = true;
 //mapSystem.DEBUG_MODE = true;
@@ -58,16 +134,14 @@ let textAccess = HUD.getDynamic(textRef);
 
 
 //Make a person see SEngine for parameters
-let hero = spriteSystem.addEntity("Scum", [loadSES("sprites/Theif01.ses")],true,500, 900, [1,1], 1);
+let hero = 
 
-//Make Q = close down
-spriteSystem.addInput(Key.Q, true, hero, ()=>Sphere.shutDown());
+
 
 
 async function setup1()
 {
-	//attach stabdard movement to the hero
-	spriteSystem.addDefaultInput(hero);
+
 
 	await mapSystem.setMap("maps/NameOfMapHere.mem");
 

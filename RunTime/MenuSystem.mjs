@@ -387,7 +387,7 @@ class TextOption
 {
 	constructor(menu, text, x, y, unselectedColour = Color.White, selectedColour = Color.Blue)
 	{
-		this.token = menu.addVariableText(text, x, y, screen.width, menu.font, unselectedColour);
+		this.token = menu.addVariableText(text, x, y, Surface.Screen.width, menu.font, unselectedColour);
 		this.selectable = true;
 		this.access = menu.getDynamic(this.token);
 		this.selectedColour = selectedColour;

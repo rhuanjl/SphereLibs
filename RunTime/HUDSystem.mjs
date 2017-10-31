@@ -266,13 +266,13 @@ export class HUDSystem
 	 * @param {string} text - the initial text to draw
 	 * @param {number} x -initial coordinates
 	 * @param {number} y 
-	 * @param {number} [wrapWidth=screen.width] -wordwrap width
+	 * @param {number} [wrapWidth=Surface.Screen.width] -wordwrap width
 	 * @param {object} [font=Font.Default] - initial font to use
 	 * @param {object} [colour=Color.White] -initial colour
 	 * @returns 
 	 * @memberof HUDSystem
 	 */
-	addVariableText(text, x, y, wrapWidth = screen.width, font = Font.Default, colour=Color.White)
+	addVariableText(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
 	{
 		if(this.enableDynamic === true)
 		{
@@ -324,12 +324,12 @@ export class HUDSystem
 	 * @param {number} y 
 	 * @param {string} text  - string to draw
 	 * @param {any} [font=Font.Default]  - font to use
-	 * @param {any} [wrapWidth=screen.width]  - word wrap width
+	 * @param {any} [wrapWidth=Surface.Screen.width]  - word wrap width
 	 * @param {any} [colour=Color.White] 
 	 * @returns {number} - id
 	 * @memberof HUDSystem
 	 */
-	addText(x, y, text, font=Font.Default, wrapWidth=screen.width, colour=Color.White)
+	addText(x, y, text, font=Font.Default, wrapWidth=Surface.Screen.width, colour=Color.White)
 	{
 		return this.addStatic(HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), x, y));
 	}
@@ -642,7 +642,7 @@ export class DynamicBar
  */
 export class DynamicText
 {
-	constructor(text, x, y, wrapWidth = screen.width, font = Font.Default, colour=Color.White)
+	constructor(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
 	{
 		this._text            = text;
 		this._x               = x;

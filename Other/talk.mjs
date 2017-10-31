@@ -28,15 +28,15 @@ export class Talking
 	 * @param {object} HUD - instance of HUDSystem class
 	 * @param {object} windowStyle - instance of windowStyle class from HUDsystem.mjs
 	 * @param {number} [x=5] -x coordiante for text boxes
-	 * @param {number} [y=(screen.height * 2/3)] - y coordinate for textboxes
+	 * @param {number} [y=(Surface.Screen.height * 2/3)] - y coordinate for textboxes
 	 * @param {array} [keys=[Key.Enter, Key.Space]] - allowed Keys for closing a textbox
-	 * @param {number} [width=screen.width - 10] - width of textboxes
-	 * @param {number} [height=screen.height /3 - 10] -height of textboxes
+	 * @param {number} [width=Surface.Screen.width - 10] - width of textboxes
+	 * @param {number} [height=Surface.Screen.height /3 - 10] -height of textboxes
 	 * @param {object} [font=Font.Default] -font to use for text
 	 * @memberof Talking
 	 */
-	constructor(HUD, windowStyle, x = 5, y = (screen.height * 2/3), keys = [Key.Enter, Key.Space],
-		width = screen.width - 10, height = screen.height /3 - 10, font = Font.Default)
+	constructor(HUD, windowStyle, x = 5, y = (Surface.Screen.height * 2/3), keys = [Key.Enter, Key.Space],
+		width = Surface.Screen.width - 10, height = Surface.Screen.height /3 - 10, font = Font.Default)
 	{
 		this.HUD         = HUD;
 		this.windowStyle = windowStyle;

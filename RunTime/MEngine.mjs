@@ -51,11 +51,11 @@ export class MEngine
 	 * @param {any} SEngine - instance of SEngine class to handle sprites
 	 * @param {any} [CEngine=null] - instance of CENgine class to handle collisions (must be shared with the SEngine instance)
 	 * @param {string} [shaderPath="shaders/"] - path to customised shaders
-	 * @param {any} [width=screen.width] -dimensions of the surface this will draw on
-	 * @param {any} [height=screen.height]
+	 * @param {any} [width=Surface.Screen.width] -dimensions of the surface this will draw on
+	 * @param {any} [height=Surface.Screen.height]
 	 * @memberof MEngine
 	 */
-	constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = screen.width, height = screen.height)
+	constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = Surface.Screen.width, height = Surface.Screen.height)
 	{
 		this.shader         = new Shader({
 			fragmentFile: shaderPath + "customised.frag.glsl",
@@ -98,8 +98,8 @@ export class MEngine
 		zoom = Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom);
 		//#FIX ME this needs adjustment - to allow for repeating maps (other things do too :( - though mostly this + sprite coordinate code also Collision code)
 		//#FIX ME WHY ON EARTH does this have a 2.1 in it as a factor - this must be wrong (though it works...)
-		this.map.x = Math.min(this.map.width  - this.s_width * zoom, Math.max(-this.s_width * zoom  / (2.1) + centre[0],0));
-		this.map.y = Math.min(this.map.height - this.s_height * zoom, Math.max(-this.s_height * zoom  / (2.1) + centre[1],0));
+		this.map.x = Math.min(Math.max(centre[0] - this.s_width * zoom  / 2, 0), this.map.width  - this.s_width * zoom);
+		this.map.y = Math.min(Math.max(centre[1] - this.s_height * zoom  / 2, 0), this.map.height - this.s_height * zoom);
 		this.map.zoom = zoom;
 
 		if(this.DEBUG_MODE === true)
@@ -119,18 +119,18 @@ export class MEngine
 	}
 
 	/**
-	 * render(surface=screen, start_layer=0, end_layer=(this.map.layers.length-1))
+	 * render(surface=Surface.Screen, start_layer=0, end_layer=(this.map.layers.length-1))
 	 * Draw the whole map onto surface
 	 * Intended to be used via Dispatch.onRender
 	 * start_layer and end_layer allow you to draw a specified range of layers only if wanted
 	 * Note if using SEngine the call to this.renderLayer calls on to SEngine.renderLayer as well
 	 * See below for more detail
-	 * @param {any} [surface=screen] 
+	 * @param {any} [surface=Surface.Screen] 
 	 * @param {number} [start_layer=0] 
 	 * @param {number} [end_layer=(this.map.layers.length-1)] 
 	 * @memberof MEngine
 	 */
-	render(surface=screen, start_layer=0, end_layer=(this.map.layers.length-1))
+	render(surface=Surface.Screen, start_layer=0, end_layer=(this.map.layers.length-1))
 	{
 		++end_layer;
 		for(let i = start_layer; i < end_layer; ++i)
@@ -149,11 +149,11 @@ export class MEngine
 	 * 
 	 * If using SEngine this also draws the entities for the layer via calling SEngine#renderLayer
 	 * 
-	 * @param {any} [surface=screen] 
+	 * @param {any} [surface=Surface.Screen] 
 	 * @param {number} [layer=0] 
 	 * @memberof MEngine
 	 */
-	renderLayer(surface=screen, layer=0)
+	renderLayer(surface=Surface.Screen, layer=0)
 	{
 		let thisLayer = this.map.layers[layer];
 		if(this.useTransformation)
