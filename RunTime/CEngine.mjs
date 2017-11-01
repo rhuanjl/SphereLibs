@@ -203,8 +203,8 @@ export class CEngine
 				{//#RE-FACTOR ME, tile collisions could be more efficient than this
 					t_x = Math.max(Math.floor(s_x / map.tile_w),0);
 					t_y = Math.max(Math.floor(s_y / map.tile_h),0);
-					n_x = Math.min(Math.floor((s_x + l_x) / map.tile_w), tile_map[0].length);
-					n_y = Math.min(Math.floor((s_y + l_y) / map.tile_h), tile_map.length);
+					n_x = Math.min(Math.floor((s_x + l_x) / map.tile_w), tile_map[0].length - 1);
+					n_y = Math.min(Math.floor((s_y + l_y) / map.tile_h), tile_map.length - 1);
 
 					let polyToCollide = {
 						type : polygons[l].type,
@@ -269,6 +269,32 @@ export class CEngine
 						}
 					}
 				}
+				if(this.SEngine.entities[ref].attached === true)
+				{
+					map.leaving = true;
+					map.player = this.SEngine.entities[ref];
+					if(s_x < 0)
+					{
+						map.dir = 0;
+					}
+					else if((s_x + l_x) > map.width)
+					{
+						map.dir = 1;
+					}
+					else if(s_y < 0)
+					{
+						map.dir = 2;
+					}
+					else if((s_y + l_y) > map.height)
+					{
+						map.dir = 3;
+					}
+					else
+					{
+						map.leaving = false;
+					}
+				}
+			
 			}
 			break;
 		case(2):

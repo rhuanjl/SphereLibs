@@ -85,35 +85,51 @@ export class MEngine
 	/**
 	 * update(centre=[0,0], zoom=1)
 	 * Called to update the map should be done every frame designed to be used via Dispatch.onUpdate
-	 * #FINISH ME - this should include calling a map update script if one exists
 	 * 
-	 * If using SEngine this automatically calls SEngine#update passing on the coordinates and zoom
+	 * If using SEngine this automatically calls SEngine#update
 	 * 
 	 * @param {any} [centre=[0,0]] - coordinates on map to attempt to centre the screen on
 	 * @param {number} [zoom=1] - zoom scale factor, increase to make things bigger...
 	 * @memberof MEngine
 	 */
-	update(centre=[0,0], zoom=1)
+	update(centre=[0,0], zoom = 1)
 	{
 		zoom = Math.max(Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom), 0.01);
 		//#FIX ME this needs adjustment - to allow for repeating maps (other things do too :( - though mostly this + sprite coordinate code also Collision code)
 		this.map.x = Math.min(Math.max(centre[0] - this.s_width * zoom  / 2, 0), this.map.width  - this.s_width * zoom);
 		this.map.y = Math.min(Math.max(centre[1] - this.s_height * zoom  / 2, 0), this.map.height - this.s_height * zoom);
 		this.map.zoom = zoom;
-
-		if(this.DEBUG_MODE === true)
+		
+		if(this.map.entered === false)
 		{
-			this.map.obsTransform.identity();
-			this.map.obsTransform.translate(-this.map.x, -this.map.y);
+			this.map.mapScripts.onEnter(this.runTime, this.map);
+			this.map.entered = true;
 		}
+		else if(this.map.leaving === true)
+		{
+			switch(this.map.dir)
+			{
+				case(0):
+					this.map.mapScripts.onLeaveWest(this.runTime, this.map, this.map.player);
+					break;
+				case(1):
+					this.map.mapScripts.onLeaveEast(this.runTime, this.map, this.map.player);
+					break;
+				case(2):
+					this.map.mapScripts.onLeaveNorth(this.runTime, this.map, this.map.player);
+					break;
+				case(3):
+					this.map.mapScripts.onLeaveSouth(this.runTime, this.map, this.map.player);
+					break;
+				
+			}
+		}
+		
+		this.map.mapScripts.onUpdate(this.runTime, this.map);
 
-		//for(let i = 0; i < this.map.layers.length; ++i)
-		//{
-		this.shader.setFloatVector("tex_move", [this.map.x / this.map.width, 1 - this.map.y/this.map.height, zoom]);
-		//}
 		if(this.useSEngine === true)
 		{
-			this.SEngine.update([this.map.x, this.map.y], zoom);
+			this.SEngine.update();
 		}
 	}
 
@@ -131,6 +147,18 @@ export class MEngine
 	 */
 	render(surface=Surface.Screen, start_layer=0, end_layer=(this.map.layers.length-1))
 	{
+
+		if(this.DEBUG_MODE === true)
+		{
+			this.map.obsTransform.identity();
+			this.map.obsTransform.translate(-this.map.x, -this.map.y);
+		}
+
+		//for(let i = 0; i < this.map.layers.length; ++i)
+		//{
+		this.shader.setFloatVector("tex_move", [this.map.x / this.map.width, 1 - this.map.y/this.map.height, this.map.zoom]);
+		//}
+		
 		++end_layer;
 		for(let i = start_layer; i < end_layer; ++i)
 		{
@@ -140,6 +168,7 @@ export class MEngine
 		{
 			this.map.layers[1].obsModel.draw();
 		}
+		this.map.mapScripts.onRender(this.runTime, this.map);
 	}
 
 
@@ -164,7 +193,7 @@ export class MEngine
 		thisLayer.model.draw(surface);
 		if(this.useSEngine === true)
 		{
-			this.SEngine.renderLayer(surface, layer);
+			this.SEngine.renderLayer([this.map.x, this.map.y], this.map.zoom, surface, layer);
 		}
 	}
 
@@ -261,6 +290,14 @@ export class MEngine
 	 */
 	async setMap(fileName)
 	{
+		if(this.map !== null)
+		{
+			if(this.map.entered === true)
+			{
+				await this.map.mapScripts.onExit(this.runTime, this.map);
+			}
+		}
+		
 		let inputFile = new DataStream(fileName, FileOp.Read);
 		//lead out with the tile data
 		let numTiles     = inputFile.readUint16(true);
@@ -439,22 +476,60 @@ export class MEngine
 		let splitPoint = startingName.lastIndexOf("/")+1;
 		let identifier = startingName.slice(0,splitPoint) + "scripts/" + startingName.slice(splitPoint, startingName.length - 4) + ".mjs";
 		//bring in the scripts
-		let mapScripts = await import(identifier);
-		this.SEngine.reset(fullWidth, fullHeight, numLayers);
-		this.SEngine.loadMapEntities(entities, mapScripts.entityScripts);
+		let scripts = await import(identifier);
+		let loadedScripts = {};
+
+		if(scripts.triggerScripts === undefined)
+		{
+			loadedScripts.triggerScripts = {};
+		}
+		else
+		{
+			loadedScripts.triggerScripts = scripts.triggerScripts;
+		}
+
+		if(scripts.mapScripts === undefined)
+		{
+			loadedScripts.mapScripts = templateScripts;
+		}
+		else
+		{
+			loadedScripts.mapScripts = cripts.mapScripts;
+		}
+
+
+		if(this.useSEngine === true)
+		{
+			if(scripts.entityScripts === undefined)
+			{
+				loadedScripts.entityScripts = {};
+			}
+			else
+			{
+				loadedScripts.entityScripts = scripts.entityScripts;
+			}
+			this.SEngine.reset(fullWidth, fullHeight, numLayers);
+			this.SEngine.loadMapEntities(entities, loadedScripts.entityScripts);
+		}
+
 
 		this.map =
 		{
-			layers : layers,
-			tiles  : tiles,
-			x      : 0,
-			y      : 0,
-			z      : 1,
-			width  : fullWidth,
-			height : fullHeight,
-			tile_w : tileWidth,
-			tile_h : tileHeight,
-			triggerScripts : mapScripts.triggerScripts
+			layers  : layers,
+			tiles   : tiles,
+			x       : 0,
+			y       : 0,
+			z       : 1,
+			entered : false,
+			leaving : false,
+			player  : null,
+			dir     : 0,
+			width   : fullWidth,
+			height  : fullHeight,
+			tile_w  : tileWidth,
+			tile_h  : tileHeight,
+			mapScripts     : loadedScripts.mapScripts,
+			triggerScripts : loadedScripts.triggerScripts
 		};
 
 		if(this.DEBUG_MODE === true)
@@ -474,24 +549,15 @@ export class MEngine
 	}
 }
 
-
-//#FIX ME this doesn't work at all- should do it with Uint32 (or 8) arrays instead
-//ideally should be able to do it at runtime - though would need to think
-//how to interopt with other things being drawn
-function scale(image, mode)
+//template for map scripts also used as blank version if none supplied
+const templateScripts = 
 {
-	var scaler = new Shader({vertex:"shaders/"+mode+"vertex.glsl",fragment:"shaders/"+mode+"fragment.glsl"});
-
-	var output = new Surface(image.width*2, image.height*2, new Color(0,0,0,0));
-
-	var verts = new VertexList([
-		{x:0,            y:0,             u:0, v:1, Color:Color.White},
-		{x:output.width, y:0,             u:1, v:1, Color:Color.White},
-		{x:0,            y:output.height, u:0, v:0, Color:Color.White},
-		{x:output.width, y:output.height, u:1, v:0, Color:Color.White}]);
-	var shape = new Shape(ShapeType.TriStrip, image, verts);
-	var mod = new Model([shape],scaler);
-	mod.setIntArray("textureDimensions",[image.width, image.height]);
-	mod.draw(output);
-	return output.toTexture();
-}
+	onExit : function (runTime, map){},
+	onEnter : function (runTime, map){},
+	onUpdate : function (runTime, map){},
+	onRender : function (runTime, map){},
+	onLeaveEast : function (runTime, map, player){},
+	onLeaveWest : function (runTime, map, player){},
+	onLeaveNorth : function (runTime, map, player){},
+	onLeaveSouth : function (runTime, map, player){}
+};

@@ -378,7 +378,7 @@ export class SEngine
 	 * @param {number} [scale=1] 
 	 * @memberof SEngine
 	 */
-	update (offset = [0, 0], scale = 1)
+	update ()
 	{
 		if(this.useCEngine === true)
 		{
@@ -599,7 +599,7 @@ export class SEngine
 										{
 											if (entity.attached === true)
 											{
-												SSj.log(e);
+												SSj.log(e.toString());
 											}
 										}
 									}
@@ -741,8 +741,6 @@ export class SEngine
 				}
 			});
 		}
-		this.scale = scale;
-		this.offset = offset;
 	}
 
 
@@ -759,17 +757,16 @@ export class SEngine
 	 * @param {number} [layer=0] 
 	 * @memberof SEngine
 	 */
-	renderLayer(surface = Surface.Screen, layer = 0)
+	renderLayer(offset = [0, 0], zoom = 1, surface = Surface.Screen, layer = 0)
 	{
 		let thisLength = this._renders[layer].length;
 		let currentRender;
-		let offset = this.offset;
-		let sScale = this.scale;
 		let coords = [0, 0];
 		let transformed = this.transformed;
 		let renderQueue = this._renders[layer];
 		let sWidth = this.width;
 		let sHeight = this.height;
+		let zooomedOffset = [offset[0] / zoom, offset[1] / zoom];
 		if(transformed === true)
 		{
 			var transformation = this.transform;
@@ -780,11 +777,11 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / sScale) - offset[0] / sScale;
-				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1])) / sScale) - offset[1] / sScale;
+				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom) - zooomedOffset[0];
+				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1])) / zoom) - zooomedOffset[1];
 
-				let w_scale = (currentRender.scale[0] / sScale);
-				let h_scale = (currentRender.scale[1] / sScale);
+				let w_scale = (currentRender.scale[0] / zoom);
+				let h_scale = (currentRender.scale[1] / zoom);
 				if (coords[0] < sWidth &&
 					coords[1] < sHeight &&
 					(coords[0] + w_scale * currentRender._sprite.w) > 0 &&
@@ -807,8 +804,8 @@ export class SEngine
 					if(this.DEBUG_MODE === true)
 					{
 						currentRender.trans.identity();
-						currentRender.trans.scale(1 / sScale, 1 / sScale);
-						currentRender.trans.translate(currentRender._x / sScale - offset[0], currentRender._y / sScale - offset[1]);
+						currentRender.trans.scale(1 / zoom, 1 / zoom);
+						currentRender.trans.translate(currentRender._x / zoom - offset[0], currentRender._y / zoom - offset[1]);
 						if(transformed === true)
 						{
 							currentRender.trans.compose(transformation);

@@ -4,9 +4,10 @@ Copyright Richard Lawrence, please see MEngine.mjs for license details
 Usage:
 Each map must have a mapscript with the same name (except for the extension)
 
-Currently two types of map scripts are supported:
+Currently three types of map scripts are supported:
 1. Trigger scripts
 2. Person scripts
+3. Map scripts
 
 An object should be exported for each, see comments below that explain
 how to set up these objects*/
@@ -144,4 +145,60 @@ export const entityScripts =
 	}
 };
 
+/*Map scripts for this map, object must be named mapScripts
+Should have eight properties:
+	onExit()
+	onEnter()
+	onUpdate()
+	onRender()
+	onLeaveEast()
+	onLeaveWest()
+	onLeaveNorth()
+	onLeaveSouth()
 
+	The first 4 functions take 2 parameters:
+	1. runTime - runTime object supplied when instantiating MEngine
+	2. map - an object representing the map you're on
+
+	The remaining 4 functions take an extra parameter:
+	3. player - an Entity object from SEngine - the player controlled entity that has walked off of the map
+
+	*/
+
+
+export const mapScripts =
+{
+	onExit (runTime, map)
+	{
+		//called from the setMap method - when using it to change map whilst on this map
+	},
+	onEnter (runTime, map)
+	{
+		//called from the update method - when it is the first frame on this map 
+	},
+	onUpdate (runTime, map)
+	{
+		//called from the update method every frame on the map
+	},
+	onRender (runTime, map)
+	{
+		//called form the render method after the map and sprites are drawn every frame on this map
+	},
+	onLeaveEast (runTime, map, player)
+	{
+		//called when a player controlled entity walks off the edge of the map
+		//player is the entity object that walked off
+	},
+	onLeaveWest (runTime, map, player)
+	{
+		//see above
+	},
+	onLeaveNorth (runTime, map, player)
+	{
+		//see above
+	},
+	onLeaveSouth (runTime, map, player)
+	{
+		//see above
+	}
+};
