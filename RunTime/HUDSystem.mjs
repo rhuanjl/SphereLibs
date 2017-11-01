@@ -37,7 +37,7 @@
  * dealings in this Software without prior written authorization.
  */
 
-import {DrawingBuffer} from "$/PixelBuffer";
+import {DrawingBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
 

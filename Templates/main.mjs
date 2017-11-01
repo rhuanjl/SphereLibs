@@ -1,39 +1,17 @@
 //Example main module for use with MEngine.mjs and SEngine.mjs
 
-//Update paths here if needed $/ = main module folder
+//Update paths here if needed 
 
 //import the SpriteEngine
-import {SEngine, loadSES} from "$/SEngine";
+import {SEngine, loadSES} from "./SEngine";
 //import the MapEngine
-import{MEngine} from "$/MEngine";
+import{MEngine} from "./MEngine";
 //import the collision Engine
-import{CEngine} from "$/CEngine";
+import{CEngine} from "./CEngine";
 
-//import the HUDSystem
-import {HUDSystem, WindowStyle} from "$/HUDSystem";
+import{HUDSystem, WindowStyle} from "./HUDSystem";
+import{Talking} from "./talk";
 
-//import the example async talk function
-import {Talking} from "./talk";
-
-//import the example async menusystem
-import {MenuSystem} from "./MenuSystem";
-
-//Make a HUD
-let HUD = new HUDSystem(true);
-//Load an rws file with the HUDSystem
-let window = new WindowStyle("windows/InsertNameHere.rws");
-//make a talking object - give it the windowstyle and HUD object
-let talking = new Talking(HUD, window);
-
-//make a menu
-let menu = new MenuSystem(200, 20);
-//add vertical list keys to menu
-menu.addVListKeys();
-//add some text options to the menu
-menu.addTextOption("Fun times");
-menu.addTextOption("Boring times");
-menu.addTextOption("Weird times");
-menu.addTextOption("Just why?");
 
 //Sphere.frameRate = 60;//Map speed is controlled by sphere framerate defaults to 60, set something else if you want to go fasterslower
 
@@ -44,33 +22,42 @@ class MapSystem
 		this.collisionSystem = new CEngine();//initiate collisionSysyem
 		this.spriteSystem = new SEngine(runTime, this.collisionSystem, 50);//initiate SEngine
 		this.mapSystem = new MEngine(runTime, this.spriteSystem, this.collisionSystem);//initiate MEngine
+		this.HUD = new HUDSystem(true);//include a HUD in the MapSystem object - for drawing windows and text over the map
 		this.started = false;
 		this.paused = false;
 	}
 
 	createCharacter(name, spriteSet, x, y, layer)
 	{
-		return this.spriteSystem.addEntity(name, [loadSES(spriteSet)],true,x, y, [1,1], layer);
+		return this.spriteSystem.addEntity(name, loadSES(spriteSet), true, x, y, layer);
 	}
 
-	start(firstMap, mainCharacter)
+	attachInput(character)
 	{
-		//Make Q = close down
+		this.spriteSystem.addDefaultInput(character);
+	}
+
+	async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
+	{
+		//Make Q = close down - this is a quit exit feature for testing
 		this.spriteSystem.addInput(Key.Q, true, null, ()=>Sphere.shutDown());
-		//attach standard movement to the hero
-		this.spriteSystem.addDefaultInput(mainCharacter);
-		this.mainCharacter = mainCharacter;
-		this.mapSystem.setMap(firstMap).then(()=>
+		//attach standard movement to the camera object (mainCharacter is a good object to supply here)
+		this.camera = cameraObject;
+		if(!this.camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
 		{
-			this.updateToken = Dispatch.onUpdate(()=>this.update());
-			this.renderToken = Dispatch.onRender(()=>this.render());
-			this.started = true;
-		});
+			this.camera.zoom = 1;
+		}
+		await this.mapSystem.setMap(firstMap);
+		SSj.log("loaded the map");
+
+		this.updateToken = Dispatch.onUpdate(()=>this.update());
+		this.renderToken = Dispatch.onRender(()=>this.render());
+		this.started = true;
 	}
 
-	async changeMap(newMap)
+	changeMap(newMap)
 	{
-		await this.mapSystem.setMap(newMap);
+		return this.mapSystem.setMap(newMap);
 	}
 
 	pause()
@@ -101,74 +88,59 @@ class MapSystem
 
 	update()
 	{
-		this.mapSystem.update([this.mainCharacter.x, this.mainCharacter.y], 1);//update the map and center it on the hero - second parameter is zoom		
+		this.mapSystem.update([this.camera.x, this.camera.y], this.camera.zoom);//update the map and center it on the hero - second parameter is zoom
+		textAccess.text = "Hero speed is\n" + ourHero.speed;//update the HUD - see below for setup
 	}
 
 	render()
 	{
 		this.mapSystem.render();
 		//draw anything on top of the map (e.g. a HUD) here
+		this.HUD.draw();
 	}
 
 }
 
 
+//lets run the above - as modules have locale scope no need to make a function
 
 
-//first param = highest number of layers in all game maps, second param = always 1 (mode polygons or tiles but tile mode is broken)
-//initiate the sprite system, give it a runtime object (for a simple example - talking) and a collision system
-//3rd param = how big segments to use for tracking sprite collisions - leave at 50 unless you know what you're doing
+//1.Make a window style
+let window = new WindowStyle("windows/reddishfetish.rws");
 
-//initiate mapSystem, takes runTIme object (NOT USED AT THE MOMENT) and spriteSystem
+//2. make a HUD
+let HUD = new HUDSystem(true);
 
-//Debug mode = draw collisions at runtime it's very slow - must be on before you load a map if you want it
-//spriteSystem.DEBUG_MODE = true;
-//mapSystem.DEBUG_MODE = true;
-
-//add a window to the HUD
-HUD.addStatic(window.renderWindow(10, 10, 100, 40, true, new Color(0.8,1,1,0.7)));
-//add some text to the hud
-let textRef = HUD.addVariableText("Text in top corner\n" + "00:00:00",20, 15, 100);
-//get access to the text so you can change it
+//example HUD contents
+HUD.addStatic(window.renderWindow(10, 10, 130, 30, new Color(0.8,1,1,0.7)));
+let textRef = HUD.addVariableText("Hero speed is\n128",20, 15, 100);
 let textAccess = HUD.getDynamic(textRef);
 
+//2.Set up a talking object
+let talking = new Talking(HUD, window);
 
-//Make a person see SEngine for parameters
-let hero = 
+//3. instantiate the system
+let system = new MapSystem(talking);
 
+//4. hook the HUD object onto the system
+system.HUD = HUD;
 
+//5. Make a character
+let ourHero = system.createCharacter("Some Hero", "sprites/Theif01.ses", 250, 600, 1);
 
+//6. attach input to the character
+system.attachInput(ourHero);
 
-async function setup1()
-{
+//7. Give the character a zoom property so he can be used as the camera object for the map
+//note zoom is an optional feature, just update the update function above to always send 1 if you don't want it
+ourHero.zoom = 1;
+//Set up some other input keys for "fun"
+system.spriteSystem.addInput(Key.A, true, null, ()=>{ourHero.speed = ourHero.speed +5;});
+system.spriteSystem.addInput(Key.S, true, null, ()=>{ourHero.speed = ourHero.speed -5;});
+system.spriteSystem.addInput(Key.Z, true, null, ()=>{ourHero.zoom = ourHero.zoom +0.01;});
+system.spriteSystem.addInput(Key.X, true, null, ()=>{ourHero.zoom = ourHero.zoom -0.01;});
 
-
-	await mapSystem.setMap("maps/NameOfMapHere.mem");
-
-	//GO
-	Dispatch.onRender(rendering);
-	Dispatch.onUpdate(updating);
-
-	//run the menu (will show over map)
-	let choice = await menu.start();
-	//choice will be a number representing what was chosen
-	//do somethign with it here
-
-}
-
-
-function updating()
-{
-	mapSystem.update([hero.x, hero.y], 1);//update the map and center it on the hero - second parameter is zoom
-	textAccess.text = "Text in top corner\n" + "00:00:00"//change the text every frame if you want to
-}
+//8. Start the system
+system.start("maps/albrook.mem", ourHero);
 
 
-function rendering()
-{
-	mapSystem.render();//draw map
-	HUD.draw();//draw HUD
-}
-
-//call the setup function from above
-setup1();

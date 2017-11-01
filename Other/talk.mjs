@@ -13,7 +13,7 @@ that would work well with MEngine and SEngine.*/
 //May need to update path for this in any specific game
 //Note this is also dependent on HUDSystem.mjs
 //But takes a pre-created instance of the HUD as an input so doesn't need to import it
-import {Input} from "$/input";
+import {Input} from "./input";
 
 /*Wrap all the features as a class
 - enables initialisation that sets key properties

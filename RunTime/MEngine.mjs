@@ -29,7 +29,7 @@
  */
 
 
-import {MapBuffer, TileBuffer} from "$/PixelBuffer";
+import {MapBuffer, TileBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
 
@@ -95,9 +95,8 @@ export class MEngine
 	 */
 	update(centre=[0,0], zoom=1)
 	{
-		zoom = Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom);
+		zoom = Math.max(Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom), 0.01);
 		//#FIX ME this needs adjustment - to allow for repeating maps (other things do too :( - though mostly this + sprite coordinate code also Collision code)
-		//#FIX ME WHY ON EARTH does this have a 2.1 in it as a factor - this must be wrong (though it works...)
 		this.map.x = Math.min(Math.max(centre[0] - this.s_width * zoom  / 2, 0), this.map.width  - this.s_width * zoom);
 		this.map.y = Math.min(Math.max(centre[1] - this.s_height * zoom  / 2, 0), this.map.height - this.s_height * zoom);
 		this.map.zoom = zoom;

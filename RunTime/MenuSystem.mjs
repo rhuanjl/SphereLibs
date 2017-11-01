@@ -35,8 +35,8 @@
 2. Test menus with windows and other graphical features
 3. Add intuitive support for child menus*/
 
- //Dependencies you may need to update the paths
- //- HUDSystem for drawing the menu
+//Dependencies you may need to update the paths
+//HUDSystem for drawing the menu
 import {HUDSystem} from "./HUDSystem";
 //input system for input
 import {Input} from "./input";
