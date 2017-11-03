@@ -47,8 +47,15 @@ class MapSystem
 		{
 			this.camera.zoom = 1;
 		}
-		await this.mapSystem.setMap(firstMap);
-		SSj.log("loaded the map");
+		try
+		{
+			await this.mapSystem.setMap(firstMap);
+		}
+		catch(e)
+		{
+			Dispatch.now(()=>{throw e;});
+		}
+		
 
 		this.updateToken = Dispatch.onUpdate(()=>this.update());
 		this.renderToken = Dispatch.onRender(()=>this.render());

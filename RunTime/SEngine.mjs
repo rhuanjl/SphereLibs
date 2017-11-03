@@ -766,7 +766,7 @@ export class SEngine
 		let renderQueue = this._renders[layer];
 		let sWidth = this.width;
 		let sHeight = this.height;
-		let zooomedOffset = [offset[0] / zoom, offset[1] / zoom];
+		let zoomedOffset = [offset[0] / zoom, offset[1] / zoom];
 		if(transformed === true)
 		{
 			var transformation = this.transform;
@@ -777,8 +777,8 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom) - zooomedOffset[0];
-				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1])) / zoom) - zooomedOffset[1];
+				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom) - zoomedOffset[0];
+				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1])) / zoom) - zoomedOffset[1];
 
 				let w_scale = (currentRender.scale[0] / zoom);
 				let h_scale = (currentRender.scale[1] / zoom);

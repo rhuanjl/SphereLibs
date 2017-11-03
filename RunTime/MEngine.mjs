@@ -471,12 +471,21 @@ export class MEngine
 
 		this.shader.setFloatVector("tex_move", [0,0,1]);
 		this.shader.setInt("mask_mode",0);
+		this.shader.setFloatVector("unit_size", [1/fullWidth, 1/fullHeight]);
 
 		let startingName = inputFile.fileName;
 		let splitPoint = startingName.lastIndexOf("/")+1;
 		let identifier = startingName.slice(0,splitPoint) + "scripts/" + startingName.slice(splitPoint, startingName.length - 4) + ".mjs";
 		//bring in the scripts
-		let scripts = await import(identifier);
+		
+		try
+		{
+			var scripts = await import(identifier);
+		}
+		catch(e)
+		{
+			Dispatch.now(()=>{throw e;});
+		}
 		let loadedScripts = {};
 
 		if(scripts.triggerScripts === undefined)
