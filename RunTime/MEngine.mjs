@@ -226,18 +226,19 @@ export class MEngine
 			let coords = [0, 0];//this section is basically a copy and paste of the sprite drawing logic in SEngine
 			let offset = [this.map.x, this.map.y];
 			let zoom = this.map.zoom;
-			let scale = 1 / zoom;
 			let transformed = this.useTransformation;
-			let animWidth = this.map.tile_w * scale;
-			let animHeight = this.map.tile_h * scale;
+			let animWidth = Math.ceil(this.map.tile_w / zoom);
+			let scale = animWidth / this.map.tile_w;
+			let animHeight = Math.ceil(this.map.tile_h * scale);
+
 			let sWidth = surface.width;
 			let sHeight = surface.height;
 			
 			for(let i = 0; i < numAnims; ++ i)
 			{
 				let currentRender = thisLayer.animations[i].data;
-				coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) * scale);
-				coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) * scale);
+				coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) / zoom);
+				coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) / zoom);
 
 				if (coords[0] < sWidth &&//only draw the animated tiles that are visible
 					coords[1] < sHeight &&
