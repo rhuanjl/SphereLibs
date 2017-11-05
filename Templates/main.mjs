@@ -19,6 +19,7 @@ class MapSystem
 {
 	constructor(runTime)
 	{
+		this.runTime = runTime;
 		this.collisionSystem = new CEngine();//initiate collisionSysyem
 		this.spriteSystem = new SEngine(runTime, this.collisionSystem, 50);//initiate SEngine
 		this.mapSystem = new MEngine(runTime, this.spriteSystem, this.collisionSystem);//initiate MEngine
@@ -39,7 +40,7 @@ class MapSystem
 
 	async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
 	{
-		//Make Q = close down - this is a quit exit feature for testing
+		//Make Q = close down - this is a quick exit feature for testing
 		this.spriteSystem.addInput(Key.Q, true, null, ()=>Sphere.shutDown());
 		//attach standard movement to the camera object (mainCharacter is a good object to supply here)
 		this.camera = cameraObject;
@@ -49,13 +50,12 @@ class MapSystem
 		}
 		try
 		{
-			await this.mapSystem.setMap(firstMap);
+			await this.mapSystem.setMap(firstMap);//load the map
 		}
 		catch(e)
 		{
-			Dispatch.now(()=>{throw e;});
+			Dispatch.now(()=>{throw e;});//throw the error if there was one
 		}
-		
 
 		this.updateToken = Dispatch.onUpdate(()=>this.update());
 		this.renderToken = Dispatch.onRender(()=>this.render());

@@ -415,14 +415,11 @@ const triggerCollision = 2;
 
 
 //#ENHANCE ME - should this record above/below etc? if yes need to implement above
-class Collision
+function Collision(type, ref, scripts={})//ES5 style intentionally (performance issue)
 {
-	constructor(type, ref, scripts={})
-	{
-		this.type      = type;
-		this.ref       = ref;
-		this.scripts   = scripts;
-	}
+	this.type      = type;
+	this.ref       = ref;
+	this.scripts   = scripts;
 }
 
 

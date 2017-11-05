@@ -50,8 +50,6 @@ function writeMEM(data, fileName)
 	{
 		outputFile.writeString16(data.tiles[i].name, true);
 		outputFile.writeUint8(data.tiles[i].animated);
-		outputFile.writeUint16(data.tiles[i].nextTile, true);
-		outputFile.writeUint16(data.tiles[i].delay, true);
 		outputFile.writeUint16(data.tiles[i].obs.length, true);
 		for(;j < data.tiles[i].obs.length; ++j)
 		{
@@ -60,6 +58,19 @@ function writeMEM(data, fileName)
 			outputFile.writeUint16(data.tiles[i].obs[j].y, true);
 			outputFile.writeUint16(data.tiles[i].obs[j].w, true);
 			outputFile.writeUint16(data.tiles[i].obs[j].h, true);
+		}
+	}
+	let numAnims = data.animTiles.length;
+	outputFile.writeUint16(numAnims, true);
+	for(let i = 0; i < numAnims; ++i)
+	{
+		let currentLength = data.animTiles[i].length;
+		outputFile.writeUint16(currentLength, true);
+		for(let j = 0; j < currentLength; ++j)
+		{
+			outputFile.writeUint16(data.animTiles[i][j].index, true);
+			outputFile.writeUint16(data.animTiles[i][j].delay, true);
+			outputFile.writeUint16(data.animTiles[i][j].next, true);
 		}
 	}
 	outputFile.writeUint8(data.repeating);
@@ -101,11 +112,8 @@ function writeMEM(data, fileName)
 		for(j = 0; j < data.layers[i].triggers.length; ++j)
 		{
 			outputFile.writeString16(data.layers[i].triggers[j].name, true);
-			//outputFile.writeUint8(1, true);//fix me should do this in the load function
 			outputFile.writeUint16(Math.floor(data.layers[i].triggers[j].x / data.tileWidth), true);
 			outputFile.writeUint16(Math.floor(data.layers[i].triggers[j].y / data.tileHeight), true);
-			//outputFile.writeUint16(data.tileWidth, true);
-			//outputFile.writeUint16(data.tileHeight, true);
 		}
 	}
 	outputFile.writeUint16(data.entities.length, true);
@@ -276,7 +284,8 @@ function loadRMP(fileName)
 	let tileData = inputFile.read(numTiles * tileWidth * tileHeight * 4);
 
 	//load and process tile properties 4th key output
-	let tiles = new Array(numTiles);
+	let rawTiles = new Array(numTiles);
+	let animatedTiles = [];
 	for(let i = 0; i < numTiles; ++i)
 	{
 		inputFile.position = inputFile.position + 1;//skip 1 reserved byte
@@ -319,7 +328,11 @@ function loadRMP(fileName)
 				tileObs.push(new Polygon(1, x_, y_, w, h));
 			}
 		}
-		tiles[i] =
+		if(animated === 1)
+		{
+			animatedTiles.push(i);
+		}
+		rawTiles[i] =
 		{
 			name     : tileName,
 			animated : animated,
@@ -328,6 +341,44 @@ function loadRMP(fileName)
 			obs      : tileObs
 		};
 	}
+	let usedAnims = [];
+	let createdAnims = [];
+	
+	//build a set of animatedTile objects and an extra index array into them
+	for(let i = 0, totalAnims = animatedTiles.length, tempLength = 0, currentAnim = 0; i < totalAnims; ++i)
+	{
+		let position = 0;
+		let currentChain = [];
+		let currentFrame = animatedTiles[i];//set the first tile
+		let lastTile = 0;
+		//unroll the animation
+		while(fastIndex(usedAnims, tempLength, currentFrame) === tempLength)
+		{
+			let tileAccess = rawTiles[currentFrame];
+			if(!tileAccess || tileAccess.animated !== 1)
+			{
+				throw new Error("Animated tile number " + lastTile + " has non-animated tile as next tile - this is not permitted \n full chain is:" + JSON.stringify(currentChain));
+			}
+			currentChain[position] = 
+			{
+				index : currentFrame,
+				delay : tileAccess.delay,
+				next  : (position + 1)
+			};
+			usedAnims[tempLength] = currentFrame;
+			lastTile = currentFrame;
+			currentFrame = rawTiles[currentFrame].nextTile;
+			++ position;
+			++ tempLength;//indicate that we've increased the length of the used Anims array
+		}
+		if(position > 0)
+		{
+			currentChain[position - 1].next = 0;//put in the loop back to start
+			createdAnims[currentAnim] = currentChain;//store what we've made
+			++currentAnim;//move down to the next Anim
+		}
+	}
+
 
 	return {
 		width      : width,
@@ -339,9 +390,26 @@ function loadRMP(fileName)
 		tileWidth  : tileWidth,
 		tileHeight : tileHeight,
 		tileData   : tileData,
-		tiles      : tiles
+		tiles      : rawTiles,
+		animTiles  : createdAnims
 	};
 }
+
+//faster version of Array#indexOf
+//no real need for this optimisation
+//but I wanted it :P
+function fastIndex(inputArray, inputLength, value)
+{
+	for(let i = 0; i < inputLength; ++i)
+	{
+		if(inputArray[i] === value)
+		{
+			return i;
+		}
+	}
+	return inputLength;
+}
+
 
 class Polygon
 {

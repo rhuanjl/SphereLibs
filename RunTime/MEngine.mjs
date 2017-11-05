@@ -94,12 +94,19 @@ export class MEngine
 	 */
 	update(centre=[0,0], zoom = 1)
 	{
-		zoom = Math.max(Math.min(this.map.height / this.s_height, this.map.width / this.s_width, zoom), 0.01);
-		//#FIX ME this needs adjustment - to allow for repeating maps (other things do too :( - though mostly this + sprite coordinate code also Collision code)
-		this.map.x = Math.min(Math.max(centre[0] - this.s_width * zoom  / 2, 0), this.map.width  - this.s_width * zoom);
-		this.map.y = Math.min(Math.max(centre[1] - this.s_height * zoom  / 2, 0), this.map.height - this.s_height * zoom);
+		//update the offset coordinates
+		let surfaceHeight = this.s_height;
+		let surfaceWidth = this.s_width;
+		let width = this.map.width;
+		let height = this.map.height;
+		zoom = Math.max(Math.min(height / surfaceHeight, width / surfaceWidth, zoom), 0.01);
+		//#FIX ME this needs adjustment to allow for repeating maps, probably an if - to do something totally different
+		// (other things do too for repeating maps :( - though mostly this + sprite coordinate code also Collision code)
+		this.map.x = Math.floor(Math.min(Math.max(centre[0] - surfaceWidth * zoom  / 2, 0), width  - surfaceWidth * zoom));
+		this.map.y = Math.floor(Math.min(Math.max(centre[1] - surfaceHeight * zoom  / 2, 0), height - surfaceHeight * zoom));
 		this.map.zoom = zoom;
 		
+		//handle map Scripts
 		if(this.map.entered === false)
 		{
 			this.map.mapScripts.onEnter(this.runTime, this.map);
@@ -124,13 +131,33 @@ export class MEngine
 				
 			}
 		}
-		
 		this.map.mapScripts.onUpdate(this.runTime, this.map);
+
+		//update animated tiles
+		let layers = this.map.layers;
+		let numLayers = layers.length;
+		let tick = this.map.tick;
+		for(let i = 0, j = 0; i < numLayers; ++ i, j = 0)
+		{
+			let animations = layers[i].animations;
+			let numAnims = animations.length;
+			for(; j < numAnims; ++j)
+			{
+				let anim = animations[j].data;
+				if(anim.list[anim.current].delay < (tick - anim.last))
+				{
+					anim.current = anim.list[anim.current].next;
+					anim.needsUpdate = true;
+					anim.last = tick;
+				}
+			}
+		}
 
 		if(this.useSEngine === true)
 		{
 			this.SEngine.update();
 		}
+		++ this.map.tick;
 	}
 
 	/**
@@ -156,7 +183,7 @@ export class MEngine
 
 		//for(let i = 0; i < this.map.layers.length; ++i)
 		//{
-		this.shader.setFloatVector("tex_move", [this.map.x / this.map.width, 1 - this.map.y/this.map.height, this.map.zoom]);
+		this.shader.setFloatVector(tex_move, [this.map.x / this.map.width, 1 - this.map.y/this.map.height, this.map.zoom]);
 		//}
 		
 		++end_layer;
@@ -184,13 +211,56 @@ export class MEngine
 	renderLayer(surface=Surface.Screen, layer=0)
 	{
 		let thisLayer = this.map.layers[layer];
-		if(this.useTransformation)
+		if(this.useTransformation)//#FIX me is this funcationality usable?
 		{
 			thisLayer.transform2.identity();
 			thisLayer.transform2.compose(this.transformation);
 			thisLayer.transform2.compose(thisLayer.transform);
 		}
+		//draw the static component of the layer
 		thisLayer.model.draw(surface);
+		//draw any animated tiles that are in view
+		let numAnims = thisLayer.animations.length;
+		if(numAnims > 0)//don't get setup to draw animated tiles on this layer if there aren't any
+		{
+			let coords = [0, 0];//this section is basically a copy and paste of the sprite drawing logic in SEngine
+			let offset = [this.map.x, this.map.y];
+			let zoom = this.map.zoom;
+			let scale = 1 / zoom;
+			let transformed = this.useTransformation;
+			let animWidth = this.map.tile_w * scale;
+			let animHeight = this.map.tile_h * scale;
+			let sWidth = surface.width;
+			let sHeight = surface.height;
+			
+			for(let i = 0; i < numAnims; ++ i)
+			{
+				let currentRender = thisLayer.animations[i].data;
+				coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) * scale);
+				coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) * scale);
+
+				if (coords[0] < sWidth &&//only draw the animated tiles that are visible
+					coords[1] < sHeight &&
+					(coords[0] + animWidth) > 0 &&
+					(coords[1] + animHeight) > 0 )
+				{
+					if(currentRender.needsUpdate === true)
+					{
+						currentRender.model.shader.setFloatVector(tex_move, [currentRender.list[currentRender.current].offset, 0.0, 1.0]);//here be magic
+						currentRender.needsUpdate = false;
+					}
+					currentRender.model.transform.identity();
+					currentRender.model.transform.scale(scale, scale);
+					currentRender.model.transform.translate(coords[0], coords[1]);
+					if(transformed === true)
+					{
+						currentRender.model.transform.compose(this.transformation);
+					}
+					currentRender.model.draw(surface);
+				}
+			}
+		}
+		//draw the entities on the layer
 		if(this.useSEngine === true)
 		{
 			this.SEngine.renderLayer([this.map.x, this.map.y], this.map.zoom, surface, layer);
@@ -313,8 +383,6 @@ export class MEngine
 			tiles[i] = {
 				name     : inputFile.readString16(true),
 				animated : inputFile.readUint8(),
-				nextTile : inputFile.readUint16(true),
-				delay    : inputFile.readUint16(true),
 				obs      : new Array(inputFile.readUint16(true))
 			};
 			let tempBuffer = new DataView(inputFile.read(9 * tiles[i].obs.length));
@@ -328,6 +396,37 @@ export class MEngine
 					h    : tempBuffer.getUint16(9 * j + 7, true)
 				};
 			}
+		}
+		let numAnims = inputFile.readUint16(true);
+		let animations = new Array(numAnims);
+		for(let i = 0; i < numAnims; ++i)
+		{
+			let currentLength = inputFile.readUint16(true);
+			animations[i] = {
+				tiles: new Array(currentLength),
+				shape : null
+			}
+			let animBuffer = new MapBuffer(currentLength, 1, tileBuffer);
+			for(let j = 0; j < currentLength; ++j)
+			{
+				let index = inputFile.readUint16(true);
+				animations[i].tiles[j] = {
+					index  : index,
+					offset : j / currentLength,
+					delay  : inputFile.readUint16(true),
+					next   : inputFile.readUint16(true)
+				};
+				animBuffer.setTileInBuffer(index, j);
+			}
+			let finalForm = animBuffer.tileBufferToTexture();
+			let image = new Texture(finalForm.width, finalForm.height, finalForm.data);
+			animations[i].shape = new Shape(ShapeType.TriStrip, image, new VertexList([
+				{x : 0,         y : 0,          u : 0,                 v : 1, color : Color.White},
+				{x : tileWidth, y : 0,          u : 1 / currentLength, v : 1, color : Color.White},
+				{x : 0,         y : tileHeight, u : 0,                 v : 0, color : Color.White},
+				{x : tileWidth, y : tileHeight, u : 1 / currentLength, v : 0, color : Color.White}
+			]));
+
 		}
 		let repeating = inputFile.readUint8(); //#FIX ME implement repeating
 		let width = inputFile.readUint16(true);
@@ -344,9 +443,9 @@ export class MEngine
 			{x:screenWidth, y:0,            u:screenWidth/fullWidth, v:1,                             color:Color.White},
 			{x:0,           y:screenHeight, u:0,                     v:1 - (screenHeight/fullHeight), color:Color.White},
 			{x:screenWidth, y:screenHeight, u:screenWidth/fullWidth, v:1 - (screenHeight/fullHeight), color:Color.White}]);
-		//var obs_shapes = [];
-		var debugColour = new Color(0.9, 0.6, 0);
-		for(let i = 0, j = 0, k = 0, l = 0; i < numLayers; ++i, j = 0, k = 0, l = 0)
+		let debugColour = new Color(0.9, 0.6, 0);
+		let inUseAnimations = [];
+		for(let i = 0, j = 0, k = 0, l = 0, tileIndex = 0; i < numLayers; ++i, j = 0, k = 0, l = 0)
 		{
 			layers[i] = {
 				x          : 0,
@@ -364,6 +463,7 @@ export class MEngine
 				triggers   : new Array(inputFile.readUint16(true)),
 				tileMap    : new Array(width),
 				transform  : new Transform(),
+				animations : [],
 				transform2 : null,
 				shape      : null,
 				model      : null
@@ -379,8 +479,16 @@ export class MEngine
 
 				for(; k < width; ++k, ++l)
 				{
-					layers[i].tileMap[j][k] = tempBuffer.getInt16(l*2, true);
-					mapBuffer.setTileInBuffer(layers[i].tileMap[j][k], l);
+					tileIndex = tempBuffer.getInt16(l*2, true);
+					layers[i].tileMap[j][k] = tileIndex;
+					if(tiles[tileIndex].animated !== 1)
+					{
+						mapBuffer.setTileInBuffer(layers[i].tileMap[j][k], l);
+					}
+					else
+					{
+						layers[i].animations.push(MapAnimation(animations, k * tileWidth, j * tileHeight, tileIndex, this.shader, inUseAnimations));
+					}
 				}
 			}
 			if(this.DEBUG_MODE === true)
@@ -416,11 +524,11 @@ export class MEngine
 			for(j = 0; j < layers[i].segments.length; ++j)
 			{
 				layers[i].segments[j] = {
-					type : tempBuffer.getUint8(9 * j),//inputFile.readUint8(),
-					x : tempBuffer.getUint16(9 * j + 1,true),//inputFile.readUint16(true),
-					y : tempBuffer.getUint16(9 * j + 3,true),//inputFile.readUint16(true),
-					w : tempBuffer.getUint16(9 * j + 5,true),//inputFile.readUint16(true),
-					h : tempBuffer.getUint16(9 * j + 7,true),//inputFile.readUint16(true)
+					type : tempBuffer.getUint8(9 * j),
+					x : tempBuffer.getUint16(9 * j + 1,true),
+					y : tempBuffer.getUint16(9 * j + 3,true),
+					w : tempBuffer.getUint16(9 * j + 5,true),
+					h : tempBuffer.getUint16(9 * j + 7,true),
 				};
 			}
 			for(j = 0; j < layers[i].zones.length; ++j)
@@ -469,7 +577,7 @@ export class MEngine
 			};
 		}
 
-		this.shader.setFloatVector("tex_move", [0,0,1]);
+		this.shader.setFloatVector(tex_move, [0,0,1]);
 		this.shader.setInt("mask_mode",0);
 		this.shader.setFloatVector("unit_size", [1/fullWidth, 1/fullHeight]);
 
@@ -526,6 +634,7 @@ export class MEngine
 		{
 			layers  : layers,
 			tiles   : tiles,
+			tick    : 0,
 			x       : 0,
 			y       : 0,
 			z       : 1,
@@ -558,6 +667,74 @@ export class MEngine
 	}
 }
 
+//set up a map animation
+function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
+{
+	let allAnims = animationsArray.length;
+	let animLength = 0;
+	let anim = null;
+	let found = false, done = false;
+	if(allAnims === 0)
+	{
+		MEngine.error("Attempt to create a map animation when no animation data exists");
+	}
+	let i = 0, j = 0, k = 0;
+	//I could avoid these loops by storing 4 bytes of extra information per tile in the map file
+	//and then adding 2 extra Ints to each tile object - considering this is only a hit on loading a map
+	//and probably quite a small one I thought better to have the loops
+	for(; i < allAnims && found === false; ++i)
+	{
+		anim = animationsArray[i];
+		animLength = anim.tiles.length;
+		for(j = 0; j < animLength && found === false; ++j)
+		{
+			if(anim.tiles[j].index === firstTile)
+			{
+				found = true;
+			}
+		}
+	}
+	--i;
+	--j;
+	if(found === false)
+	{
+		MEngine.error("attempt to create a map animation with a tile which has no animation data");
+	}
+	while (k < inUseAnimations.length && done === false)
+	{
+		if(inUseAnimations[k].ref === i && inUseAnimations[k].start === j)
+		{
+			done = true;
+		}
+		else
+		{
+			++ k;
+		}
+	}
+	if(done === false)
+	{
+		let model = new Model([anim.shape], shader.clone());
+		model.transform = new Transform();
+		inUseAnimations.push({
+			ref: i,
+			start : j,
+			data : {
+				model       : model,
+				list        : anim.tiles,
+				current     : j,
+				needsUpdate : true,
+				last        : 0
+			}
+		});
+	}
+	return {
+		data: inUseAnimations[k].data,
+		x: x,
+		y: y
+	}
+}
+
+
 //template for map scripts also used as blank version if none supplied
 const templateScripts = 
 {
@@ -570,3 +747,7 @@ const templateScripts =
 	onLeaveNorth : function (runTime, map, player){},
 	onLeaveSouth : function (runTime, map, player){}
 };
+
+//we use this string in a loop it's potentially needed many times a frame
+//so make a constant out of it to remove the risk of it re-created
+const tex_move = "tex_move";

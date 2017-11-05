@@ -777,8 +777,8 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom) - zoomedOffset[0];
-				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1])) / zoom) - zoomedOffset[1];
+				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom - zoomedOffset[0]);
+				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) / zoom) - zoomedOffset[1]);
 
 				let w_scale = (currentRender.scale[0] / zoom);
 				let h_scale = (currentRender.scale[1] / zoom);
@@ -790,7 +790,7 @@ export class SEngine
 					//Future idea: should have a method for z coordinates
 					if(currentRender.needsUpdate === true)
 					{
-						currentRender.model.shader.setFloatVector("tex_move", currentRender._sprite.frames[currentRender.dir][currentRender.frame]);//here be magic
+						currentRender.model.shader.setFloatVector(tex_move, currentRender._sprite.frames[currentRender.dir][currentRender.frame]);//here be magic
 						currentRender.needsUpdate = false;
 					}
 					currentRender.trans.identity();
@@ -1127,7 +1127,7 @@ class Entity
 		this.trans   = new Transform();
 		this.model   = new Model([sprite.shape], shader.clone());
 		this.model.transform = this.trans;
-		this.model.shader.setFloatVector("tex_move", [0,0,1]);
+		this.model.shader.setFloatVector(tex_move, [0,0,1]);
 		this.model.shader.setInt("mask_mode",0);
 
 		if(DEBUG_MODE)
@@ -1676,7 +1676,7 @@ class Entity
 	 * @memberof Entity
 	 */
 	queueMove (dir, units = 1, type = 0, script)
-	{//TEST ME - OTT optimisation because why not
+	{//OTT optimisation because why not
 		if(this.insert === this.queue.length)
 		{
 			if(this.end > 0)
@@ -1691,7 +1691,7 @@ class Entity
 				this.end = 0;
 			}
 		}
-		
+		//#OPTIMISE ME - the below code needs a look over - should always make objects with the same prototype
 		if(type === spriteLAYER || type === spriteX || type === spriteY)
 		{
 			this.queue[this.insert] =
@@ -1879,3 +1879,7 @@ class Direction
 		}
 	}
 }
+
+//we use this string in a loop it's potentially needed many times a frame
+//so make a constant out of it to remove the risk of it re-created
+const tex_move = "tex_move";
