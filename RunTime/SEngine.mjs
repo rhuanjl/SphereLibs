@@ -743,7 +743,6 @@ export class SEngine
 		}
 	}
 
-
 	/**
 	 * Draw one layer of entities
 	 * Self explanatory
@@ -1162,8 +1161,6 @@ class Entity
 			this.obs_model.transform = this.trans;
 		}
 
-
-
 		//coordinates
 		this.tile_x = ((x - sprite.o[0]) / tSize)|0;
 		this.tile_y = ((y - sprite.o[1]) / tSize)|0;
@@ -1212,7 +1209,7 @@ class Entity
 		this.frame = 0;
 		this.ticks = 0;
 		this.dir = 0;
-		this.queue = new Array({},{},{},{});//movement queue
+		this.queue = [];//movement queue
 		this.end = 0;
 		this.insert = 0;
 
@@ -1347,10 +1344,6 @@ class Entity
 	{
 		return this._speed;
 	}
-
-
-	//#FINISH ME need mechanism for sprite swaps
-	//#REFACTOR ME should we bin the sprite array?
 
 	/**
 	 * faceEntity(entity, immediate = true)
@@ -1676,10 +1669,10 @@ class Entity
 	 * @memberof Entity
 	 */
 	queueMove (dir, units = 1, type = 0, script)
-	{//OTT optimisation because why not
+	{
 		if(this.insert === this.queue.length)
 		{
-			if(this.end > 0)
+			if(this.end > 4)
 			{
 				let size = this.insert - this.end;
 				let queue = this.queue;
@@ -1691,7 +1684,8 @@ class Entity
 				this.end = 0;
 			}
 		}
-		//#OPTIMISE ME - the below code needs a look over - should always make objects with the same prototype
+		//#future note - when adding anything ensure all the inline objects here have the same format
+		//this has a performance impact
 		if(type === spriteLAYER || type === spriteX || type === spriteY)
 		{
 			this.queue[this.insert] =
@@ -1699,7 +1693,8 @@ class Entity
 				type      : type,
 				direction : dir,
 				ticks     : 1,
-				pos       : units
+				pos       : units,
+				script    : ""
 			};
 		}
 		else if(type === spriteSCRIPT)
@@ -1709,6 +1704,7 @@ class Entity
 				type       : spriteSCRIPT,
 				direction  : dir,
 				ticks      : units,
+				pos        : 0,
 				script     : script,
 			};
 		}
@@ -1719,7 +1715,8 @@ class Entity
 				type      : type,
 				direction : dir,
 				ticks     : units,
-				pos       : 0
+				pos       : 0,
+				script    : ""
 			};
 		}
 		++this.insert;
@@ -1881,5 +1878,5 @@ class Direction
 }
 
 //we use this string in a loop it's potentially needed many times a frame
-//so make a constant out of it to remove the risk of it re-created
+//so make a constant out of it to remove the risk of it being re-created
 const tex_move = "tex_move";

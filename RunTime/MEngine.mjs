@@ -749,5 +749,5 @@ const templateScripts =
 };
 
 //we use this string in a loop it's potentially needed many times a frame
-//so make a constant out of it to remove the risk of it re-created
+//so make a constant out of it to remove the risk of it being re-created
 const tex_move = "tex_move";
