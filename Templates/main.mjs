@@ -1,4 +1,5 @@
 //Example main module for use with MEngine.mjs and SEngine.mjs
+//note for a simpler example using the wrapper map-engine.mjs see simpleExample.mjs
 
 //Update paths here if needed 
 

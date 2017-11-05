@@ -205,6 +205,10 @@ export class SEngine
 	getEntity(id)
 	{
 		for(var i = 0; i < this.entities.length && this.entities[i].id !== id; ++i);
+		if(i === this.entities.length)
+		{
+			SEngine.error("Attempt to get entity " + id + " but no such entity exists");
+		}
 		return this.entities[i];
 	}
 
@@ -264,7 +268,7 @@ export class SEngine
 	 * @returns 
 	 * @memberof SEngine
 	 */
-	idle ()
+	get idle ()
 	{
 		return (this.waiting === this.entities.length);
 	}

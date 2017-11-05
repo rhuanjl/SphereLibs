@@ -1,0 +1,346 @@
+/* File: map-engine.mjs
+ * Author: Rhuan
+ * Date: 05/11/2017
+ * 2D Map Engine for miniSphere game engine
+ * Usage: FIX ME - WRITE USAGE HERE OR EXTERNAL GUIDE DOC
+ * License for map-engine.mjs, MEngine.mjs, SEngine.mjs and CEngine.mjs and related files
+ * Copyright (c) 2017 Richard Lawrence (Rhuan)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above copyright holders
+ * shall not be used in advertising or otherwise to promote the sale, use or other
+ * dealings in this Software without prior written authorization.
+ */
+
+//Import the components of the map-engine
+import {MEngine} from "./MEngine.mjs";//core map-engine
+import {SEngine, loadSES} from "./SEngine.mjs";//Sprite/Entity handling and function for loading a sprite
+import {CEngine} from "./CEngine.mjs";//collision handling
+
+//Note there are additional dependencies imported through tha above files:
+//The following two modules must be in the same folder as these modules
+//PixelBuffer.mjs - is used by MEngine and SEngine for manipulating and loading sprite/map graphics
+//input.mjs is used by SEngine for handling input checks
+//The following miniSphere system modules are used - these come with miniSphere and should already be in place
+//data-stream.mjs - used for file loading
+//focus-target.mjs - used for input priority handling - allows you to have the map running in the background
+//                      whilst a different system takes input and the map doesn't
+
+//the map-engine class, default so a user can call it anything they like when importing
+export default class
+{
+	constructor(runTime)
+	{
+		this.runTime = runTime;
+		this.CEngine = new CEngine();
+		this.SEngine = new SEngine(runTime, this.CEngine, 50);//initiate SEngine
+		this.MEngine = new MEngine(runTime, this.SEngine, this.CEngine);//initiate MEngine
+		this.started = false;
+		this.paused = false;
+		this.hidden = false;
+		this.update = null;
+		this.render = null;
+		this.camera = null;
+	}
+
+	/**
+	 * createCharacter(name, spriteSet, x=0, y=0, layer=0)
+	 * Create an entity and add them to the map
+	 * Returns the entity object
+	 * @param {string} name //name of the entity
+	 * @param {string} spriteSet  //name of the spriteset file to use 
+	 * @param {number} [x=0] 
+	 * @param {number} [y=0] 
+	 * @param {number} [layer=0] 
+	 * @returns 
+	 */
+	createCharacter(name, spriteSet, x=0, y=0, layer=0)
+	{
+		return this.SEngine.addEntity(name, loadSES(spriteSet), true, x, y, layer);
+	}
+
+	/**
+	 * attachInput(character)
+	 * Add default input (4 directional arrows + talk key) to provided character
+	 * the parameter should be the character object, not their name
+	 * 
+	 * @param {object} character 
+	 */
+	attachInput(character)
+	{
+		this.SEngine.addDefaultInput(character);
+	}
+
+	/**
+	 * addInput(key, continuous=false, parameter=null, script="")
+	 * Add another input of some kind to be monitored whilst the map is runnign
+	 * 
+	 * @param {any} key //the key to check for
+	 * @param {boolean} [continuous=false] //can it trigger continuously OR only once per press (i.e. down + up)
+	 * @param {any} [parameter=null] //parameter to pass to the function called when the key is passed (can be an object e.g. a character)
+	 * @param {string} [script=""] //function to call when key is pressed - it will be passed the parameter as a parameter
+	 * @returns 
+	 */
+	addInput(key, script="", continuous=false, parameter=null)
+	{
+		return this.SEngine.addInput(key, continuous, parameter, script);
+	}
+
+
+	/**
+	 * getEntity(id)
+	 * Return the entity object that has the given name
+	 * Throws an error if there is no entity with that name
+	 * 
+	 * @param {string} name 
+	 * @returns 
+	 */
+	getEntity(name)
+	{
+		return this.SEngine.getEntity(name);
+	}
+
+	/**
+	 * Readonly property, boolean true if all entities on the map have empty movement queues
+	 * false if any entity is doing anything
+	 * 
+	 * @readonly
+	 */
+	get idle()
+	{
+		return this.SEngine.idle;
+	}
+
+
+	/**
+	 * start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
+	 * Start the map engine - note this is an async function
+	 * Note: to centre the map on a character supply that character's object as the second parameter
+	 * 
+	 * @param {string} firstMap //name of mapFile to use as first map ".mem" format
+	 * @param {any} [cameraObject={x: 0, y: 0, zoom: 1}] //object with x and y (and optionally zoom properties) where to focus the camera on the map
+	 */
+	async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
+	{
+		this.camera = cameraObject;
+		if(!this.camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+		{
+			this.camera.zoom = 1;
+		}
+		await this.MEngine.setMap(firstMap).catch((e)=>
+		{
+			Dispatch.now(()=>{throw e;});
+		});
+
+		this.update = Dispatch.onUpdate(()=>
+		{
+			this.MEngine.update([this.camera.x, this.camera.y], this.camera.zoom);
+		});
+		this.render = Dispatch.onRender(()=>this.MEngine.render());
+		this.started = true;
+	}
+
+	/**
+	 * changeMap(newMap)
+	 * Change map - note this is an async function
+	 * 
+	 * @param {string} newMap //name of mapFile to change to ".mem" format
+	 */
+	async changeMap(newMap)
+	{
+		if(this.started === true)
+		{
+			await this.MEngine.setMap(newMap).catch((e)=>
+			{
+				Dispatch.now(()=>{throw e;});
+			});
+		}
+		else
+		{
+			throw new Error("Attempt to change map when the map-engine when it is not running.");
+		}
+	}
+
+	/**
+	 * changeCamera(cameraObject)
+	 * Supply a new camera object
+	 * 
+	 * @param {any} cameraObject 
+	 */
+	changeCamera(cameraObject)
+	{
+		if(this.started === true)
+		{
+			this.camera = cameraObject;
+			if(!this.camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+			{
+				this.camera.zoom = 1;
+			}
+		}
+		else
+		{
+			throw new Error("Attempt to change camera when the map-engine when it is not running.");
+		}
+	}
+
+	/**
+	 * pause()
+	 * Pause the map engine - only if it's running and not paused
+	 * 
+	 */
+	pause()
+	{
+		if(this.started === true && this.paused === false)
+		{
+			this.update.cancel();
+			this.paused = true;
+		}
+		else
+		{
+			throw new Error("Attempt to pause the map-engine when it is not running.");
+		}
+	}
+
+	/**
+	 * resume()
+	 * Resume the map engine - ONLY if it's paused
+	 */
+	resume()
+	{
+		if(this.started === true && this.paused === true)
+		{
+			this.update = Dispatch.onUpdate(()=>
+			{
+				this.MEngine.update([this.camera.x, this.camera.y], this.camera.zoom);
+			});
+			this.paused = false;
+		}
+		else
+		{
+			throw new Error("Attempt to resume the map-engine when it is not running or is not paused.");
+		}
+	}
+
+	/**
+	 * hide()
+	 * hide the map-engine (stop drawing it) - only if it's runnign and not already hidden
+	 * Note this doesn't stop updating
+	 */
+	hide()
+	{
+		if(this.started === true && this.hidden === false)
+		{
+			this.render.cancel();
+			this.hidden = true;
+		}
+		else
+		{
+			throw new Error("Attempt to hide the map-engine when it is not running.");
+		}
+	}
+
+	/**
+	 * show()
+	 * start drawing the map-engine again - only after it's hidden with hide()
+	 */
+	show()
+	{
+		if(this.started === true && this.hidden === false)
+		{
+			this.render = Dispatch.onRender(()=>this.MEngine.render());
+			this.hidden = false;
+		}
+		else
+		{
+			throw new Error("Attempt to show the map-engine when it is not running or is not hidden.");
+		}
+	}
+
+	/**
+	 * hideLayer(number=0)
+	 * Stop drawing a specific layer of the map
+	 * Can only call this when the map-engine is running
+	 * 
+	 * @param {number} [number=0] 
+	 */
+	hideLayer(number=0)
+	{
+		if(this.started === true)
+		{
+			this.MEngine.map.layers[number].visible = false;
+		}
+		else
+		{
+			throw new Error("Attempt to hide a layer in the map when the map-engine is not running.");
+		}
+	}
+
+	/**
+	 * showLayer(number=0)
+	 * Start drawing a specific layer of the map
+	 * Can only call this when the map-engine is running
+	 * Note - if the map has not first been hidden with hideLayer this is a no-op
+	 * 
+	 * @param {number} [number=0] 
+	 */
+	showLayer(number=0)
+	{
+		if(this.started === true)
+		{
+			this.MEngine.map.layers[number].visible = true;
+		}
+		else
+		{
+			throw new Error("Attempt to show a layer in the map when the map-engine is not running.");
+		}
+	}
+
+	/**
+	 *stop() 
+	 * Stop the map-engine
+	 * Note after using this you would need to start() again
+	 * Note this method isn't entirely finished - it disposes of the map but not the entities
+	 * This means if you follow it with start() you will keep any entities created with createCharacter
+	 * (though it will correctly dispose of map specific entities)
+	 * 
+	 */
+	stop()
+	{
+		if(this.started === true)
+		{
+			if(this.paused === false)
+			{
+				this.update.cancel();
+			}
+			if(this.hidden === false)
+			{
+				this.render.cancel();
+			}
+			this.MEngine.map = null;//let the map get GC'd
+			//#FIX ME enable GC'ing SEngine data here to
+		}
+		else
+		{
+			throw new Error("Attempt to stop the map-engine when it is not running.");
+		}
+	}
+}
+
+
+

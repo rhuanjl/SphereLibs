@@ -134,6 +134,7 @@ export class MEngine
 		this.map.mapScripts.onUpdate(this.runTime, this.map);
 
 		//update animated tiles
+		//#OptimiseMe this method loops over more than needed and does more checks than needed
 		let layers = this.map.layers;
 		let numLayers = layers.length;
 		let tick = this.map.tick;
@@ -211,60 +212,64 @@ export class MEngine
 	renderLayer(surface=Surface.Screen, layer=0)
 	{
 		let thisLayer = this.map.layers[layer];
-		if(this.useTransformation)//#FIX me is this funcationality usable?
+		if(thisLayer.visible === true)
 		{
-			thisLayer.transform2.identity();
-			thisLayer.transform2.compose(this.transformation);
-			thisLayer.transform2.compose(thisLayer.transform);
-		}
-		//draw the static component of the layer
-		thisLayer.model.draw(surface);
-		//draw any animated tiles that are in view
-		let numAnims = thisLayer.animations.length;
-		if(numAnims > 0)//don't get setup to draw animated tiles on this layer if there aren't any
-		{
-			let coords = [0, 0];//this section is basically a copy and paste of the sprite drawing logic in SEngine
-			let offset = [this.map.x, this.map.y];
-			let zoom = this.map.zoom;
-			let transformed = this.useTransformation;
-			let animWidth = Math.ceil(this.map.tile_w / zoom);
-			let scale = animWidth / this.map.tile_w;
-			let animHeight = Math.ceil(this.map.tile_h * scale);
-
-			let sWidth = surface.width;
-			let sHeight = surface.height;
-			
-			for(let i = 0; i < numAnims; ++ i)
+			if(this.useTransformation)//#FIX me is this funcationality usable?
 			{
-				let currentRender = thisLayer.animations[i].data;
-				coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) / zoom);
-				coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) / zoom);
+				thisLayer.transform2.identity();
+				thisLayer.transform2.compose(this.transformation);
+				thisLayer.transform2.compose(thisLayer.transform);
+			}
+			//draw the static component of the layer
+			thisLayer.model.draw(surface);
+			//draw any animated tiles that are in view
+			let numAnims = thisLayer.animations.length;
+			if(numAnims > 0)//don't get setup to draw animated tiles on this layer if there aren't any
+			{
+				let coords = [0, 0];//this section is basically a copy and paste of the sprite drawing logic in SEngine
+				let offset = [this.map.x, this.map.y];
+				let zoom = this.map.zoom;
+				let transformed = this.useTransformation;
+				let animWidth = Math.ceil(this.map.tile_w / zoom);
+				let scaleW = animWidth / this.map.tile_w;//avoid 1 pixel gaps around tiles at odd scales
+				let animHeight = Math.ceil(this.map.tile_h / zoom);
+				let scaleH = animHeight / this.map.tile_h;//seperate for width and height in case tiles aren't squares
 
-				if (coords[0] < sWidth &&//only draw the animated tiles that are visible
-					coords[1] < sHeight &&
-					(coords[0] + animWidth) > 0 &&
-					(coords[1] + animHeight) > 0 )
+				let sWidth = surface.width;
+				let sHeight = surface.height;
+				
+				for(let i = 0; i < numAnims; ++ i)
 				{
-					if(currentRender.needsUpdate === true)
+					let currentRender = thisLayer.animations[i].data;
+					coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) / zoom);
+					coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) / zoom);
+
+					if (coords[0] < sWidth &&//only draw the animated tiles that are visible
+						coords[1] < sHeight &&
+						(coords[0] + animWidth) > 0 &&
+						(coords[1] + animHeight) > 0 )
 					{
-						currentRender.model.shader.setFloatVector(tex_move, [currentRender.list[currentRender.current].offset, 0.0, 1.0]);//here be magic
-						currentRender.needsUpdate = false;
+						if(currentRender.needsUpdate === true)//update which tile is shown for the animation (but only update if necesary)
+						{//note tiles following the same animation chain and starting in the sample palce share the same data - so this is only called once for them all
+							currentRender.model.shader.setFloatVector(tex_move, [currentRender.list[currentRender.current].offset, 0.0, 1.0]);//OPTIMISE ME - make a new shader for this - only needs 1 number not a vector
+							currentRender.needsUpdate = false;
+						}
+						currentRender.model.transform.identity();
+						currentRender.model.transform.scale(scaleW, scaleH);
+						currentRender.model.transform.translate(coords[0], coords[1]);
+						if(transformed === true)
+						{
+							currentRender.model.transform.compose(this.transformation);
+						}
+						currentRender.model.draw(surface);
 					}
-					currentRender.model.transform.identity();
-					currentRender.model.transform.scale(scale, scale);
-					currentRender.model.transform.translate(coords[0], coords[1]);
-					if(transformed === true)
-					{
-						currentRender.model.transform.compose(this.transformation);
-					}
-					currentRender.model.draw(surface);
 				}
 			}
-		}
-		//draw the entities on the layer
-		if(this.useSEngine === true)
-		{
-			this.SEngine.renderLayer([this.map.x, this.map.y], this.map.zoom, surface, layer);
+			//draw the entities on the layer
+			if(this.useSEngine === true)
+			{
+				this.SEngine.renderLayer([this.map.x, this.map.y], this.map.zoom, surface, layer);
+			}
 		}
 	}
 
@@ -463,6 +468,7 @@ export class MEngine
 				zones      : new Array(inputFile.readUint16(true)),
 				triggers   : new Array(inputFile.readUint16(true)),
 				tileMap    : new Array(width),
+				visible    : true,
 				transform  : new Transform(),
 				animations : [],
 				transform2 : null,
@@ -612,7 +618,7 @@ export class MEngine
 		}
 		else
 		{
-			loadedScripts.mapScripts = cripts.mapScripts;
+			loadedScripts.mapScripts = scripts.mapScripts;
 		}
 
 

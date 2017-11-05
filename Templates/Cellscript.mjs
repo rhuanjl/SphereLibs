@@ -1,4 +1,4 @@
-/*Example cellscript for use with MEngine.mjs and CEngine.mjs
+/*Example cellscript for use with MEngine.mjs, SEngine.mjs and CEngine.mjs
 Copyright Richard Lawrence - see MEngine.mjs for full license information*/
 
 
@@ -17,7 +17,7 @@ Object.assign(Sphere.Game, {
 let rssTool = new Tool(convertRSS, "converting RSS");
 let rmpTool = new Tool(convertRMP, "converting RMP");
 
-
+//simple function to run the above tools on collections of files
 function runTool(dirName, sources, tool, extension)
 {
 	let targets = [];
