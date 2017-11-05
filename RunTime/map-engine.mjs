@@ -43,9 +43,16 @@ import {CEngine} from "./CEngine.mjs";//collision handling
 //                      whilst a different system takes input and the map doesn't
 
 //the map-engine class, default so a user can call it anything they like when importing
-export default class
+export default class MapEngine
 {
-	constructor(runTime)
+	/**
+	 * Creates an instance of MapEngine.
+	 * The runtime object is a pseduo-global object it will be provided as a parameter to all map and sprite scripts
+	 * Use it to hand around functions/properties you need access to in mulitple map/sprite scripts
+	 * @param {any} [runTime={}] 
+	 * @memberof MapEngine
+	 */
+	constructor(runTime={})
 	{
 		this.runTime = runTime;
 		this.CEngine = new CEngine();
