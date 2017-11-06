@@ -11,7 +11,8 @@ Object.assign(Sphere.Game, {
 	summary: "Describe game here",
 	resolution: "640x480",//set this
 	saveID: "testing",//set this
-	main: "@/bin/main.mjs"//set this
+	main: "@/bin/main.mjs",//set this
+	fullScreen: true
 });
 
 let rssTool = new Tool(convertRSS, "converting RSS");

@@ -769,7 +769,7 @@ export class SEngine
 		let renderQueue = this._renders[layer];
 		let sWidth = this.width;
 		let sHeight = this.height;
-		let uZoom = Math.trunc(256 / zoom);
+		let uZoom = Math.floor(1024 / zoom);
 		if(transformed === true)
 		{
 			var transformation = this.transform;
@@ -780,16 +780,14 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				//coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) / zoom);
-				//coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) / zoom);
-				coords[0] = ((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) * uZoom) >> 8;
-				coords[1] = ((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) * uZoom) >> 8;
+				coords[0] = ((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) * uZoom) >> 10;
+				coords[1] = ((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) * uZoom) >> 10;
 				let w_scale = (currentRender.scale[0] / zoom);
 				let h_scale = (currentRender.scale[1] / zoom);
 				if (coords[0] < sWidth &&
 					coords[1] < sHeight &&
-					(coords[0] + w_scale * currentRender._sprite.w) > 0 &&
-					(coords[1] + h_scale * currentRender._sprite.h) > 0 )
+					(coords[0] + Math.ceil(w_scale * currentRender._sprite.w)) > 0 &&
+					(coords[1] + Math.ceil(h_scale * currentRender._sprite.h)) > 0 )
 				{
 					//Future idea: should have a method for z coordinates
 					if(currentRender.needsUpdate === true)

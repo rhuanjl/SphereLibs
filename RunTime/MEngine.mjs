@@ -228,7 +228,7 @@ export class MEngine
 				let scaleW = animWidth / this.map.tile_w;//avoid 1 pixel gaps around tiles at odd scales
 				let animHeight = Math.ceil(this.map.tile_h / zoom);
 				let scaleH = animHeight / this.map.tile_h;//seperate for width and height in case tiles aren't squares
-				let uZoom = Math.trunc(1024 / zoom);
+				let uZoom = Math.floor(1024 / zoom);
 
 				let sWidth = surface.width |0;
 				let sHeight = surface.height |0;
@@ -254,7 +254,7 @@ export class MEngine
 						currentRender.trans.translate(coords[0], coords[1]);
 						if(transformed === true)
 						{
-							currentRender.model.trans.compose(this.transformation);
+							currentRender.trans.compose(this.transformation);
 						}
 						currentRender.model.draw(surface);
 					}
