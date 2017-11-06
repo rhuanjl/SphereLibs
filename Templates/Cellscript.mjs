@@ -42,6 +42,7 @@ runTool("@/maps", files("maps/*.rmp"), rmpTool, ".mem");
 //update path in second parameter to folder your mapscripts are stored in
 install("@/maps/scripts", files("src/mapScripts/*.mjs"));
 install("@/bin", files("src/*.mjs"));
-
 install("@/shaders",  files("shaders/*.glsl", true));
+
+//remove this line if not using windowstyles
 install("@/windows",  files("windowstyles/*.rws", true));

@@ -769,7 +769,7 @@ export class SEngine
 		let renderQueue = this._renders[layer];
 		let sWidth = this.width;
 		let sHeight = this.height;
-		let zoomedOffset = [offset[0] / zoom, offset[1] / zoom];
+		let uZoom = Math.trunc(256 / zoom);
 		if(transformed === true)
 		{
 			var transformation = this.transform;
@@ -780,9 +780,10 @@ export class SEngine
 			currentRender.position = j;
 			if(currentRender.visible === true)
 			{
-				coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0])) / zoom - zoomedOffset[0]);
-				coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) / zoom) - zoomedOffset[1]);
-
+				//coords[0] = Math.floor((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) / zoom);
+				//coords[1] = Math.floor((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) / zoom);
+				coords[0] = ((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) * uZoom) >> 8;
+				coords[1] = ((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) * uZoom) >> 8;
 				let w_scale = (currentRender.scale[0] / zoom);
 				let h_scale = (currentRender.scale[1] / zoom);
 				if (coords[0] < sWidth &&
@@ -793,7 +794,7 @@ export class SEngine
 					//Future idea: should have a method for z coordinates
 					if(currentRender.needsUpdate === true)
 					{
-						currentRender.model.shader.setFloatVector(tex_move, currentRender._sprite.frames[currentRender.dir][currentRender.frame]);//here be magic
+						currentRender._shader.setFloatVector(tex_move, currentRender._sprite.frames[currentRender.dir][currentRender.frame]);//here be magic
 						currentRender.needsUpdate = false;
 					}
 					currentRender.trans.identity();
@@ -1128,10 +1129,11 @@ class Entity
 		//setup the sprite
 		this._sprite = sprite;
 		this.trans   = new Transform();
-		this.model   = new Model([sprite.shape], shader.clone());
+		this._shader = shader.clone();
+		this.model   = new Model([sprite.shape], this._shader);
 		this.model.transform = this.trans;
-		this.model.shader.setFloatVector(tex_move, [0,0,1]);
-		this.model.shader.setInt("mask_mode",0);
+		this._shader.setFloatVector(tex_move, [0,0,1]);
+		this._shader.setInt("mask_mode",0);
 
 		if(DEBUG_MODE)
 		{
@@ -1254,7 +1256,7 @@ class Entity
 	 */
 	set sprite(sprite)
 	{
-		let shader   = this.model.shader;
+		let shader   = this._shader;
 		this._sprite = sprite;
 		this.model   = new Model(sprite.shape, shader);
 

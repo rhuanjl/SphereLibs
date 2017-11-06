@@ -9,7 +9,8 @@ This document covers how to set up a project to run maps with the map engine in 
 - CEngine.mjs - collision handling
 - PixelBuffer.mjs - low level graphics 
 - input.mjs - input handling
-- map-engine.mjs - easy to use wrapper this sits on top of the other modules giving a simpler interface to get started with (it is not required but offers a simpler starting point than using the other scripts directly and for many projects will be a suffiient interface)
+- map-engine.mjs - easy to use wrapper this sits on top of the other modules giving a simpler interface to get started with (it is not required but offers a simpler starting point than using the other scripts directly and for many projects will be a sufficient interface)
+
 NOTE: the folder also includes HUDSystem.mjs and MenuSystem.mjs - these are not required for running the map-engine
 3. The map engine shaders - the folder called shaders - include this in your project
 4. The cell tools - two scripts from the folder BuildTime:
@@ -22,7 +23,8 @@ NOTE: the folder also includes HUDSystem.mjs and MenuSystem.mjs - these are not 
 3. You'll need a map - .rmp is used but with a few limitations:
 - Zones are not supported
 - Obstruction segments are not supported (future pending feature) - you can leave these in they'll just be ignored, all obstructions need to be tile obstructions (or entities)
-- All scripts in the map are ignored you must add a seperate scripts file. Note: as triggers don't have names by default but need a name for linking them to a script in the script file the text you enter as the trigger script in the map editor will be used as its name. See the templateMapScript.mjs file in the templates folder for an example map script.
+- All scripts in the map are ignored you must add a seperate scripts file. Note: as triggers don't have names by default but need a name for linking them to a script in the script file the text you enter as the trigger script in the map editor will be used as its name.
+- See the templateMapScript.mjs file in the templates folder for an example map script.
 - Note the map script must have the same name as the map file except for having the .mjs extension
 4. You'll need a cellscript that runs the rmpLoader and rssLoader, see the Cellsscript.mjs in the Templates folder for a working example - you may have to change some file/folder names to get it to work for your project
 

@@ -134,23 +134,17 @@ export class MEngine
 		this.map.mapScripts.onUpdate(this.runTime, this.map);
 
 		//update animated tiles
-		//#OptimiseMe this method loops over more than needed and does more checks than needed
-		let layers = this.map.layers;
-		let numLayers = layers.length;
-		let tick = this.map.tick;
-		for(let i = 0, j = 0; i < numLayers; ++ i, j = 0)
+		let animations = this.map.animations;
+		let numAnims   = animations.length;
+		let tick       = this.map.tick;
+		for(let i = 0; i < numAnims; ++ i)
 		{
-			let animations = layers[i].animations;
-			let numAnims = animations.length;
-			for(; j < numAnims; ++j)
+			let anim = animations[i].data;
+			if(anim.list[anim.current].delay < (tick - anim.last))
 			{
-				let anim = animations[j].data;
-				if(anim.list[anim.current].delay < (tick - anim.last))
-				{
-					anim.current = anim.list[anim.current].next;
-					anim.needsUpdate = true;
-					anim.last = tick;
-				}
+				anim.current = anim.list[anim.current].next;
+				anim.needsUpdate = true;
+				anim.last = tick;
 			}
 		}
 
@@ -234,15 +228,16 @@ export class MEngine
 				let scaleW = animWidth / this.map.tile_w;//avoid 1 pixel gaps around tiles at odd scales
 				let animHeight = Math.ceil(this.map.tile_h / zoom);
 				let scaleH = animHeight / this.map.tile_h;//seperate for width and height in case tiles aren't squares
+				let uZoom = Math.trunc(1024 / zoom);
 
-				let sWidth = surface.width;
-				let sHeight = surface.height;
+				let sWidth = surface.width |0;
+				let sHeight = surface.height |0;
 				
 				for(let i = 0; i < numAnims; ++ i)
 				{
 					let currentRender = thisLayer.animations[i].data;
-					coords[0] = Math.floor((thisLayer.animations[i].x - offset[0]) / zoom);
-					coords[1] = Math.floor((thisLayer.animations[i].y - offset[1]) / zoom);
+					coords[0] = ((thisLayer.animations[i].x - offset[0]) * uZoom) >> 10;
+					coords[1] = ((thisLayer.animations[i].y - offset[1]) * uZoom) >> 10;
 
 					if (coords[0] < sWidth &&//only draw the animated tiles that are visible
 						coords[1] < sHeight &&
@@ -251,15 +246,15 @@ export class MEngine
 					{
 						if(currentRender.needsUpdate === true)//update which tile is shown for the animation (but only update if necesary)
 						{//note tiles following the same animation chain and starting in the sample palce share the same data - so this is only called once for them all
-							currentRender.model.shader.setFloatVector(tex_move, [currentRender.list[currentRender.current].offset, 0.0, 1.0]);//OPTIMISE ME - make a new shader for this - only needs 1 number not a vector
+							currentRender.shader.setFloatVector(tex_move, [currentRender.list[currentRender.current].offset, 0.0, 1.0]);//OPTIMISE ME - make a new shader for this - only needs 1 number not a vector
 							currentRender.needsUpdate = false;
 						}
-						currentRender.model.transform.identity();
-						currentRender.model.transform.scale(scaleW, scaleH);
-						currentRender.model.transform.translate(coords[0], coords[1]);
+						currentRender.trans.identity();
+						currentRender.trans.scale(scaleW, scaleH);
+						currentRender.trans.translate(coords[0], coords[1]);
 						if(transformed === true)
 						{
-							currentRender.model.transform.compose(this.transformation);
+							currentRender.model.trans.compose(this.transformation);
 						}
 						currentRender.model.draw(surface);
 					}
@@ -593,14 +588,10 @@ export class MEngine
 		let identifier = startingName.slice(0,splitPoint) + "scripts/" + startingName.slice(splitPoint, startingName.length - 4) + ".mjs";
 		//bring in the scripts
 		
-		try
-		{
-			var scripts = await import(identifier);
-		}
-		catch(e)
+		let scripts = await import(identifier).catch((e)=>
 		{
 			Dispatch.now(()=>{throw e;});
-		}
+		});
 		let loadedScripts = {};
 
 		if(scripts.triggerScripts === undefined)
@@ -654,7 +645,8 @@ export class MEngine
 			tile_w  : tileWidth,
 			tile_h  : tileHeight,
 			mapScripts     : loadedScripts.mapScripts,
-			triggerScripts : loadedScripts.triggerScripts
+			triggerScripts : loadedScripts.triggerScripts,
+			animations     : inUseAnimations
 		};
 
 		if(this.DEBUG_MODE === true)
@@ -720,8 +712,10 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
 	}
 	if(done === false)
 	{
-		let model = new Model([anim.shape], shader.clone());
-		model.transform = new Transform();
+		let shaderProp = shader.clone();
+		let model = new Model([anim.shape], shaderProp);
+		let trans = new Transform();
+		model.transform = trans;
 		inUseAnimations.push({
 			ref: i,
 			start : j,
@@ -730,7 +724,9 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
 				list        : anim.tiles,
 				current     : j,
 				needsUpdate : true,
-				last        : 0
+				last        : 0,
+				trans       : trans,
+				shader      : shaderProp
 			}
 		});
 	}
