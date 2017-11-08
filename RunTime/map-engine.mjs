@@ -95,18 +95,22 @@ export default class MapEngine
 	}
 
 	/**
-	 * addInput(key, continuous=false, parameter=null, script="")
-	 * Add another input of some kind to be monitored whilst the map is runnign
+	 * addInput(key, onPress, continuous=false, parameter=null, onRelease)
+	 * Add another input of some kind to be monitored whilst the map is running
+	 * Only first two parameters are required, the other 3 are optional
 	 * 
-	 * @param {any} key //the key to check for
-	 * @param {boolean} [continuous=false] //can it trigger continuously OR only once per press (i.e. down + up)
-	 * @param {any} [parameter=null] //parameter to pass to the function called when the key is passed (can be an object e.g. a character)
-	 * @param {string} [script=""] //function to call when key is pressed - it will be passed the parameter as a parameter
-	 * @returns 
+	 * @param {any} key - key to check for
+	 * @param {any} onPress - function to call when it's pressed
+	 * @param {boolean} [continuous=false] - allow continuous input - function can trigger every frame
+	 * 											or false to only call the function once for each press
+	 * @param {any} [parameter=null] - parameter to pass to the function, e.g. a person object
+	 * @param {any} onRelease - function to call when the key is released
+	 * @returns - the number of inputs added in total (will be one higher each time this is called)
+	 * @memberof MapEngine
 	 */
-	addInput(key, script="", continuous=false, parameter=null)
+	addInput(key, onPress, continuous=false, parameter=null, onRelease)
 	{
-		return this.SEngine.addInput(key, continuous, parameter, script);
+		return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
 	}
 
 

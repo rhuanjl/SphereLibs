@@ -227,16 +227,17 @@ export class SEngine
 	 * @returns 
 	 * @memberof SEngine
 	 */
-	addInput(key, continuous, parameter, script)
+	addInput(key, continuous, parameter, onPress=function(){}, onRelease=function(){})
 	{
 		this.inputs.push({
 			key : key,
 			continuous : continuous,
 			parameter : parameter,
-			script : script,
+			onPress : onPress,
+			onRelease : onRelease,
 			active : false
 		});
-		return this.inputs.length - 1;
+		return this.inputs.length;
 	}
 
 	/**
@@ -392,17 +393,31 @@ export class SEngine
 		for (let i = 0; i < this.inputs.length; ++i)
 		{
 			let input = this.inputs[i];
-			if (input.continuous === true || input.active === false)
+			if(input.continuous === true)
 			{
 				if (inputSys.isPressed(input.key) === true)
 				{
 					input.active = true;
-					input.script(this.runTime, input.parameter);
+					input.onPress(this.runTime, input.parameter);
+				}
+				else if(input.active === true)
+				{
+					input.active = false;
+					input.onRelease(this.runTime, input.parameter);
+				}
+			}
+			else if (input.active === false)
+			{
+				if (inputSys.isPressed(input.key) === true)
+				{
+					input.active = true;
+					input.onPress(this.runTime, input.parameter);
 				}
 			}
 			else if (inputSys.isPressed(input.key) === false)
 			{
 				input.active = false;
+				input.onRelease(this.runTime, input.parameter);
 			}
 		}
 
