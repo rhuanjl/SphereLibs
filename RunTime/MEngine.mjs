@@ -368,7 +368,7 @@ export class MEngine
 				await this.map.mapScripts.onExit(this.runTime, this.map);
 			}
 		}
-		
+		//#optimise me - considering doing one read at start and virtualising the rest
 		let inputFile = new DataStream(fileName, FileOp.Read);
 		//lead out with the tile data
 		let numTiles     = inputFile.readUint16(true);
@@ -408,7 +408,7 @@ export class MEngine
 				shape : null
 			}
 			let animBuffer = new MapBuffer(currentLength, 1, tileBuffer);
-			for(let j = 0; j < currentLength; ++j)
+			for(let j = 0; j < currentLength; ++j)//optimise me could reduce number of reads here
 			{
 				let index = inputFile.readUint16(true);
 				animations[i].tiles[j] = {

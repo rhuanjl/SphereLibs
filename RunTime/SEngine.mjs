@@ -1181,6 +1181,12 @@ class Entity
 		}
 
 		//coordinates
+		this.zoom = 1; /*not strictly needed
+		- most entities will never use a zoom propery
+		- BUT sometimes want it for using an entity for map zoom
+		- have it on all entities to avoid having different virtual clases
+		- this is a significant performance optimisation due to how the JIT works*/
+
 		this.tile_x = ((x - sprite.o[0]) / tSize)|0;
 		this.tile_y = ((y - sprite.o[1]) / tSize)|0;
 
@@ -1235,6 +1241,9 @@ class Entity
 		this.position = 0;//place in render queue
 		this.needsUpdate = true;//change of frame or direction
 		this.attached = false;//is this player controlled
+
+		//object to hold any user added properites
+		this.data = {};
 
 		//add a hook to SEngine - used by some of the convenience methods
 		if(typeof(SEngine) === "object")
@@ -1347,13 +1356,14 @@ class Entity
 
 	set speed(value)
 	{
-		if(this._speed !== value)
+		let flooredValue = value |0;
+		if(this._speed !== flooredValue)
 		{
-			this._speed = value;
+			this._speed = flooredValue;
 			let dirs = this.sprite.dirs;
 			for(let i = 0; i < dirs.length; ++i)
 			{
-				this._pVectors[i] = [dirs[i].vector[0] * value, dirs[i].vector[1] * value];
+				this._pVectors[i] = [dirs[i].vector[0] * flooredValue, dirs[i].vector[1] * flooredValue];
 				this._vectors[i] = [dirs[i].vector[0], dirs[i].vector[1]];
 			}
 		}

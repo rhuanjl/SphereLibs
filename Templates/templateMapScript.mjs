@@ -77,7 +77,7 @@ export const entityScripts =
 	{
 		onSetup (runTime, self)
 		{
-
+			self.data.talkedTo = false;//store entity data on self.data
 		},
 		onDestroy (runTime, self)
 		{
@@ -95,7 +95,15 @@ export const entityScripts =
 		{
 			self.frozen = true;//entity doesn't move when frozen (see SENgine.mjs)
 			self.faceEntity(player);//face the player - see SEngine.mjs
-			await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
+			if(self.data.talkedTo === false)
+			{
+				await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
+				self.data.talkedTo = true;//keep track of the fact that we've talked
+			}
+			else//if you've aready talked say something different
+			{
+				await runTime.talk(self.id, "Haven't we talked before?");//function would need to exist in your runTime object and return a promise
+			}
 			//see talk.mjs for example talk function that works this way
 			self.frozen = false;//unfreeze when the talking is over
 		},
