@@ -82,6 +82,16 @@ export default class MapEngine
 		return this.SEngine.addEntity(name, loadSES(spriteSet), true, x, y, layer);
 	}
 
+	takeInput()
+	{
+		this.SEngine.input.takeInput();
+	}
+
+	yieldInput()
+	{
+		this.SEngine.input.yieldInput();
+	}
+
 	/**
 	 * attachInput(character)
 	 * Add default input (4 directional arrows + talk key) to provided character
@@ -154,17 +164,15 @@ export default class MapEngine
 		{
 			this.camera.zoom = 1;
 		}
-		await this.MEngine.setMap(firstMap).catch((e)=>
-		{
-			Dispatch.now(()=>{throw e;});
-		});
+		await this.MEngine.setMap(firstMap);
 
 		this.update = Dispatch.onUpdate(()=>
 		{
-			this.MEngine.update([this.camera.x, this.camera.y], this.camera.zoom);
+			this.MEngine.update(this.camera.x, this.camera.y, this.camera.zoom);
 		});
 		this.render = Dispatch.onRender(()=>this.MEngine.render());
 		this.started = true;
+		this.takeInput();
 	}
 
 	/**
@@ -177,14 +185,11 @@ export default class MapEngine
 	{
 		if(this.started === true)
 		{
-			await this.MEngine.setMap(newMap).catch((e)=>
-			{
-				Dispatch.now(()=>{throw e;});
-			});
+			await this.MEngine.setMap(newMap);
 		}
 		else
 		{
-			throw new Error("Attempt to change map when the map-engine when it is not running.");
+			throw new Error("Attempt to change map when the map-engine is not running.");
 		}
 	}
 
@@ -206,21 +211,25 @@ export default class MapEngine
 		}
 		else
 		{
-			throw new Error("Attempt to change camera when the map-engine when it is not running.");
+			throw new Error("Attempt to change camera when the map-engine is not running.");
 		}
 	}
 
 	/**
 	 * pause()
-	 * Pause the map engine - only if it's running and not paused
-	 * 
+	 * Pause the map engine - only if it's running
+	 * A no-op if the map engine is already paused
 	 */
 	pause()
 	{
-		if(this.started === true && this.paused === false)
+		if(this.started === true)
 		{
-			this.update.cancel();
-			this.paused = true;
+			if (this.paused === false)
+			{
+				this.update.cancel();
+				this.paused = true;
+				this.yieldInput();
+			}
 		}
 		else
 		{
@@ -230,17 +239,22 @@ export default class MapEngine
 
 	/**
 	 * resume()
-	 * Resume the map engine - ONLY if it's paused
+	 * Resume the map engine - ONLY if it's running
+	 * A no-op if the map engine is not paused
 	 */
 	resume()
 	{
-		if(this.started === true && this.paused === true)
+		if (this.started === true)
 		{
-			this.update = Dispatch.onUpdate(()=>
+			if (this.paused === true)
 			{
-				this.MEngine.update([this.camera.x, this.camera.y], this.camera.zoom);
-			});
-			this.paused = false;
+				this.update = Dispatch.onUpdate(()=>
+				{
+					this.MEngine.update(this.camera.x, this.camera.y, this.camera.zoom);
+				});
+				this.paused = false;
+				this.takeInput();
+			}
 		}
 		else
 		{
@@ -250,15 +264,19 @@ export default class MapEngine
 
 	/**
 	 * hide()
-	 * hide the map-engine (stop drawing it) - only if it's runnign and not already hidden
+	 * hide the map-engine (stop drawing it) - only if it's running
 	 * Note this doesn't stop updating
+	 * This is a no-op if it's already hidden
 	 */
 	hide()
 	{
-		if(this.started === true && this.hidden === false)
+		if (this.started === true)
 		{
-			this.render.cancel();
-			this.hidden = true;
+			if (this.hidden === false)
+			{
+				this.render.cancel();
+				this.hidden = true;
+			}
 		}
 		else
 		{
@@ -268,14 +286,18 @@ export default class MapEngine
 
 	/**
 	 * show()
-	 * start drawing the map-engine again - only after it's hidden with hide()
+	 * start drawing the map-engine again - only if it's running
+	 * A no-op if it's not hidden
 	 */
 	show()
 	{
-		if(this.started === true && this.hidden === false)
+		if (this.started === true)
 		{
-			this.render = Dispatch.onRender(()=>this.MEngine.render());
-			this.hidden = false;
+			if (this.hidden === true)
+			{
+				this.render = Dispatch.onRender(()=>this.MEngine.render());
+				this.hidden = false;
+			}	
 		}
 		else
 		{
@@ -333,16 +355,17 @@ export default class MapEngine
 	 */
 	stop()
 	{
-		if(this.started === true)
+		if (this.started === true)
 		{
-			if(this.paused === false)
+			if (this.paused === false)
 			{
 				this.update.cancel();
 			}
-			if(this.hidden === false)
+			if (this.hidden === false)
 			{
 				this.render.cancel();
 			}
+			this.yieldInput();
 			this.MEngine.map = null;//let the map get GC'd
 			//#FIX ME enable GC'ing SEngine data here to
 		}

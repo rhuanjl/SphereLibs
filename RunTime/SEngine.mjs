@@ -95,14 +95,12 @@ export class SEngine
 		this.folder       = "@";
 		this.sprites      = {};
 		this.offset       = [0,0];
-		this.scale        = 1;
 		this.width        = 0;
 		this.height       = 0;
 		this._default     = false;
 		this.transform    = null;
 		this.transformed  = false;
 		this.DEBUG_MODE   = false;
-		this.talking      = false;
 		this.input        = new Input();
 		this.inputs       = [];
 		this.maxPerSeg    = maxPerSeg;
@@ -220,6 +218,8 @@ export class SEngine
 	 * the parameter object will be passed to the function as its second parameter the runtime
 	 * object as its first
 	 * 
+	 * Note you must call SEngine.input.takeInput() to enable the input
+	 * 
 	 * @param {number} key 
 	 * @param {boolean} continuous 
 	 * @param {object} parameter 
@@ -276,6 +276,7 @@ export class SEngine
 
 	/**
 	 * Adds simple 4 directional movement + talk activation to the supplied entity
+	 * Note you must call SEngine.input.takeInput() to enable the input
 	 * 
 	 * @param {object} entity - object representing an entity within this SEngine instance
 	 * @memberof SEngine
@@ -287,7 +288,6 @@ export class SEngine
 			this.removeDefaultInput();
 		}
 		
-		this.input.takeInput();
 		entity.attached = true;
 		this._default = true;
 		this.addInput(Key.Up, true, entity, function(runTime, entity)

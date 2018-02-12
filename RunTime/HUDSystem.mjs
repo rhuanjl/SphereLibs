@@ -258,6 +258,18 @@ export class HUDSystem
 	//Helper functions for setup
 
 
+	addDynamicRect(x, y, width, height, colour, texture = null)
+	{
+		if(this.enableDynamic === true)
+		{
+			return this.addDynamic(new DynamicRect(x, y, width, height, colour, texture, this.shader));
+		}
+		else
+		{
+			HUDSystem.error("attempt to add a dynamic Rectangle to a HUDSystem which has dynamics disabled");
+		}
+	}
+
 	/**
 	 * addVariableText()
 	 * Creates a dynamic object for text that can be changed or moved
@@ -555,6 +567,121 @@ export class WindowStyle
 	}
 }
 
+export class DynamicRect
+{
+	constructor(x, y, width, height, colour, texture = null, shader)
+	{
+		this._x = x|0;
+		this._y = y|0;
+		this._width = Math.ceil(width);
+		this._height = Math.ceil(height);
+		this._colour = colour;
+		this._texture = texture;
+		this.shader = shader.clone();
+		this.model = new Model([HUDSystem.render(texture, 0, 0, 1, 1, Color.White)], this.shader);
+		this.mainTransform = new Transform();
+		this.currentTransform = new Transform();
+		this.model.transform = this.currentTransform;
+		this._needsUpdate = true;
+	}
+
+	update()
+	{
+		this.shader.setColorVector("tintColor", this._colour);
+		this.mainTransform.identity();
+		this.mainTransform.scale(this._width, this._height);
+		this.mainTransform.translate(this._x, this._y);
+		this._needsUpdate = false;
+	}
+
+	set colour(value)
+	{	
+		if(this._colour.a !== value.a ||
+			this._colour.r !== value.r ||
+			this._colour.g !== value.g ||
+			this._colour.b !== value.b)
+		{
+			this._colour = value;
+			this._needsUpdate = true;
+		}
+	}
+
+	get colour()
+	{
+		return this._colour;
+	}
+
+
+	set height(value)
+	{
+		if(this._height !== value)
+		{
+			this._height = value;
+			this._needsUpdate = true;
+		}
+	}
+
+	get height()
+	{
+		return this._height;
+	}
+
+	set width(value)
+	{
+		if(this._width !== value)
+		{
+			this._width = value;
+			this._needsUpdate = true;
+		}
+	}
+
+	get width()
+	{
+		return this._width;
+	}
+
+	set y(value)
+	{
+		if(this._y !== value)
+		{
+			this._y = value;
+			this._needsUpdate = true;
+		}
+	}
+
+	get y()
+	{
+		return this._y;
+	}
+
+	set x(value)
+	{
+		if(this._x !== value)
+		{
+			this._x = value;
+			this._needsUpdate = true;
+		}
+	}
+
+	get x()
+	{
+		return this._x;
+	}
+
+	draw(transform)
+	{
+		if(this._needsUpdate === true)
+		{
+			this.update();
+		}
+		this.currentTransform.identity();
+		this.currentTransform.compose(this.mainTransform);
+		this.currentTransform.compose(transform);
+		this.model.draw();
+	}
+}
+
+
 /**
  * A dynamic Bar for the HudSystem
  * Create via HUDSystem.addVariableBar
@@ -576,7 +703,8 @@ export class DynamicBar
 		this.height = height;
 		this.colourOne = colourOne;
 		this.colourTwo = colourTwo;
-		this.model = new Model([HUDSystem.render(texture, 0, 0, width, height, Color.White)], shader.clone());
+		this.shader = shader.clone();
+		this.model = new Model([HUDSystem.render(texture, 0, 0, width, height, Color.White)], this.shader);
 		this.mainTransform = new Transform();
 		this.currentTransform = new Transform();
 		this.model.transform = this.currentTransform;
@@ -614,7 +742,7 @@ export class DynamicBar
 				this.mainTransform.translate(this.x, this.y);
 				break;
 			}
-			this.model.shader.setColorVector("tintColor", Color.mix(this.colourOne, this.colourTwo, factor, 1 - factor));
+			this.shader.setColorVector("tintColor", Color.mix(this.colourOne, this.colourTwo, factor, 1 - factor));
 			this.lastFraction = this.fraction;
 		}
 	}

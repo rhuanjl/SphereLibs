@@ -88,11 +88,12 @@ export class MEngine
 	 * 
 	 * If using SEngine this automatically calls SEngine#update
 	 * 
-	 * @param {any} [centre=[0,0]] - coordinates on map to attempt to centre the screen on
+	 * @param {number} [x=1] - x coordinate to centre the map on
+	 * @param {number} [y=1] - y coordinate to centre the map on
 	 * @param {number} [zoom=1] - zoom scale factor, increase to make things bigger...
 	 * @memberof MEngine
 	 */
-	update(centre=[0,0], zoom = 1)
+	update(x = 0, y = 0, zoom = 1)
 	{
 		//update the offset coordinates
 		let surfaceHeight = this.s_height;
@@ -102,8 +103,8 @@ export class MEngine
 		zoom = Math.max(Math.min(height / surfaceHeight, width / surfaceWidth, zoom), 0.01);
 		//#FIX ME this needs adjustment to allow for repeating maps, probably an if - to do something totally different
 		// (other things do too for repeating maps :( - though mostly this + sprite coordinate code also Collision code)
-		this.map.x = Math.floor(Math.min(Math.max(centre[0] - surfaceWidth * zoom  / 2, 0), width  - surfaceWidth * zoom));
-		this.map.y = Math.floor(Math.min(Math.max(centre[1] - surfaceHeight * zoom  / 2, 0), height - surfaceHeight * zoom));
+		this.map.x = Math.floor(Math.min(Math.max(x - surfaceWidth * zoom  / 2, 0), width  - surfaceWidth * zoom));
+		this.map.y = Math.floor(Math.min(Math.max(y - surfaceHeight * zoom  / 2, 0), height - surfaceHeight * zoom));
 		this.map.zoom = zoom;
 		
 		//handle map Scripts
