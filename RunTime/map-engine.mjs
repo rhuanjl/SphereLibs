@@ -63,7 +63,7 @@ export default class MapEngine
 		this.hidden = false;
 		this.update = null;
 		this.render = null;
-		this.camera = null;
+		this._camera = null;
 	}
 
 	/**
@@ -159,16 +159,16 @@ export default class MapEngine
 	 */
 	async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
 	{
-		this.camera = cameraObject;
-		if(!this.camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+		this._camera = cameraObject;
+		if(!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
 		{
-			this.camera.zoom = 1;
+			this._camera.zoom = 1;
 		}
 		await this.MEngine.setMap(firstMap);
 
 		this.update = Dispatch.onUpdate(()=>
 		{
-			this.MEngine.update(this.camera.x, this.camera.y, this.camera.zoom);
+			this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
 		});
 		this.render = Dispatch.onRender(()=>this.MEngine.render());
 		this.started = true;
@@ -194,25 +194,36 @@ export default class MapEngine
 	}
 
 	/**
-	 * changeCamera(cameraObject)
+	 * camera
 	 * Supply a new camera object
-	 * 
+	 * use as mapEngine.camera = newCameraObject;
 	 * @param {any} cameraObject 
 	 */
-	changeCamera(cameraObject)
+	set camera (cameraObject)
 	{
 		if(this.started === true)
 		{
-			this.camera = cameraObject;
-			if(!this.camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+			if(!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
 			{
-				this.camera.zoom = 1;
+				this._camera.zoom = 1;
 			}
+			this._camera = cameraObject;
 		}
 		else
 		{
 			throw new Error("Attempt to change camera when the map-engine is not running.");
 		}
+	}
+	
+	/**
+ 	* get the current camera object.
+ 	* 
+ 	* 
+ 	* @memberof MapEngine
+	 */
+	get camera ()
+	{
+		return this._camera;
 	}
 
 	/**
@@ -250,7 +261,7 @@ export default class MapEngine
 			{
 				this.update = Dispatch.onUpdate(()=>
 				{
-					this.MEngine.update(this.camera.x, this.camera.y, this.camera.zoom);
+					this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
 				});
 				this.paused = false;
 				this.takeInput();
