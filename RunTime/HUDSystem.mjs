@@ -44,66 +44,66 @@ import DataStream from "data-stream";
 
 export class HUDSystem
 {
-	/**
+    /**
 	 * Creates an instance of HUDSystem.
 	 * All instances support static objects (objects that once added never change)
 	 * Enable Dynamic to also support dynamic objects which you can edit
 	 * @param {boolean} [enableDynamic=false]
 	 * @memberof HUDSystem
 	 */
-	constructor(enableDynamic = false)
-	{
-		this.staticShapes = [];
-		this.types = [];
-		this.staticIDs = [];
-		this.ids = [];
-		this.model;
-		this.ready = true;
-		this.transform = new Transform();
-		this.nextID = 0;
-		this.enableStatic = false;
-		this.enableDynamic = enableDynamic;
-		if(enableDynamic === true)
-		{
-			this.dynamicIDs = [];
-			this.dynamics = [];
-			this.dynamicsAfterStatics = true;
-			this.shader = new Shader({
-				fragmentFile: "#/shaders/image.frag.glsl",
-				vertexFile:   "#/shaders/image.vert.glsl"
-			});
-		}
+    constructor(enableDynamic = false)
+    {
+        this.staticShapes = [];
+        this.types = [];
+        this.staticIDs = [];
+        this.ids = [];
+        this.model;
+        this.ready = true;
+        this.transform = new Transform();
+        this.nextID = 0;
+        this.enableStatic = false;
+        this.enableDynamic = enableDynamic;
+        if (enableDynamic === true)
+        {
+            this.dynamicIDs = [];
+            this.dynamics = [];
+            this.dynamicsAfterStatics = true;
+            this.shader = new Shader({
+                fragmentFile: "#/shaders/image.frag.glsl",
+                vertexFile:   "#/shaders/image.vert.glsl"
+            });
+        }
 
-		//de-reference the Transformation functions to ease use
-		//note the matrix accessor is excluded as it is an advanced feature
-		this.identity  = ()              => this.transform.identity();
-		this.compose   = (transform)     => this.transform.compose(transform);
-		this.rotate    = (angle, vx, vy) => this.transform.rotate(angle, vx, vy);
-		this.scale     = (sx, sy)        => this.transform.scale(sx, sy);
-		this.translate = (tx, ty)        => this.transform.translate(tx, ty);
-	}
+        //de-reference the Transformation functions to ease use
+        //note the matrix accessor is excluded as it is an advanced feature
+        this.identity  = ()              => this.transform.identity();
+        this.compose   = (transform)     => this.transform.compose(transform);
+        this.rotate    = (angle, vx, vy) => this.transform.rotate(angle, vx, vy);
+        this.scale     = (sx, sy)        => this.transform.scale(sx, sy);
+        this.translate = (tx, ty)        => this.transform.translate(tx, ty);
+    }
 
 
-	/**
+    /**
 	 * addStatic(shape)
 	 * add a pre-created shape to the HUD as a static object
 	 * @param {object} shape - must be a Sphere shape object
 	 * @returns {number} an ID number that can be used to remove it
 	 * @memberof HUDSystem
 	 */
-	addStatic(shape)
-	{
-		this.enableStatic = true;
-		this.ids.push(this.nextID);
-		this.staticShapes.push(shape);
-		this.staticIDs.push(this.nextID);
-		this.types.push(0);
-		this.ready = false;
-		this.nextID += 1;
-		return (this.nextID - 1);
-	}
+    addStatic(shape)
+    {
+        this.enableStatic = true;
+        this.ids.push(this.nextID);
+        this.staticShapes.push(shape);
+        this.staticIDs.push(this.nextID);
+        this.types.push(0);
+        this.ready = false;
+        this.nextID += 1;
+        return (this.nextID - 1);
+    }
 
-	/**
+    /**
 	 * addDynamic(dynamicData)
 	 * add a dynamic object to the HUD
 	 * The dynamic object must:
@@ -119,25 +119,25 @@ export class HUDSystem
 	 * @returns {number} ID can be used to remove this object from the HUD or to get access to the object
 	 * @memberof HUDSystem
 	 */
-	addDynamic(dynamicData)
-	{
-		if(this.enableDynamic === true)
-		{
-			this.ids.push(this.nextID);
-			this.dynamics.push(dynamicData);
-			this.dynamicIDs.push(this.nextID);
-			this.types.push(1);
-			this.nextID += 1;
-			return (this.nextID - 1);
-		}
-		else
-		{
-			HUDSystem.error("dynamic object added to HUD without dynamic enabled.");
-		}
-	}
+    addDynamic(dynamicData)
+    {
+        if (this.enableDynamic === true)
+        {
+            this.ids.push(this.nextID);
+            this.dynamics.push(dynamicData);
+            this.dynamicIDs.push(this.nextID);
+            this.types.push(1);
+            this.nextID += 1;
+            return (this.nextID - 1);
+        }
+        else
+        {
+            throw new HUDSystemError("dynamic object added to HUD without dynamic enabled.");
+        }
+    }
 
 
-	/**
+    /**
 	 * getDynamic(id)
 	 * Returns the dynamic object at the specified id i.e. the parameter given to addDynamic
 	 * 
@@ -145,132 +145,132 @@ export class HUDSystem
 	 * @returns 
 	 * @memberof HUDSystem
 	 */
-	getDynamic(id)
-	{
-		if(this.enableDynamic === true)
-		{
-			let position = this.dynamicIDs.indexOf(id);
-			if(position !== -1)
-			{
-				return this.dynamics[position];
-			}
-			else
-			{
-				HUDSystem.error("getDynamic called with id " + id + " but no dynamic object exists with that id.");
-			}
-		}
-		else
-		{
-			HUDSystem.error("getDynamic called with id " + id + " but designated HUD has dynamic disabled.");
-		}
-	}
+    getDynamic(id)
+    {
+        if (this.enableDynamic === true)
+        {
+            let position = this.dynamicIDs.indexOf(id);
+            if (position !== -1)
+            {
+                return this.dynamics[position];
+            }
+            else
+            {
+                throw new HUDSystemError("getDynamic called with id " + id + " but no dynamic object exists with that id.");
+            }
+        }
+        else
+        {
+            throw new HUDSystemError("getDynamic called with id " + id + " but designated HUD has dynamic disabled.");
+        }
+    }
 
-	/**
+    /**
 	 * remove(id)
 	 * remove a shape from the HUD
 	 * id must be the number returned when you added the shape
 	 * @param {number} id 
 	 * @memberof HUDSystem
 	 */
-	remove(id)
-	{
-		let position = this.ids.indexOf(id);
-		if(position === -1)
-		{
-			HUDSystem.error("attempt to remove item with id " + id + " from HUD but that id does not exist");
-		}
-		else
-		{
-			let type = this.types[position];
-			if(type === 0)
-			{
-				let truePosition = this.staticIDs.indexOf(id);
-				this.staticIDs.splice(truePosition, 1);
-				this.staticShapes.splice(truePosition, 1);
-				this.ready = false;
-			}
-			else
-			{//handle dynamic here - omission of this.ready = false is intentional
-				let truePosition = this.dynamicIDs.indexOf(id);
-				this.dynamics.splice(truePosition, 1);
-				this.dynamicIDs.splice(truePosition, 1);
-			}
-			this.ids.splice(position, 1);
-			this.types.splice(position, 1);
-		}
-	}
+    remove(id)
+    {
+        let position = this.ids.indexOf(id);
+        if (position === -1)
+        {
+            throw new HUDSystemError("attempt to remove item with id " + id + " from HUD but that id does not exist");
+        }
+        else
+        {
+            let type = this.types[position];
+            if (type === 0)
+            {
+                let truePosition = this.staticIDs.indexOf(id);
+                this.staticIDs.splice(truePosition, 1);
+                this.staticShapes.splice(truePosition, 1);
+                this.ready = false;
+            }
+            else
+            {//handle dynamic here - omission of this.ready = false is intentional
+                let truePosition = this.dynamicIDs.indexOf(id);
+                this.dynamics.splice(truePosition, 1);
+                this.dynamicIDs.splice(truePosition, 1);
+            }
+            this.ids.splice(position, 1);
+            this.types.splice(position, 1);
+        }
+    }
 
-	/**
+    /**
 	 * draw()
 	 * Call this from your render function or dispatch it with dispatch#onRender
 	 * 
 	 * @memberof HUDSystem
 	 */
-	draw()
-	{
-		if(this.ready === false)
-		{
-			this.model = new Model(this.staticShapes);
-			this.model.transform = this.transform;
-			this.ready = true;
-		}
-		if(this.enableDynamic === true)
-		{
-			if(this.dynamicsAfterStatics === true)
-			{
-				if(this.enableStatic === true)
-				{
-					this.model.draw();
-				}
-				this.drawDynamics();
-			}
-			else
-			{
-				this.drawDynamics();
-				if(this.enableStatic === true)
-				{
-					this.model.draw();
-				}
-			}
-		}
-		else
-		{
-			this.model.draw();
-		}
-	}
+    draw()
+    {
+        if (this.ready === false)
+        {
+            this.model = new Model(this.staticShapes);
+            this.model.transform = this.transform;
+            this.ready = true;
+        }
+        if (this.enableDynamic === true)
+        {
+            if (this.dynamicsAfterStatics === true)
+            {
+                if (this.enableStatic === true)
+                {
+                    this.model.draw();
+                }
+                this.drawDynamics();
+            }
+            else
+            {
+                this.drawDynamics();
+                if (this.enableStatic === true)
+                {
+                    this.model.draw();
+                }
+            }
+        }
+        else
+        {
+            this.model.draw();
+        }
+    }
 
-	/**
+    /**
 	 * drawDynamics()
 	 * draw the Dynamics only - don't call this
 	 * let draw() call it internally
 	 * 
 	 * @memberof HUDSystem
 	 */
-	drawDynamics()
-	{
-		let length = this.dynamics.length;
-		for(let i = 0; i < length; ++i)
-		{
-			this.dynamics[i].draw(this.transform);
-		}
-	}
+    drawDynamics()
+    {
+        let length = this.dynamics.length;
+        for (let i = 0; i < length; ++i)
+        {
+            this.dynamics[i].draw(this.transform);
+        }
+    }
 
-	//Helper functions for setup
+    //Helper functions for setup
 
 
-	addDynamicRect(x, y, width, height, colour, texture = null)
-	{
-		if(this.enableDynamic === true)
-		{
-			return this.addDynamic(new DynamicRect(x, y, width, height, colour, texture, this.shader));
-		}
-		else
-		{
-			HUDSystem.error("attempt to add a dynamic Rectangle to a HUDSystem which has dynamics disabled");
-		}
-	}
+    addDynamicRect(x, y, width, height, colour, texture = null)
+    {
+        if (this.enableDynamic === true)
+        {
+            return this.addDynamic(new DynamicRect(x, y, width, height, colour, texture, this.shader));
+        }
+        else
+        {
+            throw new HUDSystemError("attempt to add a dynamic Rectangle to a HUDSystem which has dynamics disabled");
+        }
+    }
 
-	/**
+    /**
 	 * addVariableText()
 	 * Creates a dynamic object for text that can be changed or moved
 	 * Adds the object immediately to the HUD and returns its ID number
@@ -284,20 +284,20 @@ export class HUDSystem
 	 * @returns 
 	 * @memberof HUDSystem
 	 */
-	addVariableText(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
-	{
-		if(this.enableDynamic === true)
-		{
-			return this.addDynamic(new DynamicText(text, x, y, wrapWidth, font, colour));
-		}
-		else
-		{
-			HUDSystem.error("attempt to add a dynamic Variable Bar to a HUDSystem which has dynamics disabled");
-		}
-	}
+    addVariableText(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
+    {
+        if (this.enableDynamic === true)
+        {
+            return this.addDynamic(new DynamicText(text, x, y, wrapWidth, font, colour));
+        }
+        else
+        {
+            throw new HUDSystemError("attempt to add a dynamic Variable Bar to a HUDSystem which has dynamics disabled");
+        }
+    }
 
 
-	/**
+    /**
 	 * addVariableBar()
 	 * Creates a dynamic object rectangle that can grow larger and smaller
 	 * Adds the object immediately to the HUD and returns its ID number
@@ -315,19 +315,19 @@ export class HUDSystem
 	 * @returns 
 	 * @memberof HUDSystem
 	 */
-	addVariableBar(x, y, width, height, fadeDirection = 0, colourOne = Color.Green, colourTwo = Color.Red, texture = null)
-	{
-		if(this.enableDynamic === true)
-		{
-			return this.addDynamic(new DynamicBar(x, y, width, height, fadeDirection, colourOne, colourTwo, texture, this.shader));
-		}
-		else
-		{
-			HUDSystem.error("attempt to add a dynamic Variable Bar to a HUDSystem which has dynamics disabled");
-		}
-	}
+    addVariableBar(x, y, width, height, fadeDirection = 0, colourOne = Color.Green, colourTwo = Color.Red, texture = null)
+    {
+        if (this.enableDynamic === true)
+        {
+            return this.addDynamic(new DynamicBar(x, y, width, height, fadeDirection, colourOne, colourTwo, texture, this.shader));
+        }
+        else
+        {
+            throw new HUDSystemError("attempt to add a dynamic Variable Bar to a HUDSystem which has dynamics disabled");
+        }
+    }
 
-	/**
+    /**
 	 * addText()
 	 * Creates a static text object
 	 * Immediately adds this object to the HUD and returns the id number
@@ -341,12 +341,12 @@ export class HUDSystem
 	 * @returns {number} - id
 	 * @memberof HUDSystem
 	 */
-	addText(x, y, text, font=Font.Default, wrapWidth=Surface.Screen.width, colour=Color.White)
-	{
-		return this.addStatic(HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), x, y));
-	}
+    addText(x, y, text, font=Font.Default, wrapWidth=Surface.Screen.width, colour=Color.White)
+    {
+        return this.addStatic(HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), x, y));
+    }
 
-	/**
+    /**
 	 * addImage(texture, x, y, mask)
 	 * Add a Sphere Texture object to the HUD as an image
 	 * at x,y with colour, mask (note if no mask is supplied it defaults to white)
@@ -359,12 +359,12 @@ export class HUDSystem
 	 * @returns  {number} - id
 	 * @memberof HUDSystem
 	 */
-	addImage(texture, x, y, mask)
-	{
-		return this.addStatic(HUDSystem.render(texture, x, y, mask));
-	}
+    addImage(texture, x, y, mask)
+    {
+        return this.addStatic(HUDSystem.render(texture, x, y, mask));
+    }
 
-	/**
+    /**
 	 * addBuffer(buffer, x, y, mask)
 	 * render a DrawingBuffer as an image and add it to the HUD at x, y as a static object
 	 * See PixelBuffer.mjs for explanation of Drawing Buffers
@@ -376,12 +376,12 @@ export class HUDSystem
 	 * @returns 
 	 * @memberof HUDSystem
 	 */
-	addBuffer(buffer, x, y, mask)
-	{
-		return this.addStatic(HUDSystem.render(new Texture(buffer.data, buffer.width, buffer.height), x, y, mask));
-	}
+    addBuffer(buffer, x, y, mask)
+    {
+        return this.addStatic(HUDSystem.render(new Texture(buffer.data, buffer.width, buffer.height), x, y, mask));
+    }
 
-	/**
+    /**
 	 * addImageFromFile(filename, x, y, mask)
 	 * Loads an image from a file, and immediately adds it to the HUD as a static object
 	 * returns the id number in the HID
@@ -392,45 +392,40 @@ export class HUDSystem
 	 * @returns {number} -id
 	 * @memberof HUDSystem
 	 */
-	addImageFromFile(filename, x, y, mask)
-	{
-		return this.addStatic(HUDSystem.render(new Texture(filename), x, y, mask));
-	}
+    addImageFromFile(filename, x, y, mask)
+    {
+        return this.addStatic(HUDSystem.render(new Texture(filename), x, y, mask));
+    }
 
-	//STATIC methods - below helper functions are used internally
+    //STATIC methods - below helper functions are used internally
 	
 
-	static text(text, font, wrapWidth, colour)
-	{
-		let size = font.getTextSize(text, wrapWidth);
-		let height = Math.max(size.height, font.height + 5);
-		let output = new Surface(size.width, height);
-		font.drawText(output, 0, 0, text, colour, wrapWidth);
+    static text(text, font, wrapWidth, colour)
+    {
+        let size = font.getTextSize(text, wrapWidth);
+        let height = Math.max(size.height, font.height + 5);
+        let output = new Surface(size.width, height);
+        font.drawText(output, 0, 0, text, colour, wrapWidth);
 
-		return output.toTexture();
-	}
+        return output.toTexture();
+    }
 
-	static renderImage(texture, x, y, mask = Color.White)
-	{
-		return HUDSystem.render(texture, x, y, texture.width, texture.height, mask);
-	}
+    static renderImage(texture, x, y, mask = Color.White)
+    {
+        return HUDSystem.render(texture, x, y, texture.width, texture.height, mask);
+    }
 
-	static render(texture, x, y, width, height, mask = Color.White)
-	{
-		let vbo = new VertexList([
-			{x : x, y : y, z : 0, u : 0, v : 1, color : mask},
-			{x : x + width, y : y, z : 0, u : 1, v : 1, color : mask},
-			{x : x, y : y + height, z : 0, u : 0, v : 0, color : mask},
-			{x : x + width, y : y + height, z : 0, u : 1, v : 0, color : mask}
-		]);
+    static render(texture, x, y, width, height, mask = Color.White)
+    {
+        let vbo = new VertexList([
+            {x : x, y : y, z : 0, u : 0, v : 1, color : mask},
+            {x : x + width, y : y, z : 0, u : 1, v : 1, color : mask},
+            {x : x, y : y + height, z : 0, u : 0, v : 0, color : mask},
+            {x : x + width, y : y + height, z : 0, u : 1, v : 0, color : mask}
+        ]);
 
-		return new Shape(ShapeType.TriStrip, texture, vbo);
-	}
-
-	static error(description)
-	{
-		throw new Error("HUD system error " + description);
-	}
+        return new Shape(ShapeType.TriStrip, texture, vbo);
+    }
 }
 
 /**
@@ -443,48 +438,48 @@ export class HUDSystem
  */
 export class WindowStyle
 {
-	/**
+    /**
 	 * Creates an instance of WindowStyle.
 	 * This can then be used for drawing windows
 	 * (Think sphere v1 LoadWindowStyle)
 	 * @param {string} filename path to a .rws file
 	 * @memberof WindowStyle
 	 */
-	constructor(filename)
-	{
-		let data = new DataStream(filename, FileOp.Read);
+    constructor(filename)
+    {
+        let data = new DataStream(filename, FileOp.Read);
 
-		if(data.readStringRaw(4) !== ".rws")
-		{
-			HUDSystem.error("window style file provided not a .rws file.");
-		}
-		if(data.readUint16(true) !== 2)
-		{
-			HUDSystem.error("only supports .rws version 2 - provided file is a different version.");
-		}
-		data.position = data.position + 1;
+        if (data.readStringRaw(4) !== ".rws")
+        {
+            throw new HUDSystemError("window style file provided not a .rws file.");
+        }
+        if (data.readUint16(true) !== 2)
+        {
+            throw new HUDSystemError("only supports .rws version 2 - provided file is a different version.");
+        }
+        data.position = data.position + 1;
 
-		this.mode = data.readUint8();
-		this.corners = new Array(4);
-		this.corners[0] = data.read(4);
-		this.corners[1] = data.read(4);
-		this.corners[2] = data.read(4);
-		this.corners[3] = data.read(4);
-		data.position = data.position + 40;
+        this.mode = data.readUint8();
+        this.corners = new Array(4);
+        this.corners[0] = data.read(4);
+        this.corners[1] = data.read(4);
+        this.corners[2] = data.read(4);
+        this.corners[3] = data.read(4);
+        data.position = data.position + 40;
 
-		this.upper_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.top         = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.upper_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.right       = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.lower_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.bottom      = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.lower_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.left        = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-		this.background  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.upper_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.top         = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.upper_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.right       = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.lower_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.bottom      = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.lower_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.left        = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.background  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
 
-	}
+    }
 
-	/**
+    /**
 	 *renderWindow(x, y, width, height, mask)
 	 * returns a Sphere shape object made from the windowStyle
 	 * @param {number} x - top left coordinate
@@ -495,13 +490,13 @@ export class WindowStyle
 	 * @returns {object} - SPhere shape
 	 * @memberof WindowStyle
 	 */
-	renderWindow(x, y, width, height, mask)
-	{
-		let drawnBuffer = this.compose(width, height, mask);
-		return HUDSystem.renderImage(new Texture(width, height, drawnBuffer.data), x, y);
-	}
+    renderWindow(x, y, width, height, mask)
+    {
+        let drawnBuffer = this.compose(width, height, mask);
+        return HUDSystem.renderImage(new Texture(width, height, drawnBuffer.data), x, y);
+    }
 
-	/**
+    /**
 	 * compose(width, height, mask=Color.White)
 	 * Returns a DrawingBuffer that is the windowStyle with the provided dimensions
 	 * Use via renderWindow for simple cases
@@ -511,174 +506,174 @@ export class WindowStyle
 	 * @returns 
 	 * @memberof WindowStyle
 	 */
-	compose(width, height, mask=Color.White)
-	{
-		if(((this.upper_left.width  + this.upper_right.width) > width) ||
-			(this.upper_left.height + this.lower_left,height) > height)
-		{
-			HUDSystem.error("window requested smaller than can be drawn with this style.");
-		}
-		let output = new DrawingBuffer(width, height, false);
+    compose(width, height, mask=Color.White)
+    {
+        if (((this.upper_left.width  + this.upper_right.width) > width) ||
+            (this.upper_left.height + this.lower_left,height) > height)
+        {
+            throw new HUDSystemError("window requested smaller than can be drawn with this style.");
+        }
+        let output = new DrawingBuffer(width, height, false);
 
 
-		let widthCount  = Math.ceil((width  - this.upper_left.width  - this.upper_right.width) / this.top.width);
-		let heightCount = Math.ceil((height - this.upper_left.height - this.lower_left.height) / this.left.height);
+        let widthCount  = Math.ceil((width  - this.upper_left.width  - this.upper_right.width) / this.top.width);
+        let heightCount = Math.ceil((height - this.upper_left.height - this.lower_left.height) / this.left.height);
 
-		//#FIX ME currently this does tiled window styles only
+        //#FIX ME currently this does tiled window styles only
 
-		//draw the background
-		for(let i = 0, j = 0; j < heightCount; ++j, i = 0)
-		{
-			for(; i < widthCount; ++i)
-			{
-				output.drawBuffer(
-					this.upper_left.width  + i * this.background.width,
-					this.upper_left.height + j * this.background.height, this.background);
-			}
-		}
+        //draw the background
+        for (let i = 0, j = 0; j < heightCount; ++j, i = 0)
+        {
+            for (; i < widthCount; ++i)
+            {
+                output.drawBuffer(
+                    this.upper_left.width  + i * this.background.width,
+                    this.upper_left.height + j * this.background.height, this.background);
+            }
+        }
 
-		//draw top and bottom
-		for(let i = 0; i < widthCount; ++i)
-		{
-			output.drawBuffer(this.upper_left.width + (i * this.top.width), 0, this.top);
-			output.drawBuffer(this.lower_left.width + (i * this.top.width), height - this.bottom.height, this.bottom);
-		}
+        //draw top and bottom
+        for (let i = 0; i < widthCount; ++i)
+        {
+            output.drawBuffer(this.upper_left.width + (i * this.top.width), 0, this.top);
+            output.drawBuffer(this.lower_left.width + (i * this.top.width), height - this.bottom.height, this.bottom);
+        }
 
-		//draw left and right
-		for(let i = 0; i < heightCount; ++i)
-		{
-			output.drawBuffer(0, this.upper_left.height + i * this.left.height, this.left);
-			output.drawBuffer(width - this.right.width, this.upper_right.height + i * this.right.height, this.right);
-		}
+        //draw left and right
+        for (let i = 0; i < heightCount; ++i)
+        {
+            output.drawBuffer(0, this.upper_left.height + i * this.left.height, this.left);
+            output.drawBuffer(width - this.right.width, this.upper_right.height + i * this.right.height, this.right);
+        }
 
-		//draw corners
-		output.drawBuffer(0,                              0,                                this.upper_left);
-		output.drawBuffer(width - this.upper_right.width, 0,                                this.upper_right);
-		output.drawBuffer(0,                              height - this.lower_left.height,  this.lower_left);
-		output.drawBuffer(width - this.lower_right.width, height - this.lower_right.height, this.lower_right);
+        //draw corners
+        output.drawBuffer(0,                              0,                                this.upper_left);
+        output.drawBuffer(width - this.upper_right.width, 0,                                this.upper_right);
+        output.drawBuffer(0,                              height - this.lower_left.height,  this.lower_left);
+        output.drawBuffer(width - this.lower_right.width, height - this.lower_right.height, this.lower_right);
 		
-		//mask it
-		if(mask !== Color.White)
-		{
-			let maskArray = [mask.r, mask.g, mask.b, mask.a];
-			output.mask(maskArray);
-		}
-		return output;
-	}
+        //mask it
+        if (mask !== Color.White)
+        {
+            let maskArray = [mask.r, mask.g, mask.b, mask.a];
+            output.mask(maskArray);
+        }
+        return output;
+    }
 }
 
 export class DynamicRect
 {
-	constructor(x, y, width, height, colour, texture = null, shader)
-	{
-		this._x = x|0;
-		this._y = y|0;
-		this._width = Math.ceil(width);
-		this._height = Math.ceil(height);
-		this._colour = colour;
-		this._texture = texture;
-		this.shader = shader.clone();
-		this.model = new Model([HUDSystem.render(texture, 0, 0, 1, 1, Color.White)], this.shader);
-		this.mainTransform = new Transform();
-		this.currentTransform = new Transform();
-		this.model.transform = this.currentTransform;
-		this._needsUpdate = true;
-	}
+    constructor(x, y, width, height, colour, texture = null, shader)
+    {
+        this._x = x|0;
+        this._y = y|0;
+        this._width = Math.ceil(width);
+        this._height = Math.ceil(height);
+        this._colour = colour;
+        this._texture = texture;
+        this.shader = shader.clone();
+        this.model = new Model([HUDSystem.render(texture, 0, 0, 1, 1, Color.White)], this.shader);
+        this.mainTransform = new Transform();
+        this.currentTransform = new Transform();
+        this.model.transform = this.currentTransform;
+        this._needsUpdate = true;
+    }
 
-	update()
-	{
-		this.shader.setColorVector("tintColor", this._colour);
-		this.mainTransform.identity();
-		this.mainTransform.scale(this._width, this._height);
-		this.mainTransform.translate(this._x, this._y);
-		this._needsUpdate = false;
-	}
+    update()
+    {
+        this.shader.setColorVector("tintColor", this._colour);
+        this.mainTransform.identity();
+        this.mainTransform.scale(this._width, this._height);
+        this.mainTransform.translate(this._x, this._y);
+        this._needsUpdate = false;
+    }
 
-	set colour(value)
-	{	
-		if(this._colour.a !== value.a ||
-			this._colour.r !== value.r ||
-			this._colour.g !== value.g ||
-			this._colour.b !== value.b)
-		{
-			this._colour = value;
-			this._needsUpdate = true;
-		}
-	}
+    set colour(value)
+    {	
+        if (this._colour.a !== value.a ||
+   this._colour.r !== value.r ||
+   this._colour.g !== value.g ||
+   this._colour.b !== value.b)
+        {
+            this._colour = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get colour()
-	{
-		return this._colour;
-	}
+    get colour()
+    {
+        return this._colour;
+    }
 
 
-	set height(value)
-	{
-		if(this._height !== value)
-		{
-			this._height = value;
-			this._needsUpdate = true;
-		}
-	}
+    set height(value)
+    {
+        if (this._height !== value)
+        {
+            this._height = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get height()
-	{
-		return this._height;
-	}
+    get height()
+    {
+        return this._height;
+    }
 
-	set width(value)
-	{
-		if(this._width !== value)
-		{
-			this._width = value;
-			this._needsUpdate = true;
-		}
-	}
+    set width(value)
+    {
+        if (this._width !== value)
+        {
+            this._width = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get width()
-	{
-		return this._width;
-	}
+    get width()
+    {
+        return this._width;
+    }
 
-	set y(value)
-	{
-		if(this._y !== value)
-		{
-			this._y = value;
-			this._needsUpdate = true;
-		}
-	}
+    set y(value)
+    {
+        if (this._y !== value)
+        {
+            this._y = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get y()
-	{
-		return this._y;
-	}
+    get y()
+    {
+        return this._y;
+    }
 
-	set x(value)
-	{
-		if(this._x !== value)
-		{
-			this._x = value;
-			this._needsUpdate = true;
-		}
-	}
+    set x(value)
+    {
+        if (this._x !== value)
+        {
+            this._x = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get x()
-	{
-		return this._x;
-	}
+    get x()
+    {
+        return this._x;
+    }
 
-	draw(transform)
-	{
-		if(this._needsUpdate === true)
-		{
-			this.update();
-		}
-		this.currentTransform.identity();
-		this.currentTransform.compose(this.mainTransform);
-		this.currentTransform.compose(transform);
-		this.model.draw();
-	}
+    draw(transform)
+    {
+        if (this._needsUpdate === true)
+        {
+            this.update();
+        }
+        this.currentTransform.identity();
+        this.currentTransform.compose(this.mainTransform);
+        this.currentTransform.compose(transform);
+        this.model.draw();
+    }
 }
 
 
@@ -695,65 +690,65 @@ export class DynamicRect
  */
 export class DynamicBar
 {
-	constructor(x, y, width, height, fadeDirection, colourOne, colourTwo, texture = null, shader)
-	{
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		this.colourOne = colourOne;
-		this.colourTwo = colourTwo;
-		this.shader = shader.clone();
-		this.model = new Model([HUDSystem.render(texture, 0, 0, width, height, Color.White)], this.shader);
-		this.mainTransform = new Transform();
-		this.currentTransform = new Transform();
-		this.model.transform = this.currentTransform;
-		this.fraction = 1;
-		this.lastFraction = 0;
-		this.fadeDirection = fadeDirection;
-	}
+    constructor(x, y, width, height, fadeDirection, colourOne, colourTwo, texture = null, shader)
+    {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.colourOne = colourOne;
+        this.colourTwo = colourTwo;
+        this.shader = shader.clone();
+        this.model = new Model([HUDSystem.render(texture, 0, 0, width, height, Color.White)], this.shader);
+        this.mainTransform = new Transform();
+        this.currentTransform = new Transform();
+        this.model.transform = this.currentTransform;
+        this.fraction = 1;
+        this.lastFraction = 0;
+        this.fadeDirection = fadeDirection;
+    }
 
-	update()
-	{
-		if(this.fraction !== this.lastFraction)
-		{
-			this.mainTransform.identity();
-			let factor = Math.max(this.fraction,0);
-			if(this.fadeDirection < 2)
-			{
-				this.mainTransform.scale(factor, 1);
-			}
-			else
-			{
-				this.mainTransform.scale(1, factor);
-			}
-			switch(this.fadeDirection)
-			{
-			case(0):
-				this.mainTransform.translate(this.x, this.y);
-				break;
-			case(1):
-				this.mainTransform.translate(this.x + Math.round(this.width * (1 - factor)), this.y);
-				break;
-			case(2):
-				this.mainTransform.translate(this.x, this.y + Math.round(this.height * (1 - factor)));
-				break;
-			case(3):
-				this.mainTransform.translate(this.x, this.y);
-				break;
-			}
-			this.shader.setColorVector("tintColor", Color.mix(this.colourOne, this.colourTwo, factor, 1 - factor));
-			this.lastFraction = this.fraction;
-		}
-	}
-	draw(transform)
-	{
-		this.update();
-		this.currentTransform.identity();
-		this.currentTransform.compose(this.mainTransform);
-		this.currentTransform.compose(transform);
-		this.model.draw();
-	}
+    update()
+    {
+        if (this.fraction !== this.lastFraction)
+        {
+            this.mainTransform.identity();
+            let factor = Math.max(this.fraction,0);
+            if (this.fadeDirection < 2)
+            {
+                this.mainTransform.scale(factor, 1);
+            }
+            else
+            {
+                this.mainTransform.scale(1, factor);
+            }
+            switch (this.fadeDirection)
+            {
+            case (0):
+                this.mainTransform.translate(this.x, this.y);
+                break;
+            case (1):
+                this.mainTransform.translate(this.x + Math.round(this.width * (1 - factor)), this.y);
+                break;
+            case (2):
+                this.mainTransform.translate(this.x, this.y + Math.round(this.height * (1 - factor)));
+                break;
+            case (3):
+                this.mainTransform.translate(this.x, this.y);
+                break;
+            }
+            this.shader.setColorVector("tintColor", Color.mix(this.colourOne, this.colourTwo, factor, 1 - factor));
+            this.lastFraction = this.fraction;
+        }
+    }
+    draw(transform)
+    {
+        this.update();
+        this.currentTransform.identity();
+        this.currentTransform.compose(this.mainTransform);
+        this.currentTransform.compose(transform);
+        this.model.draw();
+    }
 }
 
 /**
@@ -770,139 +765,139 @@ export class DynamicBar
  */
 export class DynamicText
 {
-	constructor(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
-	{
-		this._text            = text;
-		this._x               = x;
-		this._y               = y;
-		this._font            = font;
-		this._wrapWidth       = wrapWidth;
-		this._colour          = colour;
-		this._needsUpdate     = true;
-		this._needsMove       = true;
-		this.shape            = HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), 0, 0);
-		this.model            = new Model([this.shape]);
-		this.mainTransform    = new Transform();
-		this.currentTransform = new Transform();
-		this.model.transform  = this.currentTransform;
-	}
+    constructor(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
+    {
+        this._text            = text;
+        this._x               = x;
+        this._y               = y;
+        this._font            = font;
+        this._wrapWidth       = wrapWidth;
+        this._colour          = colour;
+        this._needsUpdate     = true;
+        this._needsMove       = true;
+        this.shape            = HUDSystem.renderImage(HUDSystem.text(text, font, wrapWidth, colour), 0, 0);
+        this.model            = new Model([this.shape]);
+        this.mainTransform    = new Transform();
+        this.currentTransform = new Transform();
+        this.model.transform  = this.currentTransform;
+    }
 	
-	/**
+    /**
 	 * Change the text being drawn
 	 * instance.text = "new text";
 	 * @memberof DynamicText
 	 */
-	set text (value)
-	{
-		if(this._text !== value)
-		{
-			this._text = value;
-			this._needsUpdate = true;
-		}
-	}
+    set text (value)
+    {
+        if (this._text !== value)
+        {
+            this._text = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get text ()
-	{
-		return this._text;
-	}
+    get text ()
+    {
+        return this._text;
+    }
 
-	/**
+    /**
 	 * Change the font being used
 	 * instance.font = newFontObject
 	 * @memberof DynamicText
 	 */
-	set font (value)
-	{
-		if(this._font !== value)
-		{
-			this._font = value;
-			this._needsUpdate = true;
-		}
-	}
+    set font (value)
+    {
+        if (this._font !== value)
+        {
+            this._font = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get font ()
-	{
-		return this._font;
-	}
+    get font ()
+    {
+        return this._font;
+    }
 	
-	/**
+    /**
 	 * change the wrapWidth
 	 * 
 	 * @memberof DynamicText
 	 */
-	set wrapWidth (value)
-	{
-		if(this._wrapWidth !== value)
-		{
-			this._wrapWidth = value;
-			this._needsUpdate = true;
-		}
-	}
+    set wrapWidth (value)
+    {
+        if (this._wrapWidth !== value)
+        {
+            this._wrapWidth = value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get wrapWidth ()
-	{
-		return this._wrapWidth;
-	}
+    get wrapWidth ()
+    {
+        return this._wrapWidth;
+    }
 
-	/**
+    /**
 	 * Change the colour being used
 	 * 
 	 * @memberof DynamicText
 	 */
-	set colour (value)
-	{
-		if(this._colour !== value)
-		{
-			this._colour= value;
-			this._needsUpdate = true;
-		}
-	}
+    set colour (value)
+    {
+        if (this._colour !== value)
+        {
+            this._colour= value;
+            this._needsUpdate = true;
+        }
+    }
 
-	get colour ()
-	{
-		return this._colour;
-	}
+    get colour ()
+    {
+        return this._colour;
+    }
 
-	/**
+    /**
 	 * Move the text
 	 * 
 	 * @memberof DynamicText
 	 */
-	set x (value)
-	{
-		if(this._x !== value)
-		{
-			this._x = value;
-			this._needsMove = true;
-		}
-	}
+    set x (value)
+    {
+        if (this._x !== value)
+        {
+            this._x = value;
+            this._needsMove = true;
+        }
+    }
 
-	get x ()
-	{
-		return this._x;
-	}
+    get x ()
+    {
+        return this._x;
+    }
 
-	/**
+    /**
 	 * Move the text
 	 * 
 	 * @memberof DynamicText
 	 */
-	set y (value)
-	{
-		if(this._y !== value)
-		{
-			this._y = value;
-			this._needsMove = true;
-		}
-	}
+    set y (value)
+    {
+        if (this._y !== value)
+        {
+            this._y = value;
+            this._needsMove = true;
+        }
+    }
 
-	get y ()
-	{
-		return this._y;
-	}
+    get y ()
+    {
+        return this._y;
+    }
 
 
-	/**
+    /**
 	 * draw the text
 	 * This will normally be called by HUDSystem#draw
 	 * So you should not call it directly
@@ -910,33 +905,41 @@ export class DynamicText
 	 * @param {any} transform 
 	 * @memberof DynamicText
 	 */
-	draw(transform)
-	{
-		this.update();
-		this.currentTransform.identity();
-		this.currentTransform.compose(this.mainTransform);
-		this.currentTransform.compose(transform);
-		this.model.draw();
-	}
+    draw(transform)
+    {
+        this.update();
+        this.currentTransform.identity();
+        this.currentTransform.compose(this.mainTransform);
+        this.currentTransform.compose(transform);
+        this.model.draw();
+    }
 
-	/**
+    /**
 	 * Updates the text if values have been changed
 	 * Don't call this directly
 	 * 
 	 * @memberof DynamicText
 	 */
-	update()
-	{
-		if(this._needsUpdate === true)
-		{
-			this.shape.texture = HUDSystem.text(this._text, this._font, this._wrapWidth, this._colour);
-			this._needsUpdate  = false;
-		}
-		if(this._needsMove === true)
-		{
-			this.mainTransform.identity();
-			this.mainTransform.translate(this._x, this._y);
-			this._needsMove = false;
-		}
-	}
+    update()
+    {
+        if (this._needsUpdate === true)
+        {
+            this.shape.texture = HUDSystem.text(this._text, this._font, this._wrapWidth, this._colour);
+            this._needsUpdate  = false;
+        }
+        if (this._needsMove === true)
+        {
+            this.mainTransform.identity();
+            this.mainTransform.translate(this._x, this._y);
+            this._needsMove = false;
+        }
+    }
+}
+
+class HUDSystemError extends Error
+{
+    constructor(message)
+    {
+        super("HUDSystem error: " + message);
+    }
 }

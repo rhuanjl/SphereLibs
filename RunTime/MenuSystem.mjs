@@ -52,35 +52,35 @@ import {Input} from "./input";
  */
 export class MenuSystem extends HUDSystem
 {
-	/**
+    /**
 	 * Creates an instance of MenuSystem.
 	 * @param {number} [x=0] -Coordinates of top left corner
 	 * @param {number} [y=0] 
 	 * @param {object} [font=Font.Default] Spehre font object for text
 	 * @memberof MenuSystem
 	 */
-	constructor(x = 0, y = 0, font = Font.Default)
-	{
-		super(true);
-		this.options       = [];
-		this.selection     = 0;
-		this.lastSelection = 0;
-		this.input         = new Input();
-		this.font          = font;
-		this.tokens        = [];
-		this.waiting       = false;
-		this.keys          = [];
-		this.effects       = [];
-		this.x             = x;
-		this.y             = y;
-		this.nextX         = x;
-		this.nextY         = y;
-		this.direction     = 0;
-		this.executing     = false;
-		this.handler;
-	}
+    constructor(x = 0, y = 0, font = Font.Default)
+    {
+        super(true);
+        this.options       = [];
+        this.selection     = 0;
+        this.lastSelection = 0;
+        this.input         = new Input();
+        this.font          = font;
+        this.tokens        = [];
+        this.waiting       = false;
+        this.keys          = [];
+        this.effects       = [];
+        this.x             = x;
+        this.y             = y;
+        this.nextX         = x;
+        this.nextY         = y;
+        this.direction     = 0;
+        this.executing     = false;
+        this.handler;
+    }
 
-	/**
+    /**
 	 * Add a key with an effect to the MenuSystem
 	 * Effect is currently called as a parameterless function
 	 * 
@@ -90,53 +90,53 @@ export class MenuSystem extends HUDSystem
 	 * @param {function} effect 
 	 * @memberof MenuSystem
 	 */
-	addInputKey(key, effect)
-	{
-		if(this.keys.indexOf(key) === -1)
-		{
-			this.keys.push(key);
-			this.effects.push(effect);
-		}
-		else
-		{
-			MenuSystem.error("Same key added twice.");
-		}
-	}
+    addInputKey(key, effect)
+    {
+        if (this.keys.indexOf(key) === -1)
+        {
+            this.keys.push(key);
+            this.effects.push(effect);
+        }
+        else
+        {
+            throw new MenuSystemError("Same key added twice.");
+        }
+    }
 
-	/**
+    /**
 	 * Remove a key
 	 * 
 	 * @param {number} key 
 	 * @memberof MenuSystem
 	 */
-	removeInputKey(key)
-	{
-		let offset = this.keys.indexOf(key);
-		if(offset !== -1)
-		{
-			this.keys.splice(offset,1);
-			this.effects.splice(offset,1);
-		}
-		else
-		{
-			MenuSystem.error("Key removed that was never added.");
-		}
-	}
+    removeInputKey(key)
+    {
+        let offset = this.keys.indexOf(key);
+        if (offset !== -1)
+        {
+            this.keys.splice(offset,1);
+            this.effects.splice(offset,1);
+        }
+        else
+        {
+            throw new MenuSystemError("Key removed that was never added.");
+        }
+    }
 
-	/**
+    /**
 	 * Add default keys for a vertical list menu
 	 * 
 	 * @memberof MenuSystem
 	 */
-	addVListKeys()
-	{
-		this.addInputKey(Key.Down,   ()=>this.selectionDown());
-		this.addInputKey(Key.Up,     ()=>this.selectionUp());
-		this.addInputKey(Key.Enter,  ()=>this.confirm());
-		this.addInputKey(Key.Escape, ()=>this.cancel());
-	}
+    addVListKeys()
+    {
+        this.addInputKey(Key.Down,   ()=>this.selectionDown());
+        this.addInputKey(Key.Up,     ()=>this.selectionUp());
+        this.addInputKey(Key.Enter,  ()=>this.confirm());
+        this.addInputKey(Key.Escape, ()=>this.cancel());
+    }
 
-	/**
+    /**
 	 * Add a text option to a menu
 	 * 
 	 * By default these stack one above the other if no coordinates given
@@ -149,25 +149,25 @@ export class MenuSystem extends HUDSystem
 	 * @param {object} [selectedColour=Color.Blue] 
 	 * @memberof MenuSystem
 	 */
-	addTextOption(text, x = this.nextX, y = this.nextY, unselectedColour = Color.White, selectedColour = Color.Blue)
-	{
-		this.options.push(new TextOption(this, text, x, y, unselectedColour, selectedColour));
-		if(x === this.nextX && y === this.nextY)
-		{
-			switch(this.direction)
-			{
-			case(0):
-				this.nextY = y + this.font.height;
-				break;
-			case(1):
-				this.nextY = y - this.font.height;
-				break;
-				//implement horizontal too
-			}
-		}
-	}
+    addTextOption(text, x = this.nextX, y = this.nextY, unselectedColour = Color.White, selectedColour = Color.Blue)
+    {
+        this.options.push(new TextOption(this, text, x, y, unselectedColour, selectedColour));
+        if (x === this.nextX && y === this.nextY)
+        {
+            switch (this.direction)
+            {
+            case (0):
+                this.nextY = y + this.font.height;
+                break;
+            case (1):
+                this.nextY = y - this.font.height;
+                break;
+    //implement horizontal too
+            }
+        }
+    }
 
-	/**
+    /**
 	 * Add any kind of option
 	 * 
 	 * Must have a selected() and an unselected method()
@@ -176,85 +176,85 @@ export class MenuSystem extends HUDSystem
 	 * @param {any} option 
 	 * @memberof MenuSystem
 	 */
-	addOption(option)
-	{
-		if(!option.selected)
-		{
-			MenuSystem.error("added an option with no selection method");
-		}
-		if(!option.unselected)
-		{
-			MenuSystem.error("added an option with no deselection method");
-		}
-		let position = this.dynamicIDs.indexOf(option.token);
-		if(position === -1)
-		{
-			MenuSystem.error("added an option that is not yet a Dynamic HUD Object");
-		}
-		this.options.push(option);
-	}
+    addOption(option)
+    {
+        if (!option.selected)
+        {
+            throw new MenuSystemError("added an option with no selection method");
+        }
+        if (!option.unselected)
+        {
+            throw new MenuSystemError("added an option with no deselection method");
+        }
+        let position = this.dynamicIDs.indexOf(option.token);
+        if (position === -1)
+        {
+            throw new MenuSystemError("added an option that is not yet a Dynamic HUD Object");
+        }
+        this.options.push(option);
+    }
 	
-	/**
+    /**
 	 * Remove an option from the menu
 	 * 
 	 * @param {any} token 
 	 * @memberof MenuSystem
 	 */
-	removeOption(token)
-	{
-		let position = 0;
-		let options = this.options;
-		for(; token !== options[position].token; ++position);
-		options.splice(position,1);
-		this.remove(token);
-	}
+    removeOption(token)
+    {
+        let position = 0;
+        let options = this.options;
+        for (; token !== options[position].token; ++position);
+        options.splice(position,1);
+        this.remove(token);
+    }
 
-	/**
+    /**
 	 * Called on update when the menu is running
 	 * Overwrite this if you'd like something to happen once a frame during the menu
 	 * 
 	 * @memberof MenuSystem
 	 */
-	update()
-	{
-		//blank function that can be overwritten to add any custom updates
-	}
+    update()
+    {
+        //blank function that can be overwritten to add any custom updates
+    }
 
-	/**
+    /**
 	 * internal update function don't use externally
 	 * 
 	 * @memberof MenuSystem
 	 */
-	internalUpdate()
-	{
-		this.update();
-		if(this.waiting === false)
-		{
-			this.processUpdate();
-		}
-	}
+    internalUpdate()
+    {
+        this.update();
+        if (this.waiting === false)
+        {
+            this.processUpdate();
+        }
+    }
 
-	/**
+    /**
 	 * Process inputs during the menu's execution
 	 * Don't call this externally
 	 * 
 	 * @memberof MenuSystem
 	 */
-	async processUpdate()
-	{
-		this.waiting = true;
-		let key = await this.input.waitForInput(this.keys);
-		this.effects[this.keys.indexOf(key)]();
-		if(this.selection !== this.lastSelection)
-		{
-			this.options[this.selection].selected();
-			this.options[this.lastSelection].unselected();
-			this.lastSelection = this.selection;
-		}
-		this.waiting = false;
-	}
+    async processUpdate()
+    {
+        this.waiting = true;
+        let key = await this.input.waitForInput(this.keys);
+        this.effects[this.keys.indexOf(key)]();
+        if (this.selection !== this.lastSelection)
+        {
+            this.options[this.selection].selected();
+            this.options[this.lastSelection].unselected();
+            this.lastSelection = this.selection;
+        }
+        this.waiting = false;
+    }
 
-	/**
+    /**
 	 * Start the menu
 	 * 
 	 * This returns a promise that resolves as the id number of the selected option when the menu finishes
@@ -262,117 +262,112 @@ export class MenuSystem extends HUDSystem
 	 * @returns 
 	 * @memberof MenuSystem
 	 */
-	start()
-	{
-		if(this.keys.length < 1 || this.keys.length !== this.effects.length)
-		{
-			MenuSystem.error("Menu Input not setup correctly");
-		}
-		if(this.options.length < 1)
-		{
-			MenuSystem.error("Menu has no options");
-		}
-		this.input.takeInput();
-		this.options[this.selection].selected();
-		this.executing = true;
-		this.tokens[0] = Dispatch.onUpdate(()=>this.internalUpdate());
-		this.tokens[1] = Dispatch.onRender(()=>this.draw());
-		return new Promise((resolve, reject)=>
-		{
-			this.handler = {resolve, reject};
-		});
-	}
+    start()
+    {
+        if (this.keys.length < 1 || this.keys.length !== this.effects.length)
+        {
+            throw new MenuSystemError("Menu Input not setup correctly");
+        }
+        if (this.options.length < 1)
+        {
+            throw new MenuSystemError("Menu has no options");
+        }
+        this.input.takeInput();
+        this.options[this.selection].selected();
+        this.executing = true;
+        this.tokens[0] = Dispatch.onUpdate(()=>this.internalUpdate());
+        this.tokens[1] = Dispatch.onRender(()=>this.draw());
+        return new Promise((resolve, reject)=>
+        {
+            this.handler = {resolve, reject};
+        });
+    }
 
-	/**
+    /**
 	 * End the menu stops updating/drawing AND resolves the promise created by start()
 	 * 
 	 * @memberof MenuSystem
 	 */
-	end()
-	{
-		this.executing = false;
-		this.input.yieldInput();
-		for(let i = 0, length = this.tokens.length; i < length; ++i)
-		{
-			this.tokens[i].cancel();
-		}
-		this.handler.resolve(this.selection);
-	}
+    end()
+    {
+        this.executing = false;
+        this.input.yieldInput();
+        for (let i = 0, length = this.tokens.length; i < length; ++i)
+        {
+            this.tokens[i].cancel();
+        }
+        this.handler.resolve(this.selection);
+    }
 
 
 
-	/**
+    /**
 	 * Dispose of the input object associated with the menu
 	 * Call this if never intending to use this menu again
 	 * 
 	 * @memberof MenuSystem
 	 */
-	dispose()
-	{
-		this.input.dispose();
-	}
+    dispose()
+    {
+        this.input.dispose();
+    }
 
-	/**
+    /**
 	 * helper method - user chooses currently selected option
 	 * 
 	 * @memberof MenuSystem
 	 */
-	confirm()
-	{
-		this.lastSelection = this.selection;
-		this.end();
-	}
+    confirm()
+    {
+        this.lastSelection = this.selection;
+        this.end();
+    }
 
-	/**
+    /**
 	 * helper method - user cancels the menu
 	 * 
 	 * @memberof MenuSystem
 	 */
-	cancel()
-	{
-		this.lastSelection = this.selection;
-		this.selection = -1;
-		this.end();
-	}	
+    cancel()
+    {
+        this.lastSelection = this.selection;
+        this.selection = -1;
+        this.end();
+    }	
 
-	/**
+    /**
 	 * helper method - go up one selection
 	 * 
 	 * @memberof MenuSystem
 	 */
-	selectionUp()
-	{
-		if(this.selection > 0)
-		{
-			--this.selection;
-		}
-		else
-		{
-			this.selection = this.options.length - 1;
-		}
-	}
+    selectionUp()
+    {
+        if (this.selection > 0)
+        {
+            --this.selection;
+        }
+        else
+        {
+            this.selection = this.options.length - 1;
+        }
+    }
 
-	/**
+    /**
 	 * helper method - go down one selection
 	 * 
 	 * @memberof MenuSystem
 	 */
-	selectionDown()
-	{
-		if(this.selection < (this.options.length - 1))
-		{
-			++this.selection;
-		}
-		else
-		{
-			this.selection = 0;
-		}
-	}
-
-	static error(description)
-	{
-		throw new Error("MenuSystem Error: " + description);
-	}
+    selectionDown()
+    {
+        if (this.selection < (this.options.length - 1))
+        {
+            ++this.selection;
+        }
+        else
+        {
+            this.selection = 0;
+        }
+    }
 }
 
 
@@ -385,20 +380,28 @@ export class MenuSystem extends HUDSystem
  */
 class TextOption
 {
-	constructor(menu, text, x, y, unselectedColour = Color.White, selectedColour = Color.Blue)
-	{
-		this.token = menu.addVariableText(text, x, y, Surface.Screen.width, menu.font, unselectedColour);
-		this.selectable = true;
-		this.access = menu.getDynamic(this.token);
-		this.selectedColour = selectedColour;
-		this.unselectedColour = unselectedColour;
-	}
-	selected()
-	{
-		this.access.colour = this.selectedColour;
-	}
-	unselected()
-	{
-		this.access.colour = this.unselectedColour;
-	}
+    constructor(menu, text, x, y, unselectedColour = Color.White, selectedColour = Color.Blue)
+    {
+        this.token = menu.addVariableText(text, x, y, Surface.Screen.width, menu.font, unselectedColour);
+        this.selectable = true;
+        this.access = menu.getDynamic(this.token);
+        this.selectedColour = selectedColour;
+        this.unselectedColour = unselectedColour;
+    }
+    selected()
+    {
+        this.access.colour = this.selectedColour;
+    }
+    unselected()
+    {
+        this.access.colour = this.unselectedColour;
+    }
+}
+
+class MenuSystemError extends Error
+{
+    constructor(message)
+    {
+        super("MenuSystem Error: " + message);
+    }
 }

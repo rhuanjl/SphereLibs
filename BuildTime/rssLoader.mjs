@@ -36,167 +36,160 @@ import {DataStream} from "cell-runtime";
 
 export function convertRSS(outputFile, inputFile)
 {
-	let data = loadRSS(inputFile[0], true);
-	writeSprite(outputFile, data);
+    let data = loadRSS(inputFile[0]);
+    writeSprite(outputFile, data);
 }
 
 
-export function loadRSS(filename, cell)
+export function loadRSS(filename)
 {
-	let inputFile = new DataStream(filename, FileOp.Read);
+    let inputFile = new DataStream(filename, FileOp.Read);
 
-	let header = inputFile.readStruct(RSSHeader);
-	inputFile.position = inputFile.position + 106;
-	if(header.version !== 3)
-	{
-		if(cell === true)
-		{
-			error("Incompatible RSS file cannot be loaded - " + filename);
-		}
-		else
-		{
-			throw "Incompatible RSS file cannot be loaded - " + filename;
-		}
-	}
-	let images = new TileBuffer(inputFile, header.frameWidth, header.frameHeight, header.numImages);
-	let rssDirections = new Array(header.numDirections);
-	let imagesWide = 0;
+    let header = inputFile.readStruct(RSSHeader);
+    inputFile.position = inputFile.position + 106;
+    if (header.version !== 3)
+    {
+        throw new Error("Incompatible RSS file cannot be loaded - " + filename);
+    }
+    let images = new TileBuffer(inputFile, header.frameWidth, header.frameHeight, header.numImages);
+    let rssDirections = new Array(header.numDirections);
+    let imagesWide = 0;
 
-	for(let i = 0; i < header.numDirections; ++i)
-	{
-		let numFrames = inputFile.readInt16(true);
-		inputFile.position = inputFile.position + 6;
-		let name = inputFile.readString16(true);
-		let frames = new Array(numFrames);
-		for(let j = 0; j < numFrames; ++j)
-		{
-			frames[j] = {
-				index : inputFile.readInt16(true),
-				delay : inputFile.readInt16(true)
-			};
-			inputFile.position = inputFile.position + 4;
-		}
-		rssDirections[i] =
-		{
-			name	  : name,
-			numFrames : numFrames,
-			frames	  : frames
-		};
-		imagesWide = Math.max(imagesWide, numFrames);
-	}
+    for (let i = 0; i < header.numDirections; ++i)
+    {
+        let numFrames = inputFile.readInt16(true);
+        inputFile.position = inputFile.position + 6;
+        let name = inputFile.readString16(true);
+        let frames = new Array(numFrames);
+        for (let j = 0; j < numFrames; ++j)
+        {
+            frames[j] = {
+                index : inputFile.readInt16(true),
+                delay : inputFile.readInt16(true)
+            };
+            inputFile.position = inputFile.position + 4;
+        }
+        rssDirections[i] =
+  {
+      name	  : name,
+      numFrames : numFrames,
+      frames	  : frames
+  };
+        imagesWide = Math.max(imagesWide, numFrames);
+    }
 
-	let spriteSheet = new MapBuffer(imagesWide, header.numDirections, images);
+    let spriteSheet = new MapBuffer(imagesWide, header.numDirections, images);
 
-	let outputDirections = new Array(header.numDirections);
+    let outputDirections = new Array(header.numDirections);
 
-	for(let i = 0; i < header.numDirections; ++i)
-	{
-		outputDirections[i] =
-		{//#FIX ME - speed, ignores rss frame delay
-			id:rssDirections[i].name,
-			vector:[0,0,0],
-			speed:5, 
-			frames:rssDirections[i].numFrames,
-			reset:5
-		};
-		//give vectors to directions
-		let x = 0, y = 0, z = 0;
-		if(outputDirections[i].id.indexOf("north") !== -1)
-		{
-			--y;
-		}
-		if(outputDirections[i].id.indexOf("south") !== -1)
-		{
-			++y;
-		}
-		if(outputDirections[i].id.indexOf("west") !== -1)
-		{
-			--x;
-		}
-		if(outputDirections[i].id.indexOf("east") !== -1)
-		{
-			++x;
-		}
-		outputDirections[i].vector = [x,y,z];
-		for(let j = 0; j < rssDirections[i].numFrames; ++j)
-		{
-			spriteSheet.setTileInBuffer(rssDirections[i].frames[j].index, i * imagesWide + j);
-		}
-	}
+    for (let i = 0; i < header.numDirections; ++i)
+    {
+        outputDirections[i] =
+  {//#FIX ME - speed, ignores rss frame delay
+      id:rssDirections[i].name,
+      vector:[0,0,0],
+      speed:5, 
+      frames:rssDirections[i].numFrames,
+      reset:5
+  };
+        //give vectors to directions
+        let x = 0, y = 0, z = 0;
+        if (outputDirections[i].id.indexOf("north") !== -1)
+        {
+            --y;
+        }
+        if (outputDirections[i].id.indexOf("south") !== -1)
+        {
+            ++y;
+        }
+        if (outputDirections[i].id.indexOf("west") !== -1)
+        {
+            --x;
+        }
+        if (outputDirections[i].id.indexOf("east") !== -1)
+        {
+            ++x;
+        }
+        outputDirections[i].vector = [x,y,z];
+        for (let j = 0; j < rssDirections[i].numFrames; ++j)
+        {
+            spriteSheet.setTileInBuffer(rssDirections[i].frames[j].index, i * imagesWide + j);
+        }
+    }
 
-	let offset = [Math.floor((header.baseX1+header.baseX2)/2), Math.floor((header.baseY1+header.baseY2)/2)];
+    let offset = [Math.floor((header.baseX1+header.baseX2)/2), Math.floor((header.baseY1+header.baseY2)/2)];
 
-	let poly = {
-		type : 1,//#FIX ME this is wrong
-		x : Math.floor(Math.min(header.baseX1, header.baseX2)),
-		y : Math.floor(Math.min(header.baseY1, header.baseY2)),
-		w : Math.abs(header.baseX1 - header.baseX2),
-		h : Math.abs(header.baseY1 - header.baseY2)
-	};
-	return {
-		directions   : outputDirections,
-		spriteSheet  : spriteSheet.tileBufferToTexture(),
-		frameWidth   : header.frameWidth,
-		frameHeight  : header.frameHeight,
-		poly         : poly,
-		offset		 : offset
-	};
+    let poly = {
+        type : 1,//#FIX ME this is wrong
+        x : Math.floor(Math.min(header.baseX1, header.baseX2)),
+        y : Math.floor(Math.min(header.baseY1, header.baseY2)),
+        w : Math.abs(header.baseX1 - header.baseX2),
+        h : Math.abs(header.baseY1 - header.baseY2)
+    };
+    return {
+        directions   : outputDirections,
+        spriteSheet  : spriteSheet.tileBufferToTexture(),
+        frameWidth   : header.frameWidth,
+        frameHeight  : header.frameHeight,
+        poly         : poly,
+        offset		 : offset
+    };
 }
 
 
 export function writeSprite (filename, data)
 {
-	let outputFile = new DataStream(filename, FileOp.Write);
+    let outputFile = new DataStream(filename, FileOp.Write);
 
-	//dimensions
-	outputFile.writeUint16(data.frameWidth, true);
-	outputFile.writeUint16(data.frameHeight, true);
+    //dimensions
+    outputFile.writeUint16(data.frameWidth, true);
+    outputFile.writeUint16(data.frameHeight, true);
 
 
-	//poly
-	outputFile.writeUint8(1);//number of polys, with an rss it'll always be 1
-	outputFile.writeUint8(data.poly.type);
-	outputFile.writeInt16(data.poly.x -data.offset[0], true);
-	outputFile.writeInt16(data.poly.y - data.offset[1], true);
-	outputFile.writeUint16(data.poly.w, true);
-	outputFile.writeUint16(data.poly.h, true);
+    //poly
+    outputFile.writeUint8(1);//number of polys, with an rss it'll always be 1
+    outputFile.writeUint8(data.poly.type);
+    outputFile.writeInt16(data.poly.x -data.offset[0], true);
+    outputFile.writeInt16(data.poly.y - data.offset[1], true);
+    outputFile.writeUint16(data.poly.w, true);
+    outputFile.writeUint16(data.poly.h, true);
 
-	//offset to apply when drawing - v1 used mid point of base as coordinates
-	outputFile.writeUint16(data.offset[0], true);
-	outputFile.writeUint16(data.offset[1], true);
+    //offset to apply when drawing - v1 used mid point of base as coordinates
+    outputFile.writeUint16(data.offset[0], true);
+    outputFile.writeUint16(data.offset[1], true);
 	
 
-	//directions
-	outputFile.writeUint16(data.directions.length, true);
+    //directions
+    outputFile.writeUint16(data.directions.length, true);
 
-	for(let i = 0; i < data.directions.length; ++i)
-	{
-		let dat = data.directions[i];
-		outputFile.writeString16(dat.id,true);
-		outputFile.writeInt8(dat.vector[0]);
-		outputFile.writeInt8(dat.vector[1]);
-		outputFile.writeInt8(dat.vector[2]);
-		outputFile.writeUint8(dat.speed);
-		outputFile.writeUint8(dat.frames);
-		outputFile.writeUint8(dat.reset);
-	}
-	outputFile.writeUint16(data.spriteSheet.width, true);
-	outputFile.writeUint16(data.spriteSheet.height, true);
-	outputFile.write(data.spriteSheet.data);
+    for (let i = 0; i < data.directions.length; ++i)
+    {
+        let dat = data.directions[i];
+        outputFile.writeString16(dat.id,true);
+        outputFile.writeInt8(dat.vector[0]);
+        outputFile.writeInt8(dat.vector[1]);
+        outputFile.writeInt8(dat.vector[2]);
+        outputFile.writeUint8(dat.speed);
+        outputFile.writeUint8(dat.frames);
+        outputFile.writeUint8(dat.reset);
+    }
+    outputFile.writeUint16(data.spriteSheet.width, true);
+    outputFile.writeUint16(data.spriteSheet.height, true);
+    outputFile.write(data.spriteSheet.data);
 }
 
 //#FIX ME - cut out the use of this - inline the loads above
 //will run slightly faster and be easier to follow
-var RSSHeader =
+const RSSHeader =
 {
-	signature     : {type : "fstring", length: 4},
-	version       : {type : "uint16le"},
-	numImages     : {type : "uint16le"},
-	frameWidth    : {type : "uint16le"},
-	frameHeight   : {type : "uint16le"},
-	numDirections : {type : "uint16le"},
-	baseX1        : {type : "uint16le"},
-	baseY1        : {type : "uint16le"},
-	baseX2        : {type : "uint16le"},
-	baseY2        : {type : "uint16le"},
+    signature     : {type : "fstring", length: 4},
+    version       : {type : "uint16le"},
+    numImages     : {type : "uint16le"},
+    frameWidth    : {type : "uint16le"},
+    frameHeight   : {type : "uint16le"},
+    numDirections : {type : "uint16le"},
+    baseX1        : {type : "uint16le"},
+    baseY1        : {type : "uint16le"},
+    baseX2        : {type : "uint16le"},
+    baseY2        : {type : "uint16le"},
 };
