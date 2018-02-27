@@ -78,295 +78,295 @@
 //Internal class do not use directly
 class PixelBuffer
 {
-	constructor(buffer, width, height)
-	{
-		this.data    = buffer; 
-		this.pixels  = new Uint32Array(this.data);
-		this.rgba    = new Uint8Array(this.data);
-		this.width   = width;
-		this.height  = height;
-	}
+    constructor(buffer, width, height)
+    {
+        this.data    = buffer; 
+        this.pixels  = new Uint32Array(this.data);
+        this.rgba    = new Uint8Array(this.data);
+        this.width   = width;
+        this.height  = height;
+    }
 }
 
 //Internal class do not use directly
 class internalTileBuffer extends PixelBuffer
 {
-	constructor(buffer, tileWidth, tileHeight, tilesWide, tilesHigh)
-	{
-		super(buffer, tileWidth * tilesWide, tileHeight * tilesHigh);
+    constructor(buffer, tileWidth, tileHeight, tilesWide, tilesHigh)
+    {
+        super(buffer, tileWidth * tilesWide, tileHeight * tilesHigh);
 
-		this.length     = this.width * this.height;
-		this.tileWidth  = tileWidth;
-		this.tileHeight = tileHeight;
-		this.tileSize   = tileWidth * tileHeight;
-		this.tilesWide  = tilesWide;
-		this.tilesHigh  = tilesHigh;
-		this.strip      = this.tileSize * tilesWide;
-	}
+        this.length     = this.width * this.height;
+        this.tileWidth  = tileWidth;
+        this.tileHeight = tileHeight;
+        this.tileSize   = tileWidth * tileHeight;
+        this.tilesWide  = tilesWide;
+        this.tilesHigh  = tilesHigh;
+        this.strip      = this.tileSize * tilesWide;
+    }
 	
-	tileBufferToTexture()
-	{
-		//dereference everything to make the below loop smaller, neater and maybe even faster
-		let input       = this.pixels;
-		let length      = this.length |0;
-		let tileWidth   = this.tileWidth |0;
-		let width       = this.width |0;
-		let strip       = this.strip |0;
-		let output      = new Uint32Array(length);
-		for(let i = 0, x = 0, a = 0, b = 0, c = 0; i < length; c += strip, b = 0)
-		{
-			for(; b < width; b += tileWidth, a = 0)
-			{
-				for(; a < strip; a += width, x = 0)
-				{
-					for(; x < tileWidth; ++x, ++i)
-					{
-						output[(x + a + b + c)] = input[i];
-					}
-				}
-			}
-		}
-		return {
-			width  : width, 
-			height : this.height,
-			data   : output.buffer
-		};
-	}
+    tileBufferToTexture()
+    {
+        //dereference everything to make the below loop smaller, neater and maybe even faster
+        let input       = this.pixels;
+        let length      = this.length |0;
+        let tileWidth   = this.tileWidth |0;
+        let width       = this.width |0;
+        let strip       = this.strip |0;
+        let output      = new Uint32Array(length);
+        for (let i = 0, x = 0, a = 0, b = 0, c = 0; i < length; c += strip, b = 0)
+        {
+            for (; b < width; b += tileWidth, a = 0)
+            {
+                for (; a < strip; a += width, x = 0)
+                {
+                    for (; x < tileWidth; ++x, ++i)
+                    {
+                        output[(x + a + b + c)] = input[i];
+                    }
+                }
+            }
+        }
+        return {
+            width  : width, 
+            height : this.height,
+            data   : output.buffer
+        };
+    }
 }
 
 
 export class MapBuffer extends internalTileBuffer
 {
-	constructor(tilesWide, tilesHigh, tileBuffer)
-	{
-		super(new ArrayBuffer(tileBuffer.tileWidth * tilesWide * tileBuffer.tileHeight * tilesHigh * 4),
-			tileBuffer.tileWidth, tileBuffer.tileHeight, tilesWide, tilesHigh);
+    constructor(tilesWide, tilesHigh, tileBuffer)
+    {
+        super(new ArrayBuffer(tileBuffer.tileWidth * tilesWide * tileBuffer.tileHeight * tilesHigh * 4),
+            tileBuffer.tileWidth, tileBuffer.tileHeight, tilesWide, tilesHigh);
 		
-		this.tileBuffer = tileBuffer;
-	}
+        this.tileBuffer = tileBuffer;
+    }
 
-	setTileInBuffer(tile, target)
-	{
-		let tStart    = this.tileSize * tile;
-		this.pixels.set(this.tileBuffer.pixels.subarray(tStart, tStart + this.tileSize), this.tileSize * target);
-	}
+    setTileInBuffer(tile, target)
+    {
+        let tStart    = this.tileSize * tile;
+        this.pixels.set(this.tileBuffer.pixels.subarray(tStart, tStart + this.tileSize), this.tileSize * target);
+    }
 }
 
 export class TileBuffer extends internalTileBuffer
 {
-	constructor(source, tileWidth, tileHeight, numTiles)
-	{
-		let shortBuffer = source.read(tileWidth * tileHeight * numTiles * 4);
-		let roundWidth = Math.ceil(Math.sqrt(tileWidth * tileHeight * numTiles)) * 2;
-		let buffer = new ArrayBuffer(roundWidth * roundWidth);
-		let shortView = new Uint8Array(shortBuffer);
-		let fullView = new Uint8Array(buffer);
-		fullView.set(shortView);
-		super(buffer, tileWidth, tileHeight, roundWidth, roundWidth);
-	}
+    constructor(source, tileWidth, tileHeight, numTiles)
+    {
+        let shortBuffer = source.read(tileWidth * tileHeight * numTiles * 4);
+        let roundWidth = Math.ceil(Math.sqrt(tileWidth * tileHeight * numTiles)) * 2;
+        let buffer = new ArrayBuffer(roundWidth * roundWidth);
+        let shortView = new Uint8Array(shortBuffer);
+        let fullView = new Uint8Array(buffer);
+        fullView.set(shortView);
+        super(buffer, tileWidth, tileHeight, roundWidth, roundWidth);
+    }
 }
 
 export class DrawingBuffer extends PixelBuffer
 {
-	constructor(width, height, prefilled, source)
-	{
-		let data;
-		if (prefilled === true)
-		{
-			data = source.read(width * height * 4);
-		}
-		else
-		{
-			data = new ArrayBuffer(width * height * 4);
-		}
-		super(data, width, height);
-	}
-	//draw a different buffer on to this one
-	//the buffer parameter can be a DrawingBuffer OR the return value
-	//from DrawingBuffer#finalise or TileBuffer/MapBuffer#tileBufferToTexture
-	//if add is true the colour values of the buffer being drawn are added
-	//if add is false the buffer being drawn overwrites the one it's drawn on
-	//#FIX ME should allow multiplicative blending
-	drawBuffer(x, y, buffer, add)
-	{
-		let input, output;
-		if(add === true)
-		{
-			input = new Uint8Array(buffer.data);
-			output = this.rgba;
-		}
-		else
-		{
-			input  = new Uint32Array(buffer.data);
-			output = this.pixels;
-		}
-		let outputWidth = this.width;
-		let width  = Math.min(this.width - x, buffer.width);
-		let height = Math.min(this.height -y, buffer.height);
-		for(let j = 0, i = 0, k = 0; j < height; ++j, i = 0)
-		{
-			for(; i < width; ++i, ++k)
-			{
-				if(add === true)
-				{
-					let offset = 4 * ((x +i) + (y + j) * outputWidth);
-					output[offset    ] = Math.min(input[k * 4    ] + output[offset    ], 255);
-					output[offset + 1] = Math.min(input[k * 4 + 1] + output[offset + 1], 255);
-					output[offset + 2] = Math.min(input[k * 4 + 2] + output[offset + 2], 255);
-					output[offset + 3] = Math.min(input[k * 4 + 3] + output[offset + 3], 255);					
-				}
-				else
-				{
-					output[(x +i) + (y + j) * outputWidth] = input[k];
-				}
-			}
-		}
-	}
+    constructor(width, height, prefilled, source)
+    {
+        let data;
+        if (prefilled === true)
+        {
+            data = source.read(width * height * 4);
+        }
+        else
+        {
+            data = new ArrayBuffer(width * height * 4);
+        }
+        super(data, width, height);
+    }
+    //draw a different buffer on to this one
+    //the buffer parameter can be a DrawingBuffer OR the return value
+    //from DrawingBuffer#finalise or TileBuffer/MapBuffer#tileBufferToTexture
+    //if add is true the colour values of the buffer being drawn are added
+    //if add is false the buffer being drawn overwrites the one it's drawn on
+    //#FIX ME should allow multiplicative blending
+    drawBuffer(x, y, buffer, add)
+    {
+        let input, output;
+        if (add === true)
+        {
+            input = new Uint8Array(buffer.data);
+            output = this.rgba;
+        }
+        else
+        {
+            input  = new Uint32Array(buffer.data);
+            output = this.pixels;
+        }
+        let outputWidth = this.width;
+        let width  = Math.min(this.width - x, buffer.width);
+        let height = Math.min(this.height -y, buffer.height);
+        for (let j = 0, i = 0, k = 0; j < height; ++j, i = 0)
+        {
+            for (; i < width; ++i, ++k)
+            {
+                if (add === true)
+                {
+                    let offset = 4 * ((x +i) + (y + j) * outputWidth);
+                    output[offset    ] = Math.min(input[k * 4    ] + output[offset    ], 255);
+                    output[offset + 1] = Math.min(input[k * 4 + 1] + output[offset + 1], 255);
+                    output[offset + 2] = Math.min(input[k * 4 + 2] + output[offset + 2], 255);
+                    output[offset + 3] = Math.min(input[k * 4 + 3] + output[offset + 3], 255);					
+                }
+                else
+                {
+                    output[(x +i) + (y + j) * outputWidth] = input[k];
+                }
+            }
+        }
+    }
 
-	mask(colour)
-	{
-		let width = this.width;
-		let height = this.height;
-		let offset = 0;
-		let rgba = this.rgba;
-		for(let i = 0, j = 0; j < height; ++j, i = 0)
-		{
-			for(; i < width; ++i)
-			{
-				offset = (i + j * width) * 4;
-				rgba[offset    ] = Math.floor(rgba[offset    ] * colour[0]);
-				rgba[offset + 1] = Math.floor(rgba[offset + 1] * colour[1]);
-				rgba[offset + 2] = Math.floor(rgba[offset + 2] * colour[2]);
-				rgba[offset + 3] = Math.floor(rgba[offset + 3] * colour[3]);
-			}
-		}
-	}
+    mask(colour)
+    {
+        let width = this.width;
+        let height = this.height;
+        let offset = 0;
+        let rgba = this.rgba;
+        for (let i = 0, j = 0; j < height; ++j, i = 0)
+        {
+            for (; i < width; ++i)
+            {
+                offset = (i + j * width) * 4;
+                rgba[offset    ] = Math.floor(rgba[offset    ] * colour[0]);
+                rgba[offset + 1] = Math.floor(rgba[offset + 1] * colour[1]);
+                rgba[offset + 2] = Math.floor(rgba[offset + 2] * colour[2]);
+                rgba[offset + 3] = Math.floor(rgba[offset + 3] * colour[3]);
+            }
+        }
+    }
 
-	solidRectangle(x1, y1, x2, y2, colour)
-	{
-		let cColour = DrawingBuffer.combineColour(...colour);
-		for(let i = x1, j = 0; i <= x2; ++i)
-		{
-			for(j = y1; j <= y2; ++j)
-			{
-				this.internalSetPixel(i, j, cColour);
-			}
-		}
-	}
+    solidRectangle(x1, y1, x2, y2, colour)
+    {
+        let cColour = DrawingBuffer.combineColour(...colour);
+        for (let i = x1, j = 0; i <= x2; ++i)
+        {
+            for (j = y1; j <= y2; ++j)
+            {
+                this.internalSetPixel(i, j, cColour);
+            }
+        }
+    }
 
-	outlinedRectangle(x1, y1, x2, y2, thickness, colour)
-	{	
-		let cColour = DrawingBuffer.combineColour(...colour);
-		for(let k = 0; k < thickness; ++ k)
-		{
-			this.internalLine(x1, y1 + k, x2, y1 + k, cColour);
-			this.internalLine(x1, y2 - k, x2, y2 - k, cColour);
-			this.internalLine(x1 + k, y1, x1 + k, y2, cColour);
-			this.internalLine(x2 - k, y1, x2 - k, y1, cColour);
-		}
-	}
+    outlinedRectangle(x1, y1, x2, y2, thickness, colour)
+    {	
+        let cColour = DrawingBuffer.combineColour(...colour);
+        for (let k = 0; k < thickness; ++ k)
+        {
+            this.internalLine(x1, y1 + k, x2, y1 + k, cColour);
+            this.internalLine(x1, y2 - k, x2, y2 - k, cColour);
+            this.internalLine(x1 + k, y1, x1 + k, y2, cColour);
+            this.internalLine(x2 - k, y1, x2 - k, y1, cColour);
+        }
+    }
 
-	solidCircle(x, y, r, colour)
-	{
-		let x1 = x - r;
-		let x2 = x + r;
-		let y1 = y - r;
-		let y2 = y + r;
+    solidCircle(x, y, r, colour)
+    {
+        let x1 = x - r;
+        let x2 = x + r;
+        let y1 = y - r;
+        let y2 = y + r;
 
-		let xi = 0;
-		let yi = 0;
+        let xi = 0;
+        let yi = 0;
 
-		let cColour = DrawingBuffer.combineColour(...colour);
+        let cColour = DrawingBuffer.combineColour(...colour);
 
-		for(let i = x1; i < x2; ++i)
-		{
-			for(let j = y1; j < y2; ++j)
-			{
-				xi = (i - x);
-				yi = (j - y);
-				if((xi * xi + yi * yi) <= (r * r))
-				{
-					this.internalSetPixel(i, j, cColour);
-				}
-			}
-		}
-	}
+        for (let i = x1; i < x2; ++i)
+        {
+            for (let j = y1; j < y2; ++j)
+            {
+                xi = (i - x);
+                yi = (j - y);
+                if ((xi * xi + yi * yi) <= (r * r))
+                {
+                    this.internalSetPixel(i, j, cColour);
+                }
+            }
+        }
+    }
 
-	outlinedCircle(x, y, r, thickness, colour)
-	{
-		let x1 = x - r;
-		let x2 = x + r;
-		let r2 = r * r;
+    outlinedCircle(x, y, r, thickness, colour)
+    {
+        let x1 = x - r;
+        let x2 = x + r;
+        let r2 = r * r;
 
-		let cColour = DrawingBuffer.combineColour(...colour);
+        let cColour = DrawingBuffer.combineColour(...colour);
 
-		for(let k = 0, xt2 = x2; k < thickness; ++k, --xt2)
-		{
-			for(let i = x1 + thickness; i < xt2; ++i)
-			{
-				let yt = Math.sqrt(r2 +(i * i)) + y;
-				this.internalSetPixel(i, yt, cColour);
-			}
-		}
-	}
+        for (let k = 0, xt2 = x2; k < thickness; ++k, --xt2)
+        {
+            for (let i = x1 + thickness; i < xt2; ++i)
+            {
+                let yt = Math.sqrt(r2 +(i * i)) + y;
+                this.internalSetPixel(i, yt, cColour);
+            }
+        }
+    }
 
-	line(x1, x2, y1, y2, colour)
-	{
-		let m = Math.floor((y2 - y1) / (x2 - x1));
-		let c = y1 - (m * x1);
+    line(x1, x2, y1, y2, colour)
+    {
+        let m = Math.floor((y2 - y1) / (x2 - x1));
+        let c = y1 - (m * x1);
 
-		let cColour = DrawingBuffer.combineColour(...colour);
+        let cColour = DrawingBuffer.combineColour(...colour);
 
-		for(let i = x1; i <= x2; ++i)
-		{
-			this.internalSetPixel(i, i * m + c, cColour);
-		}
-	}
+        for (let i = x1; i <= x2; ++i)
+        {
+            this.internalSetPixel(i, i * m + c, cColour);
+        }
+    }
 
 
-	//set the pixel at (x, y) to colour
-	setPixel(x, y, colour)
-	{
-		let offset = x + y * this.width * 4;
-		this.rgba[offset]     = Math.floor(colour[0] * 255);
-		this.rgba[offset + 1] = Math.floor(colour[1] * 255);
-		this.rgba[offset + 2] = Math.floor(colour[2] * 255);
-		this.rgba[offset + 3] = Math.floor(colour[3] * 255);
-	}
+    //set the pixel at (x, y) to colour
+    setPixel(x, y, colour)
+    {
+        let offset = x + y * this.width * 4;
+        this.rgba[offset]     = Math.floor(colour[0] * 255);
+        this.rgba[offset + 1] = Math.floor(colour[1] * 255);
+        this.rgba[offset + 2] = Math.floor(colour[2] * 255);
+        this.rgba[offset + 3] = Math.floor(colour[3] * 255);
+    }
 
-	finalise()
-	{
-		return {
-			width  : this.width, 
-			height : this.height,
-			data   : this.data
-		};
-	}
+    finalise()
+    {
+        return {
+            width  : this.width, 
+            height : this.height,
+            data   : this.data
+        };
+    }
 
-	//methods below this point are for internal use only
-	internalSetPixel(x, y, combinedColour)
-	{
-		this.pixels[x + y * this.width] = combinedColour;
-	}
+    //methods below this point are for internal use only
+    internalSetPixel(x, y, combinedColour)
+    {
+        this.pixels[x + y * this.width] = combinedColour;
+    }
 
-	internalLine(x1, x2, y1, y2, cColour)
-	{
-		let m = Math.floor((y2 - y1) / (x2 - x1));
-		let c = y1 - (m * x1);
+    internalLine(x1, x2, y1, y2, cColour)
+    {
+        let m = Math.floor((y2 - y1) / (x2 - x1));
+        let c = y1 - (m * x1);
 
-		for(let i = x1; i <= x2; ++i)
-		{
-			this.internalSetPixel(i, i * m + c, cColour);
-		}
-	}
+        for (let i = x1; i <= x2; ++i)
+        {
+            this.internalSetPixel(i, i * m + c, cColour);
+        }
+    }
 
-	static combineColour(r, g, b, a)
-	{
-		let colour = new Uint8Array(4);
-		colour[0] = Math.floor(r * 255);
-		colour[1] = Math.floor(g * 255);
-		colour[2] = Math.floor(b * 255);		
-		colour[3] = Math.floor(a * 255);
-		return new Uint32Array(colour);
-	}
+    static combineColour(r, g, b, a)
+    {
+        let colour = new Uint8Array(4);
+        colour[0] = Math.floor(r * 255);
+        colour[1] = Math.floor(g * 255);
+        colour[2] = Math.floor(b * 255);		
+        colour[3] = Math.floor(a * 255);
+        return new Uint32Array(colour);
+    }
 }

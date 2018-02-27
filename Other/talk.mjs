@@ -23,7 +23,7 @@ import {Input} from "./input";
 //There may be a better way to do this
 export class Talking
 {
-	/**
+    /**
 	 * Creates an instance of Talking.
 	 * @param {object} HUD - instance of HUDSystem class
 	 * @param {object} windowStyle - instance of windowStyle class from HUDsystem.mjs
@@ -35,23 +35,23 @@ export class Talking
 	 * @param {object} [font=Font.Default] -font to use for text
 	 * @memberof Talking
 	 */
-	constructor(HUD, windowStyle, x = 5, y = (Surface.Screen.height * 2/3), keys = [Key.Enter, Key.Space],
-		width = Surface.Screen.width - 10, height = Surface.Screen.height /3 - 10, font = Font.Default)
-	{
-		this.HUD         = HUD;
-		this.windowStyle = windowStyle;
-		this.input       = new Input();
-		this.font        = font;
-		this.x           = x;
-		this.y           = y;
-		this.width       = width |0;
-		this.height      = height |0;
-		this.queue       = [];
-		this.keys        = keys;
-		this.mask = new Color(0.8, 1, 1, 0.8);
-	}
+    constructor(HUD, windowStyle, x = 5, y = (Surface.Screen.height * 2/3), keys = [Key.Enter, Key.Space],
+        width = Surface.Screen.width - 10, height = Surface.Screen.height /3 - 10, font = Font.Default)
+    {
+        this.HUD         = HUD;
+        this.windowStyle = windowStyle;
+        this.input       = new Input();
+        this.font        = font;
+        this.x           = x;
+        this.y           = y;
+        this.width       = width |0;
+        this.height      = height |0;
+        this.queue       = [];
+        this.keys        = keys;
+        this.mask = new Color(0.8, 1, 1, 0.8);
+    }
 
-	/**
+    /**
 	 * async Talk function
 	 * call this with await if you want to pause your current function untll the talk completes
 	 * as this is asynch it does not block the event loop
@@ -60,13 +60,12 @@ export class Talking
 	 * @returns {promise} - resolves when textbox closed
 	 * @memberof Talking
 	 */
-	async talk(speaker, text)
-	{
-		return await this.queueTalk(speaker, [text]);
-	}
-
+    async talk(speaker, text)
+    {
+        return await this.queueTalk(speaker, [text]);
+    }
 	
-	/**
+    /**
 	 * async multi-talk function
 	 * call this with await if you want to pause your current function untll the talk completes
 	 * as this is asynch it does not block the event loop
@@ -76,18 +75,18 @@ export class Talking
 	 * @returns {promise} - resolves when textbox closed
 	 * @memberof Talking
 	 */
-	async queueTalk(speaker, textQueue)
-	{
-		for(let i = 0; i < textQueue.length; ++i)
-		{
-			this.queue.push({speaker: speaker, text:textQueue[i]});
-		}
-		this.input.takeInput();
+    async queueTalk(speaker, textQueue)
+    {
+        for (let i = 0; i < textQueue.length; ++i)
+        {
+            this.queue.push({speaker: speaker, text:textQueue[i]});
+        }
+        this.input.takeInput();
 
-		return await this.processQueue();
-	}
+        return await this.processQueue();
+    }
 
-	/**
+    /**
 	 * proxess Queue - internal function do not call this
 	 * This is the logic used for the above talk operations
 	 * 1. Removes the first queued talk from the queue
@@ -99,33 +98,33 @@ export class Talking
 	 * @returns {promise} - resovles when all talking is finished
 	 * @memberof Talking
 	 */
-	async processQueue()
-	{
-		while(this.queue.length > 0)
-		{
-			let x = this.x;
-			let y = this.y;
-			let width = this.width;
-			let height = this.height;
-			let ws = this.windowStyle;
-			let HUD = this.HUD;
-			let hudRefs = [];
+    async processQueue()
+    {
+        while (this.queue.length > 0)
+        {
+            let x = this.x;
+            let y = this.y;
+            let width = this.width;
+            let height = this.height;
+            let ws = this.windowStyle;
+            let HUD = this.HUD;
+            let hudRefs = [];
 			
-			let current = this.queue.shift();
-			hudRefs.push(HUD.addStatic(ws.renderWindow(x, y, width, height, this.mask)));
-			if(current.speaker.length > 0)
-			{
-				hudRefs.push(HUD.addStatic(ws.renderWindow(x + 20,y - 10, 80, 20, this.mask)));
-				hudRefs.push(HUD.addText(x + 25, y -7, current.speaker, this.font, 70));
-			}
-			hudRefs.push(HUD.addText(x + 10, y + 15, current.text, this.font, width - 20));
-			await this.input.waitForInput(this.keys);
-			for(let i = 0; i < hudRefs.length; ++i)
-			{
-				this.HUD.remove(hudRefs[i]);
-			}
-		}
-		this.input.yieldInput();
-		return true;
-	}
+            let current = this.queue.shift();
+            hudRefs.push(HUD.addStatic(ws.renderWindow(x, y, width, height, this.mask)));
+            if (current.speaker.length > 0)
+            {
+                hudRefs.push(HUD.addStatic(ws.renderWindow(x + 20,y - 10, 80, 20, this.mask)));
+                hudRefs.push(HUD.addText(x + 25, y -7, current.speaker, this.font, 70));
+            }
+            hudRefs.push(HUD.addText(x + 10, y + 15, current.text, this.font, width - 20));
+            await this.input.waitForInput(this.keys);
+            for (let i = 0; i < hudRefs.length; ++i)
+            {
+                this.HUD.remove(hudRefs[i]);
+            }
+        }
+        this.input.yieldInput();
+        return true;
+    }
 }

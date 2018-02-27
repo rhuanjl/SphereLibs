@@ -30,28 +30,28 @@ properties*/
 
 export const triggerScripts =
 {
-	nameOfTriggerOne :
-	{
-		onPlayer(runTime, player)
-		{
+    nameOfTriggerOne :
+    {
+        onPlayer(runTime, player)
+        {
 
-		},
-		onOther(runTime, other)
-		{
+        },
+        onOther(runTime, other)
+        {
 
-		}
-	},
-	nameOfTriggerTwo :
-	{
-		onPlayer(runTime, player)
-		{
+        }
+    },
+    nameOfTriggerTwo :
+    {
+        onPlayer(runTime, player)
+        {
 
-		},
-		onOther(runTime, other)
-		{
+        },
+        onOther(runTime, other)
+        {
 
-		}
-	}
+        }
+    }
 };
 
 /*Entity scripts for this map, object must be named entityScripts
@@ -73,84 +73,84 @@ TODO: add more documentation here -for now see comments in personTwo below*/
 
 export const entityScripts =
 {
-	personOne :
-	{
-		onSetup (runTime, self)
-		{
-			self.data.talkedTo = false;//store entity data on self.data
-		},
-		onDestroy (runTime, self)
-		{
+    personOne :
+    {
+        onSetup (runTime, self)
+        {
+            self.data.talkedTo = false;//store entity data on self.data
+        },
+        onDestroy (runTime, self)
+        {
 
-		},
-		onTouchPlayer (runTime, self, player)
-		{
+        },
+        onTouchPlayer (runTime, self, player)
+        {
 
-		},
-		onTouchOther (runTime, self, other)
-		{
+        },
+        onTouchOther (runTime, self, other)
+        {
 
-		},
-		async onTalk (runTime, self, player)//example async function
-		{
-			self.frozen = true;//entity doesn't move when frozen (see SENgine.mjs)
-			self.faceEntity(player);//face the player - see SEngine.mjs
-			if(self.data.talkedTo === false)
-			{
-				await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
-				self.data.talkedTo = true;//keep track of the fact that we've talked
-			}
-			else//if you've aready talked say something different
-			{
-				await runTime.talk(self.id, "Haven't we talked before?");//function would need to exist in your runTime object and return a promise
-			}
-			//see talk.mjs for example talk function that works this way
-			self.frozen = false;//unfreeze when the talking is over
-		},
-		onIdle (runTime, self)
-		{//example random movement code
-			let chance = (Math.random() * 10)|0;
-			let dir = "";
-			if(chance < 6)
-			{
-				dir = self.direction;
-			}
-			else
-			{
-				chance = (Math.random() * 4)|0;
-				let options = ["north", "south", "east", "west"]
-				dir = options[chance];
-			}
-			self.queueMove(dir, 8);
-		}
-	},
-	personTwo :
-	{
-		onSetup (runTime, self)
-		{
-			//on creation
-		},
-		onDestroy (runTime, self)
-		{
-			//on destruction
-		},
-		onTouchPlayer (runTime, self, player)
-		{
-			//when touched by the player
-		},
-		onTouchOther (runTime, self, other)
-		{
-			//when touching a different entity - not the player
-		},
-		onTalk (runTime, self, player)
-		{
-			//when the player talks to them (touches + presses action key)
-		},
-		onIdle (runTime, self)
-		{
-			//when their queue is empty
-		}
-	}
+        },
+        async onTalk (runTime, self, player)//example async function
+        {
+            self.frozen = true;//entity doesn't move when frozen (see SENgine.mjs)
+            self.faceEntity(player);//face the player - see SEngine.mjs
+            if(self.data.talkedTo === false)
+            {
+                await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
+                self.data.talkedTo = true;//keep track of the fact that we've talked
+            }
+            else//if you've aready talked say something different
+            {
+                await runTime.talk(self.id, "Haven't we talked before?");//function would need to exist in your runTime object and return a promise
+            }
+            //see talk.mjs for example talk function that works this way
+            self.frozen = false;//unfreeze when the talking is over
+        },
+        onIdle (runTime, self)
+        {//example random movement code
+            let chance = (Math.random() * 10)|0;
+            let dir = "";
+            if(chance < 6)
+            {
+                dir = self.direction;
+            }
+            else
+            {
+                chance = (Math.random() * 4)|0;
+                let options = ["north", "south", "east", "west"]
+                dir = options[chance];
+            }
+            self.queueMove(dir, 8);
+        }
+    },
+    personTwo :
+    {
+        onSetup (runTime, self)
+        {
+            //on creation
+        },
+        onDestroy (runTime, self)
+        {
+            //on destruction
+        },
+        onTouchPlayer (runTime, self, player)
+        {
+            //when touched by the player
+        },
+        onTouchOther (runTime, self, other)
+        {
+            //when touching a different entity - not the player
+        },
+        onTalk (runTime, self, player)
+        {
+            //when the player talks to them (touches + presses action key)
+        },
+        onIdle (runTime, self)
+        {
+            //when their queue is empty
+        }
+    }
 };
 
 /*Map scripts for this map, object must be named mapScripts
@@ -176,37 +176,37 @@ Should have eight properties:
 
 export const mapScripts =
 {
-	onExit (runTime, map)
-	{
-		//called from the setMap method - when using it to change map whilst on this map
-	},
-	onEnter (runTime, map)
-	{
-		//called from the update method - when it is the first frame on this map 
-	},
-	onUpdate (runTime, map)
-	{
-		//called from the update method every frame on the map
-	},
-	onRender (runTime, map)
-	{
-		//called form the render method after the map and sprites are drawn every frame on this map
-	},
-	onLeaveEast (runTime, map, player)
-	{
-		//called when a player controlled entity walks off the edge of the map
-		//player is the entity object that walked off
-	},
-	onLeaveWest (runTime, map, player)
-	{
-		//see above
-	},
-	onLeaveNorth (runTime, map, player)
-	{
-		//see above
-	},
-	onLeaveSouth (runTime, map, player)
-	{
-		//see above
-	}
+    onExit (runTime, map)
+    {
+        //called from the setMap method - when using it to change map whilst on this map
+    },
+    onEnter (runTime, map)
+    {
+        //called from the update method - when it is the first frame on this map 
+    },
+    onUpdate (runTime, map)
+    {
+        //called from the update method every frame on the map
+    },
+    onRender (runTime, map)
+    {
+        //called form the render method after the map and sprites are drawn every frame on this map
+    },
+    onLeaveEast (runTime, map, player)
+    {
+        //called when a player controlled entity walks off the edge of the map
+        //player is the entity object that walked off
+    },
+    onLeaveWest (runTime, map, player)
+    {
+        //see above
+    },
+    onLeaveNorth (runTime, map, player)
+    {
+        //see above
+    },
+    onLeaveSouth (runTime, map, player)
+    {
+        //see above
+    }
 };

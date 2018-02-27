@@ -45,28 +45,28 @@ import {CEngine} from "./CEngine.mjs";//collision handling
 //the map-engine class, default so a user can call it anything they like when importing
 export default class MapEngine
 {
-	/**
+    /**
 	 * Creates an instance of MapEngine.
 	 * The runtime object is a pseduo-global object it will be provided as a parameter to all map and sprite scripts
 	 * Use it to hand around functions/properties you need access to in mulitple map/sprite scripts
 	 * @param {any} [runTime={}] 
 	 * @memberof MapEngine
 	 */
-	constructor(runTime={})
-	{
-		this.runTime = runTime;
-		this.CEngine = new CEngine();
-		this.SEngine = new SEngine(runTime, this.CEngine, 50);//initiate SEngine
-		this.MEngine = new MEngine(runTime, this.SEngine, this.CEngine);//initiate MEngine
-		this.started = false;
-		this.paused = false;
-		this.hidden = false;
-		this.update = null;
-		this.render = null;
-		this._camera = null;
-	}
+    constructor(runTime={})
+    {
+        this.runTime = runTime;
+        this.CEngine = new CEngine();
+        this.SEngine = new SEngine(runTime, this.CEngine, 50);//initiate SEngine
+        this.MEngine = new MEngine(runTime, this.SEngine, this.CEngine);//initiate MEngine
+        this.started = false;
+        this.paused = false;
+        this.hidden = false;
+        this.update = null;
+        this.render = null;
+        this._camera = null;
+    }
 
-	/**
+    /**
 	 * createCharacter(name, spriteSet, x=0, y=0, layer=0)
 	 * Create an entity and add them to the map
 	 * Returns the entity object
@@ -77,34 +77,34 @@ export default class MapEngine
 	 * @param {number} [layer=0] 
 	 * @returns 
 	 */
-	createCharacter(name, spriteSet, x=0, y=0, layer=0)
-	{
-		return this.SEngine.addEntity(name, loadSES(spriteSet), true, x, y, layer);
-	}
+    createCharacter(name, spriteSet, x=0, y=0, layer=0)
+    {
+        return this.SEngine.addEntity(name, loadSES(spriteSet), true, x, y, layer);
+    }
 
-	takeInput()
-	{
-		this.SEngine.input.takeInput();
-	}
+    takeInput()
+    {
+        this.SEngine.input.takeInput();
+    }
 
-	yieldInput()
-	{
-		this.SEngine.input.yieldInput();
-	}
+    yieldInput()
+    {
+        this.SEngine.input.yieldInput();
+    }
 
-	/**
+    /**
 	 * attachInput(character)
 	 * Add default input (4 directional arrows + talk key) to provided character
 	 * the parameter should be the character object, not their name
 	 * 
 	 * @param {object} character 
 	 */
-	attachInput(character)
-	{
-		this.SEngine.addDefaultInput(character);
-	}
+    attachInput(character)
+    {
+        this.SEngine.addDefaultInput(character);
+    }
 
-	/**
+    /**
 	 * addInput(key, onPress, continuous=false, parameter=null, onRelease)
 	 * Add another input of some kind to be monitored whilst the map is running
 	 * Only first two parameters are required, the other 3 are optional
@@ -118,13 +118,13 @@ export default class MapEngine
 	 * @returns - the number of inputs added in total (will be one higher each time this is called)
 	 * @memberof MapEngine
 	 */
-	addInput(key, onPress, continuous=false, parameter=null, onRelease)
-	{
-		return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
-	}
+    addInput(key, onPress, continuous=false, parameter=null, onRelease)
+    {
+        return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
+    }
 
 
-	/**
+    /**
 	 * getEntity(id)
 	 * Return the entity object that has the given name
 	 * Throws an error if there is no entity with that name
@@ -132,24 +132,24 @@ export default class MapEngine
 	 * @param {string} name 
 	 * @returns 
 	 */
-	getEntity(name)
-	{
-		return this.SEngine.getEntity(name);
-	}
+    getEntity(name)
+    {
+        return this.SEngine.getEntity(name);
+    }
 
-	/**
+    /**
 	 * Readonly property, boolean true if all entities on the map have empty movement queues
 	 * false if any entity is doing anything
 	 * 
 	 * @readonly
 	 */
-	get idle()
-	{
-		return this.SEngine.idle;
-	}
+    get idle()
+    {
+        return this.SEngine.idle;
+    }
 
 
-	/**
+    /**
 	 * start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
 	 * Start the map engine - note this is an async function
 	 * Note: to centre the map on a character supply that character's object as the second parameter
@@ -157,185 +157,185 @@ export default class MapEngine
 	 * @param {string} firstMap //name of mapFile to use as first map ".mem" format
 	 * @param {any} [cameraObject={x: 0, y: 0, zoom: 1}] //object with x and y (and optionally zoom properties) where to focus the camera on the map
 	 */
-	async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
-	{
-		this._camera = cameraObject;
-		if(!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
-		{
-			this._camera.zoom = 1;
-		}
-		await this.MEngine.setMap(firstMap);
+    async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
+    {
+        this._camera = cameraObject;
+        if (!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+        {
+            this._camera.zoom = 1;
+        }
+        await this.MEngine.setMap(firstMap);
 
-		this.update = Dispatch.onUpdate(()=>
-		{
-			this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
-		});
-		this.render = Dispatch.onRender(()=>this.MEngine.render());
-		this.started = true;
-		this.takeInput();
-	}
+        this.update = Dispatch.onUpdate(()=>
+        {
+            this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
+        });
+        this.render = Dispatch.onRender(()=>this.MEngine.render());
+        this.started = true;
+        this.takeInput();
+    }
 
-	/**
+    /**
 	 * changeMap(newMap)
 	 * Change map - note this is an async function
 	 * 
 	 * @param {string} newMap //name of mapFile to change to ".mem" format
 	 */
-	async changeMap(newMap)
-	{
-		if(this.started === true)
-		{
-			await this.MEngine.setMap(newMap);
-		}
-		else
-		{
-			throw new Error("Attempt to change map when the map-engine is not running.");
-		}
-	}
+    async changeMap(newMap)
+    {
+        if (this.started === true)
+        {
+            await this.MEngine.setMap(newMap);
+        }
+        else
+        {
+            throw new Error("Attempt to change map when the map-engine is not running.");
+        }
+    }
 
-	/**
+    /**
 	 * camera
 	 * Supply a new camera object
 	 * use as mapEngine.camera = newCameraObject;
 	 * @param {any} cameraObject 
 	 */
-	set camera (cameraObject)
-	{
-		if(this.started === true)
-		{
-			if(!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
-			{
-				this._camera.zoom = 1;
-			}
-			this._camera = cameraObject;
-		}
-		else
-		{
-			throw new Error("Attempt to change camera when the map-engine is not running.");
-		}
-	}
+    set camera (cameraObject)
+    {
+        if (this.started === true)
+        {
+            if (!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+            {
+                this._camera.zoom = 1;
+            }
+            this._camera = cameraObject;
+        }
+        else
+        {
+            throw new Error("Attempt to change camera when the map-engine is not running.");
+        }
+    }
 	
-	/**
+    /**
  	* get the current camera object.
  	* 
  	* 
  	* @memberof MapEngine
 	 */
-	get camera ()
-	{
-		return this._camera;
-	}
+    get camera ()
+    {
+        return this._camera;
+    }
 
-	/**
+    /**
 	 * pause()
 	 * Pause the map engine - only if it's running
 	 * A no-op if the map engine is already paused
 	 */
-	pause()
-	{
-		if(this.started === true)
-		{
-			if (this.paused === false)
-			{
-				this.update.cancel();
-				this.paused = true;
-				this.yieldInput();
-			}
-		}
-		else
-		{
-			throw new Error("Attempt to pause the map-engine when it is not running.");
-		}
-	}
+    pause()
+    {
+        if (this.started === true)
+        {
+            if (this.paused === false)
+            {
+                this.update.cancel();
+                this.paused = true;
+                this.yieldInput();
+            }
+        }
+        else
+        {
+            throw new Error("Attempt to pause the map-engine when it is not running.");
+        }
+    }
 
-	/**
+    /**
 	 * resume()
 	 * Resume the map engine - ONLY if it's running
 	 * A no-op if the map engine is not paused
 	 */
-	resume()
-	{
-		if (this.started === true)
-		{
-			if (this.paused === true)
-			{
-				this.update = Dispatch.onUpdate(()=>
-				{
-					this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
-				});
-				this.paused = false;
-				this.takeInput();
-			}
-		}
-		else
-		{
-			throw new Error("Attempt to resume the map-engine when it is not running or is not paused.");
-		}
-	}
+    resume()
+    {
+        if (this.started === true)
+        {
+            if (this.paused === true)
+            {
+                this.update = Dispatch.onUpdate(()=>
+                {
+                    this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
+                });
+                this.paused = false;
+                this.takeInput();
+            }
+        }
+        else
+        {
+            throw new Error("Attempt to resume the map-engine when it is not running or is not paused.");
+        }
+    }
 
-	/**
+    /**
 	 * hide()
 	 * hide the map-engine (stop drawing it) - only if it's running
 	 * Note this doesn't stop updating
 	 * This is a no-op if it's already hidden
 	 */
-	hide()
-	{
-		if (this.started === true)
-		{
-			if (this.hidden === false)
-			{
-				this.render.cancel();
-				this.hidden = true;
-			}
-		}
-		else
-		{
-			throw new Error("Attempt to hide the map-engine when it is not running.");
-		}
-	}
+    hide()
+    {
+        if (this.started === true)
+        {
+            if (this.hidden === false)
+            {
+                this.render.cancel();
+                this.hidden = true;
+            }
+        }
+        else
+        {
+            throw new Error("Attempt to hide the map-engine when it is not running.");
+        }
+    }
 
-	/**
+    /**
 	 * show()
 	 * start drawing the map-engine again - only if it's running
 	 * A no-op if it's not hidden
 	 */
-	show()
-	{
-		if (this.started === true)
-		{
-			if (this.hidden === true)
-			{
-				this.render = Dispatch.onRender(()=>this.MEngine.render());
-				this.hidden = false;
-			}	
-		}
-		else
-		{
-			throw new Error("Attempt to show the map-engine when it is not running or is not hidden.");
-		}
-	}
+    show()
+    {
+        if (this.started === true)
+        {
+            if (this.hidden === true)
+            {
+                this.render = Dispatch.onRender(()=>this.MEngine.render());
+                this.hidden = false;
+            }	
+        }
+        else
+        {
+            throw new Error("Attempt to show the map-engine when it is not running or is not hidden.");
+        }
+    }
 
-	/**
+    /**
 	 * hideLayer(number=0)
 	 * Stop drawing a specific layer of the map
 	 * Can only call this when the map-engine is running
 	 * 
 	 * @param {number} [number=0] 
 	 */
-	hideLayer(number=0)
-	{
-		if(this.started === true)
-		{
-			this.MEngine.map.layers[number].visible = false;
-		}
-		else
-		{
-			throw new Error("Attempt to hide a layer in the map when the map-engine is not running.");
-		}
-	}
+    hideLayer(number=0)
+    {
+        if (this.started === true)
+        {
+            this.MEngine.map.layers[number].visible = false;
+        }
+        else
+        {
+            throw new Error("Attempt to hide a layer in the map when the map-engine is not running.");
+        }
+    }
 
-	/**
+    /**
 	 * showLayer(number=0)
 	 * Start drawing a specific layer of the map
 	 * Can only call this when the map-engine is running
@@ -343,19 +343,19 @@ export default class MapEngine
 	 * 
 	 * @param {number} [number=0] 
 	 */
-	showLayer(number=0)
-	{
-		if(this.started === true)
-		{
-			this.MEngine.map.layers[number].visible = true;
-		}
-		else
-		{
-			throw new Error("Attempt to show a layer in the map when the map-engine is not running.");
-		}
-	}
+    showLayer(number=0)
+    {
+        if (this.started === true)
+        {
+            this.MEngine.map.layers[number].visible = true;
+        }
+        else
+        {
+            throw new Error("Attempt to show a layer in the map when the map-engine is not running.");
+        }
+    }
 
-	/**
+    /**
 	 *stop() 
 	 * Stop the map-engine
 	 * Note after using this you would need to start() again
@@ -364,27 +364,27 @@ export default class MapEngine
 	 * (though it will correctly dispose of map specific entities)
 	 * 
 	 */
-	stop()
-	{
-		if (this.started === true)
-		{
-			if (this.paused === false)
-			{
-				this.update.cancel();
-			}
-			if (this.hidden === false)
-			{
-				this.render.cancel();
-			}
-			this.yieldInput();
-			this.MEngine.map = null;//let the map get GC'd
-			//#FIX ME enable GC'ing SEngine data here to
-		}
-		else
-		{
-			throw new Error("Attempt to stop the map-engine when it is not running.");
-		}
-	}
+    stop()
+    {
+        if (this.started === true)
+        {
+            if (this.paused === false)
+            {
+                this.update.cancel();
+            }
+            if (this.hidden === false)
+            {
+                this.render.cancel();
+            }
+            this.yieldInput();
+            this.MEngine.map = null;//let the map get GC'd
+            //#FIX ME enable GC'ing SEngine data here to
+        }
+        else
+        {
+            throw new Error("Attempt to stop the map-engine when it is not running.");
+        }
+    }
 }
 
 

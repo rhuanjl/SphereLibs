@@ -33,211 +33,205 @@ let kb = Keyboard.Default;
 
 export class Input
 {
-	constructor(priority = 0)
-	{
-		this.keys;
-		this.state = 0;
-		this.value = 0;
-		this.focus = new Focus({priority});
-	}
+    constructor(priority = 0)
+    {
+        this.keys;
+        this.state = 0;
+        this.value = 0;
+        this.focus = new Focus({priority});
+    }
 
-	disposeInput()
-	{
-		this.focus.dispose();
-	}
+    disposeInput()
+    {
+        this.focus.dispose();
+    }
 
-	takeInput()
-	{
-		this.focus.takeFocus();
-	}
+    takeInput()
+    {
+        this.focus.takeFocus();
+    }
 
-	yieldInput()
-	{
-		this.focus.dispose();//#Change to yield if it's updated
-	}
+    yieldInput()
+    {
+        this.focus.dispose();//#Change to yield if it's updated
+    }
 
-	clearQueue()
-	{
-		if(this.focus.hasFocus)
-		{
-			kb.clearQueue();
-		}
-	}
+    clearQueue()
+    {
+        if (this.focus.hasFocus)
+        {
+            kb.clearQueue();
+        }
+    }
 
-	getKey()
-	{
-		if(this.focus.hasFocus)
-		{
-			return kb.getKey();
-		}
-		else
-		{
-			return null;
-		}
-	}
+    getKey()
+    {
+        if (this.focus.hasFocus)
+        {
+            return kb.getKey();
+        }
+        else
+        {
+            return null;
+        }
+    }
 
-	getChar(key, shifted = false)
-	{
-		return kb.getChar(key, shifted);
-	}
+    getChar(key, shifted = false)
+    {
+        return kb.getChar(key, shifted);
+    }
 
-	isPressed(key)
-	{
-		if(this.focus.hasFocus)
-		{
-			return kb.isPressed(key);
-		}
-		else
-		{
-			return false;
-		}
-	}
+    isPressed(key)
+    {
+        if (this.focus.hasFocus)
+        {
+            return kb.isPressed(key);
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-	async waitForKey(key, allowContinuous = false)
-	{
-		return await this.waitForInput([key], allowContinuous);
-	}
+    async waitForKey(key, allowContinuous = false)
+    {
+        return await this.waitForInput([key], allowContinuous);
+    }
 	
-	waitForInput(keys, allowContinuous = false)
-	{
-		this.keys = keys;
-		this.state = 0;
-		return new Promise((resolve) =>
-		{
-			if(allowContinuous === false)
-			{
-				let job = Dispatch.onUpdate(() =>
-				{
-					let done = true;
-					switch(this.state)
-					{
-					case(0):
-						this.state = 1;
-						for(let i = 0; i < this.keys.length; ++i)
-						{
-							if(this.isPressed(this.keys[i]) === true)
-							{
-								this.state = 0;
-							}
-						}
-						break;
-					case(1):
-						for(let i = 0; i < this.keys.length; ++i)
-						{
-							if(this.isPressed(this.keys[i]) === true)
-							{
-								this.state = 2;
-								this.value = this.keys[i];
-							}
-						}
-						break;
-					case(2):
-						for(let i = 0; i < this.keys.length; ++i)
-						{
-							if(this.isPressed(this.keys[i]) === true)
-							{
-								done = false;
-							}
-						}
-						if(done === true)
-						{
-							job.cancel();
-							resolve(this.value);
-						}
-						break;
-					}
-				});
-			}
-			else
-			{
-				let job = Dispatch.onUpdate(() =>
-				{
-					let done = false;
-					for(let i = 0; i < this.keys.length; ++i)
-					{
-						if(this.isPressed(this.keys[i]) === true)
-						{
-							done = true;
-							this.value = this.keys[i];
-						}
-					}
-					if(done)
-					{
-						job.cancel();
-						resolve(this.value);
-					}
-				});
-			}
-		});
-	}
+    waitForInput(keys, allowContinuous = false)
+    {
+        this.keys = keys;
+        this.state = 0;
+        return new Promise((resolve) =>
+        {
+            if (allowContinuous === false)
+            {
+                let job = Dispatch.onUpdate(() =>
+                {
+                    let done = true;
+                    switch (this.state)
+                    {
+                    case (0):
+                        this.state = 1;
+                        for (let i = 0; i < this.keys.length; ++i)
+                        {
+                            if (this.isPressed(this.keys[i]) === true)
+                            {
+                                this.state = 0;
+                            }
+                        }
+                        break;
+                    case (1):
+                        for (let i = 0; i < this.keys.length; ++i)
+                        {
+                            if (this.isPressed(this.keys[i]) === true)
+                            {
+                                this.state = 2;
+                                this.value = this.keys[i];
+                            }
+                        }
+                        break;
+                    case (2):
+                        for (let i = 0; i < this.keys.length; ++i)
+                        {
+                            if (this.isPressed(this.keys[i]) === true)
+                            {
+                                done = false;
+                            }
+                        }
+                        if (done === true)
+                        {
+                            job.cancel();
+                            resolve(this.value);
+                        }
+                        break;
+                    }
+                });
+            }
+            else
+            {
+                let job = Dispatch.onUpdate(() =>
+                {
+                    let done = false;
+                    for (let i = 0; i < this.keys.length; ++i)
+                    {
+                        if (this.isPressed(this.keys[i]) === true)
+                        {
+                            done = true;
+                            this.value = this.keys[i];
+                        }
+                    }
+                    if (done)
+                    {
+                        job.cancel();
+                        resolve(this.value);
+                    }
+                });
+            }
+        });
+    }
 
-	async getNextKey(clearQueue = true, permittedKeys = [])
-	{
-		if(clearQueue === true)
-		{
-			await this.waitForPriority();
-			this.clearQueue();
-		}
-		return new Promise((resolve) =>
-		{
-			if(permittedKeys.length === 0)
-			{
-				let job = Dispatch.onUpdate(() =>
-				{
-					let pressedKey = this.getKey();
-					if(pressedKey !== null)
-					{
-						job.cancel();
-						resolve(pressedKey);
-					}
+    async getNextKey(clearQueue = true, permittedKeys = [])
+    {
+        if (clearQueue === true)
+        {
+            await this.waitForPriority();
+            this.clearQueue();
+        }
+        return new Promise((resolve) =>
+        {
+            if (permittedKeys.length === 0)
+            {
+                let job = Dispatch.onUpdate(() =>
+                {
+                    let pressedKey = this.getKey();
+                    if (pressedKey !== null)
+                    {
+                        job.cancel();
+                        resolve(pressedKey);
+                    }
 
-				});
-			}
-			else
-			{
-				let job = Dispatch.onUpdate(() =>
-				{
-					let pressedKey = this.getKey();
-					if(pressedKey !== null)
-					{
-						for(let i = 0; i < permittedKeys.length; ++i)
-						{
-							if(pressedKey === permittedKeys[i])
-							{
-								job.cancel();
-								resolve(pressedKey);
-							}
-						}
-					}
-				});
-			}
-		});
-	}
+                });
+            }
+            else
+            {
+                let job = Dispatch.onUpdate(() =>
+                {
+                    let pressedKey = this.getKey();
+                    if (pressedKey !== null)
+                    {
+                        for (let i = 0; i < permittedKeys.length; ++i)
+                        {
+                            if (pressedKey === permittedKeys[i])
+                            {
+                                job.cancel();
+                                resolve(pressedKey);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
 
-	waitForPriority(askForIt = true)
-	{
-		if(askForIt === true)
-		{
-			this.focus.takeFocus();
-		}
-		return new Promise((resolve) =>
-		{
-			let job = Dispatch.onUpdate(() =>
-			{
-				if(this.focus.hasFocus)
-				{
-					job.cancel();
-					resolve(true);
-				}
-			});
-		});
-	}
-
-
-	static error(description)
-	{
-		throw new Error("InputSystem error: " + description);
-	}
+    waitForPriority(askForIt = true)
+    {
+        if (askForIt === true)
+        {
+            this.focus.takeFocus();
+        }
+        return new Promise((resolve) =>
+        {
+            let job = Dispatch.onUpdate(() =>
+            {
+                if (this.focus.hasFocus)
+                {
+                    job.cancel();
+                    resolve(true);
+                }
+            });
+        });
+    }
 }
 
 
