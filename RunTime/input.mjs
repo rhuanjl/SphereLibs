@@ -41,6 +41,11 @@ export class Input
         this.focus = new Focus({priority});
     }
 
+    static getChar(key, shifted = false)
+    {
+        return kb.getChar(key, shifted);
+    }
+
     disposeInput()
     {
         this.focus.dispose();
@@ -76,11 +81,6 @@ export class Input
         }
     }
 
-    getChar(key, shifted = false)
-    {
-        return kb.getChar(key, shifted);
-    }
-
     isPressed(key)
     {
         if (this.focus.hasFocus)
@@ -95,9 +95,9 @@ export class Input
 
     async waitForKey(key, allowContinuous = false)
     {
-        return await this.waitForInput([key], allowContinuous);
+        return this.waitForInput([key], allowContinuous);
     }
-	
+
     waitForInput(keys, allowContinuous = false)
     {
         this.keys = keys;
@@ -106,12 +106,12 @@ export class Input
         {
             if (allowContinuous === false)
             {
-                let job = Dispatch.onUpdate(() =>
+                const job = Dispatch.onUpdate(() =>
                 {
                     let done = true;
                     switch (this.state)
                     {
-                    case (0):
+                    case 0:
                         this.state = 1;
                         for (let i = 0; i < this.keys.length; ++i)
                         {
@@ -121,7 +121,7 @@ export class Input
                             }
                         }
                         break;
-                    case (1):
+                    case 1:
                         for (let i = 0; i < this.keys.length; ++i)
                         {
                             if (this.isPressed(this.keys[i]) === true)
@@ -131,7 +131,7 @@ export class Input
                             }
                         }
                         break;
-                    case (2):
+                    case 2:
                         for (let i = 0; i < this.keys.length; ++i)
                         {
                             if (this.isPressed(this.keys[i]) === true)
@@ -150,7 +150,7 @@ export class Input
             }
             else
             {
-                let job = Dispatch.onUpdate(() =>
+                const job = Dispatch.onUpdate(() =>
                 {
                     let done = false;
                     for (let i = 0; i < this.keys.length; ++i)
@@ -182,9 +182,9 @@ export class Input
         {
             if (permittedKeys.length === 0)
             {
-                let job = Dispatch.onUpdate(() =>
+                const job = Dispatch.onUpdate(() =>
                 {
-                    let pressedKey = this.getKey();
+                    const pressedKey = this.getKey();
                     if (pressedKey !== null)
                     {
                         job.cancel();
@@ -195,9 +195,9 @@ export class Input
             }
             else
             {
-                let job = Dispatch.onUpdate(() =>
+                const job = Dispatch.onUpdate(() =>
                 {
-                    let pressedKey = this.getKey();
+                    const pressedKey = this.getKey();
                     if (pressedKey !== null)
                     {
                         for (let i = 0; i < permittedKeys.length; ++i)
@@ -222,7 +222,7 @@ export class Input
         }
         return new Promise((resolve) =>
         {
-            let job = Dispatch.onUpdate(() =>
+            const job = Dispatch.onUpdate(() =>
             {
                 if (this.focus.hasFocus)
                 {

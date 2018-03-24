@@ -34,13 +34,12 @@ import {DataStream} from "cell-runtime";
 
 export function convertRMP(output, input)
 {
-    let data = loadRMP(input[0]);
-    writeMEM(data, output);
+    writeMEM(loadRMP(input[0]), output);
 }
 
 function writeMEM(data, fileName)
 {
-    let outputFile = new DataStream(fileName, FileOp.Write);
+    const outputFile = new DataStream(fileName, FileOp.Write);
     //lead out with the tile data
     outputFile.writeUint16(data.numTiles, true);
     outputFile.writeUint16(data.tileWidth, true);
@@ -60,11 +59,11 @@ function writeMEM(data, fileName)
             outputFile.writeUint16(data.tiles[i].obs[j].h, true);
         }
     }
-    let numAnims = data.animTiles.length;
+    const numAnims = data.animTiles.length;
     outputFile.writeUint16(numAnims, true);
     for (let i = 0; i < numAnims; ++i)
     {
-        let currentLength = data.animTiles[i].length;
+        const currentLength = data.animTiles[i].length;
         outputFile.writeUint16(currentLength, true);
         for (let j = 0; j < currentLength; ++j)
         {
@@ -75,11 +74,11 @@ function writeMEM(data, fileName)
     }
     outputFile.writeUint8(data.repeating);
     outputFile.writeUint16(data.width, true);//map width/height in tiles
-    outputFile.writeUint16(data.height, true);	
+    outputFile.writeUint16(data.height, true);
     outputFile.writeUint8(data.layers.length);
     for (let i = 0, j = 0; i < data.layers.length; ++i, j = 0)
     {
-        outputFile.writeUint16(data.layers[i].width, true);	
+        outputFile.writeUint16(data.layers[i].width, true);
         outputFile.writeUint16(data.layers[i].height, true);
         outputFile.writeUint16(data.layers[i].flags, true);//what's this meant to do, kept for now
         outputFile.writeFloat32(data.layers[i].parallaxX, true);//what's this meant to do, kept for now
@@ -130,7 +129,7 @@ function writeMEM(data, fileName)
 
 function loadRMP(fileName)
 {
-    let inputFile = new DataStream(fileName, FileOp.Read);
+    const inputFile = new DataStream(fileName, FileOp.Read);
 
     if (inputFile.readStringRaw(4) !== ".rmp")
     {
@@ -138,31 +137,31 @@ function loadRMP(fileName)
     }
     inputFile.position = inputFile.position + 3;//skip version number (always 1) and type which is meaningless
 
-    let numLayers = inputFile.readUint8();
+    const numLayers = inputFile.readUint8();
 
     inputFile.position = inputFile.position + 1;//skip reserved byte
 
-    let numEntities = inputFile.readUint16(true);
+    const numEntities = inputFile.readUint16(true);
 
     //skip startX, startY, (Uint16s) startLayer, startDirection (Uint8s) <- not used with MEngine
     inputFile.position = inputFile.position + 6;
-    let numStrings = inputFile.readUint16(true);
+    const numStrings = inputFile.readUint16(true);
 
-    let numZones = inputFile.readUint16(true);
+    const numZones = inputFile.readUint16(true);
 
-    let repeating = inputFile.readUint8();
+    const repeating = inputFile.readUint8();
     inputFile.position = inputFile.position + 234;
 
     /*  -strings are all currently ignored, they are:
-		0 - tileset file (obsolete)
-		1 - music file
-		2 - script file (obsolete)
-		3 - entry script
-		4 - exit script
-		5 - north script
-		6 - east script
-		7 - south script
-		8 - west script*/
+        0 - tileset file (obsolete)
+        1 - music file
+        2 - script file (obsolete)
+        3 - entry script
+        4 - exit script
+        5 - north script
+        6 - east script
+        7 - south script
+        8 - west script*/
     for (let i = 0; i < numStrings; ++i)
     {
         inputFile.readString16(true);
@@ -172,7 +171,7 @@ function loadRMP(fileName)
     let height = 0;
 
     //load main Layer data - 1st key output
-    let layers = new Array(numLayers);
+    const layers = new Array(numLayers);
     for (let i = 0; i < numLayers; ++i)
     {
         layers[i] =
@@ -198,21 +197,21 @@ function loadRMP(fileName)
         layers[i].segments = new Array(layers[i].numSegments);
         for (let j = 0; j < layers[i].numSegments; ++j)
         {
-            let x = inputFile.readUint32(true);
-            let y = inputFile.readUint32(true);
+            const x = inputFile.readUint32(true);
+            const y = inputFile.readUint32(true);
             layers[i].segments[j] = new Polygon(1, x, y, inputFile.readUint32(true) - x, inputFile.readUint32(true) - y);
         }
     }
 
     //load entity data 2nd key output
     //and load trigger data - attached into layer objects from above
-    let entities   = [];
+    const entities   = [];
     for (let i = 0; i < numEntities; ++i)
     {
-        let x     = inputFile.readUint16(true);
-        let y     = inputFile.readUint16(true);
-        let layer = inputFile.readUint16(true);
-        let type  = inputFile.readUint16(true);
+        const x     = inputFile.readUint16(true);
+        const y     = inputFile.readUint16(true);
+        const layer = inputFile.readUint16(true);
+        const type  = inputFile.readUint16(true);
 
         inputFile.position = inputFile.position + 8;//skip 8 reserved bytes
 
@@ -224,11 +223,11 @@ function loadRMP(fileName)
         {
             entities.push(
                 {
-                    x          : x,
-                    y          : y,
-                    layer      : layer,
-                    name       : inputFile.readString16(true),
-                    sprite     : inputFile.readString16(true).replace(".rss",".ses"),
+                    x      : x,
+                    y      : y,
+                    layer  : layer,
+                    name   : inputFile.readString16(true),
+                    sprite : inputFile.readString16(true).replace(".rss",".ses"),
                 });
             inputFile.position = inputFile.position + 2;//skip reading number of scripts as always 5
             inputFile.position = inputFile.readUint16(true) + inputFile.position;//burn the scripts I don't want them
@@ -242,9 +241,9 @@ function loadRMP(fileName)
         {
             layers[layer].triggers.push(
                 {
-                    x      : x,
-                    y      : y,
-                    name   : inputFile.readString16(true)//note per spec this is script - but no name and need an ID
+                    x    : x,
+                    y    : y,
+                    name : inputFile.readString16(true)//note per spec this is script - but no name and need an ID
                 });
         }
     }
@@ -252,18 +251,18 @@ function loadRMP(fileName)
     //load zone data - attached into layer objects from above
     for (let i = 0; i < numZones; ++i)
     {
-        let x1 = inputFile.readUint16(true);
-        let y1 = inputFile.readUint16(true);
-        let x2 = inputFile.readUint16(true);
-        let y2 = inputFile.readUint16(true);
-        let layer = inputFile.readUint16(true);
-        let steps = inputFile.readUint16(true);
+        const x1 = inputFile.readUint16(true);
+        const y1 = inputFile.readUint16(true);
+        const x2 = inputFile.readUint16(true);
+        const y2 = inputFile.readUint16(true);
+        const layer = inputFile.readUint16(true);
+        const steps = inputFile.readUint16(true);
         inputFile.position = inputFile.position + 4;
-        let name = inputFile.readString16(true);//script field re-purposed as a ref
+        const name = inputFile.readString16(true);//script field re-purposed as a ref
         layers[layer] = {
-            poly : new Polygon(1, x1, x2, x2 - x1, y2 - y1),
+            poly  : new Polygon(1, x1, x2, x2 - x1, y2 - y1),
             steps : steps,
-            name : name
+            name  : name
         };
     }
 
@@ -272,35 +271,33 @@ function loadRMP(fileName)
         throw new Error("Tile signiture not found either .rmp file is corrupt/out of date or there's an error in the reader script");
     }
     inputFile.position = inputFile.position + 2;//skip version number - always 1
-    let numTiles = inputFile.readUint16(true);
-    let tileWidth = inputFile.readUint16(true);
-    let tileHeight = inputFile.readUint16(true);
-    let tileSize = tileWidth * tileHeight;
+    const numTiles = inputFile.readUint16(true);
+    const tileWidth = inputFile.readUint16(true);
+    const tileHeight = inputFile.readUint16(true);
+    const tileSize = tileWidth * tileHeight;
 
     inputFile.position = inputFile.position + 244;//skip 3 reserved bytes then 1 byte "has_obstructions" then 240 reserved bytes
     //has_obstructions is aassumed to always be true
-
     //load rawTile data 3rd key Output
-    let tileData = inputFile.read(numTiles * tileWidth * tileHeight * 4);
+    const tileData = inputFile.read(numTiles * tileWidth * tileHeight * 4);
 
     //load and process tile properties 4th key output
-    let rawTiles = new Array(numTiles);
-    let animatedTiles = [];
+    const rawTiles = new Array(numTiles);
+    const animatedTiles = [];
     for (let i = 0; i < numTiles; ++i)
     {
         inputFile.position = inputFile.position + 1;//skip 1 reserved byte
-        let animated = inputFile.readUint8();
-        let nextTile = inputFile.readUint16(true);
-        let delay = inputFile.readUint16(true);
+        const animated = inputFile.readUint8();
+        const nextTile = inputFile.readUint16(true);
+        const delay = inputFile.readUint16(true);
         inputFile.position = inputFile.position + 1;//skip 1 reserved byte
-        let obsType = inputFile.readUint8();
-        let numSegments = inputFile.readUint16(true);
-        let nameLength = inputFile.readUint16(true);
+        const obsType = inputFile.readUint8();
+        const numSegments = inputFile.readUint16(true);
+        const nameLength = inputFile.readUint16(true);
         inputFile.position = inputFile.position + 20;//skip 20 reserved bytes
 
-        let tileName = inputFile.readStringRaw(nameLength);
-
-        let tileObs = [];
+        const tileName = inputFile.readStringRaw(nameLength);
+        const tileObs = [];
         if (obsType == 1)
         {
             for (let j = 0; j < tileSize; ++j)
@@ -315,16 +312,16 @@ function loadRMP(fileName)
         {
             for (let j = 0; j < numSegments; ++j)
             {
-                let x1 = inputFile.readUint16(true);
-                let y1 = inputFile.readUint16(true);
-                let x2 = inputFile.readUint16(true);
-                let y2 = inputFile.readUint16(true);
+                const x1 = inputFile.readUint16(true);
+                const y1 = inputFile.readUint16(true);
+                const x2 = inputFile.readUint16(true);
+                const y2 = inputFile.readUint16(true);
 
-                let x_ = Math.min(x1, x2);
-                let y_ = Math.min(y1, y2);
-                let w  = Math.max(Math.min(Math.abs(x1 - x2), tileWidth -x_),0);
-                let h  = Math.max(Math.min(Math.abs(y1 - y2), tileHeight -y_),0);
-				
+                const x_ = Math.min(x1, x2);
+                const y_ = Math.min(y1, y2);
+                const w  = Math.max(Math.min(Math.abs(x1 - x2), tileWidth -x_),0);
+                const h  = Math.max(Math.min(Math.abs(y1 - y2), tileHeight -y_),0);
+
                 tileObs.push(new Polygon(1, x_, y_, w, h));
             }
         }
@@ -341,29 +338,29 @@ function loadRMP(fileName)
             obs      : tileObs
         };
     }
-    let usedAnims = [];
-    let createdAnims = [];
-	
+    const usedAnims = [];
+    const createdAnims = [];
+
     //build a set of animatedTile objects and an extra index array into them
     for (let i = 0, totalAnims = animatedTiles.length, tempLength = 0, currentAnim = 0; i < totalAnims; ++i)
     {
         let position = 0;
-        let currentChain = [];
+        const currentChain = [];
         let currentFrame = animatedTiles[i];//set the first tile
         let lastTile = 0;
         //unroll the animation
         while (fastIndex(usedAnims, tempLength, currentFrame) === tempLength)
         {
-            let tileAccess = rawTiles[currentFrame];
+            const tileAccess = rawTiles[currentFrame];
             if (!tileAccess || tileAccess.animated !== 1)
             {
                 throw new Error("Animated tile number " + lastTile + " has non-animated tile as next tile - this is not permitted \n full chain is:" + JSON.stringify(currentChain));
             }
-            currentChain[position] = 
+            currentChain[position] =
             {
                 index : currentFrame,
                 delay : tileAccess.delay,
-                next  : (position + 1)
+                next  : position + 1
             };
             usedAnims[tempLength] = currentFrame;
             lastTile = currentFrame;

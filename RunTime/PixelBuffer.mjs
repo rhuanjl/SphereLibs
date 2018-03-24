@@ -80,7 +80,7 @@ class PixelBuffer
 {
     constructor(buffer, width, height)
     {
-        this.data    = buffer; 
+        this.data    = buffer;
         this.pixels  = new Uint32Array(this.data);
         this.rgba    = new Uint8Array(this.data);
         this.width   = width;
@@ -103,16 +103,16 @@ class internalTileBuffer extends PixelBuffer
         this.tilesHigh  = tilesHigh;
         this.strip      = this.tileSize * tilesWide;
     }
-	
+
     tileBufferToTexture()
     {
         //dereference everything to make the below loop smaller, neater and maybe even faster
-        let input       = this.pixels;
-        let length      = this.length |0;
-        let tileWidth   = this.tileWidth |0;
-        let width       = this.width |0;
-        let strip       = this.strip |0;
-        let output      = new Uint32Array(length);
+        const input       = this.pixels;
+        const length      = this.length |0;
+        const tileWidth   = this.tileWidth |0;
+        const width       = this.width |0;
+        const strip       = this.strip |0;
+        const output      = new Uint32Array(length);
         for (let i = 0, x = 0, a = 0, b = 0, c = 0; i < length; c += strip, b = 0)
         {
             for (; b < width; b += tileWidth, a = 0)
@@ -121,13 +121,13 @@ class internalTileBuffer extends PixelBuffer
                 {
                     for (; x < tileWidth; ++x, ++i)
                     {
-                        output[(x + a + b + c)] = input[i];
+                        output[x + a + b + c] = input[i];
                     }
                 }
             }
         }
         return {
-            width  : width, 
+            width  : width,
             height : this.height,
             data   : output.buffer
         };
@@ -141,13 +141,12 @@ export class MapBuffer extends internalTileBuffer
     {
         super(new ArrayBuffer(tileBuffer.tileWidth * tilesWide * tileBuffer.tileHeight * tilesHigh * 4),
             tileBuffer.tileWidth, tileBuffer.tileHeight, tilesWide, tilesHigh);
-		
         this.tileBuffer = tileBuffer;
     }
 
     setTileInBuffer(tile, target)
     {
-        let tStart    = this.tileSize * tile;
+        const tStart = this.tileSize * tile;
         this.pixels.set(this.tileBuffer.pixels.subarray(tStart, tStart + this.tileSize), this.tileSize * target);
     }
 }
@@ -156,11 +155,11 @@ export class TileBuffer extends internalTileBuffer
 {
     constructor(source, tileWidth, tileHeight, numTiles)
     {
-        let shortBuffer = source.read(tileWidth * tileHeight * numTiles * 4);
-        let roundWidth = Math.ceil(Math.sqrt(tileWidth * tileHeight * numTiles)) * 2;
-        let buffer = new ArrayBuffer(roundWidth * roundWidth);
-        let shortView = new Uint8Array(shortBuffer);
-        let fullView = new Uint8Array(buffer);
+        const shortBuffer = source.read(tileWidth * tileHeight * numTiles * 4);
+        const roundWidth = Math.ceil(Math.sqrt(tileWidth * tileHeight * numTiles)) * 2;
+        const buffer = new ArrayBuffer(roundWidth * roundWidth);
+        const shortView = new Uint8Array(shortBuffer);
+        const fullView = new Uint8Array(buffer);
         fullView.set(shortView);
         super(buffer, tileWidth, tileHeight, roundWidth, roundWidth);
     }
@@ -200,24 +199,24 @@ export class DrawingBuffer extends PixelBuffer
             input  = new Uint32Array(buffer.data);
             output = this.pixels;
         }
-        let outputWidth = this.width;
-        let width  = Math.min(this.width - x, buffer.width);
-        let height = Math.min(this.height -y, buffer.height);
+        const outputWidth = this.width;
+        const width  = Math.min(this.width - x, buffer.width);
+        const height = Math.min(this.height -y, buffer.height);
         for (let j = 0, i = 0, k = 0; j < height; ++j, i = 0)
         {
             for (; i < width; ++i, ++k)
             {
                 if (add === true)
                 {
-                    let offset = 4 * ((x +i) + (y + j) * outputWidth);
+                    const offset = 4 * (x + i + (y + j) * outputWidth);
                     output[offset    ] = Math.min(input[k * 4    ] + output[offset    ], 255);
                     output[offset + 1] = Math.min(input[k * 4 + 1] + output[offset + 1], 255);
                     output[offset + 2] = Math.min(input[k * 4 + 2] + output[offset + 2], 255);
-                    output[offset + 3] = Math.min(input[k * 4 + 3] + output[offset + 3], 255);					
+                    output[offset + 3] = Math.min(input[k * 4 + 3] + output[offset + 3], 255);
                 }
                 else
                 {
-                    output[(x +i) + (y + j) * outputWidth] = input[k];
+                    output[x + i + (y + j) * outputWidth] = input[k];
                 }
             }
         }
@@ -225,10 +224,10 @@ export class DrawingBuffer extends PixelBuffer
 
     mask(colour)
     {
-        let width = this.width;
-        let height = this.height;
+        const width = this.width;
+        const height = this.height;
+        const rgba = this.rgba;
         let offset = 0;
-        let rgba = this.rgba;
         for (let i = 0, j = 0; j < height; ++j, i = 0)
         {
             for (; i < width; ++i)
@@ -244,7 +243,7 @@ export class DrawingBuffer extends PixelBuffer
 
     solidRectangle(x1, y1, x2, y2, colour)
     {
-        let cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(...colour);
         for (let i = x1, j = 0; i <= x2; ++i)
         {
             for (j = y1; j <= y2; ++j)
@@ -255,8 +254,8 @@ export class DrawingBuffer extends PixelBuffer
     }
 
     outlinedRectangle(x1, y1, x2, y2, thickness, colour)
-    {	
-        let cColour = DrawingBuffer.combineColour(...colour);
+    {
+        const cColour = DrawingBuffer.combineColour(...colour);
         for (let k = 0; k < thickness; ++ k)
         {
             this.internalLine(x1, y1 + k, x2, y1 + k, cColour);
@@ -268,23 +267,23 @@ export class DrawingBuffer extends PixelBuffer
 
     solidCircle(x, y, r, colour)
     {
-        let x1 = x - r;
-        let x2 = x + r;
-        let y1 = y - r;
-        let y2 = y + r;
+        const x1 = x - r;
+        const x2 = x + r;
+        const y1 = y - r;
+        const y2 = y + r;
 
         let xi = 0;
         let yi = 0;
 
-        let cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(...colour);
 
         for (let i = x1; i < x2; ++i)
         {
             for (let j = y1; j < y2; ++j)
             {
-                xi = (i - x);
-                yi = (j - y);
-                if ((xi * xi + yi * yi) <= (r * r))
+                xi = i - x;
+                yi = j - y;
+                if (xi * xi + yi * yi <= r * r)
                 {
                     this.internalSetPixel(i, j, cColour);
                 }
@@ -294,28 +293,27 @@ export class DrawingBuffer extends PixelBuffer
 
     outlinedCircle(x, y, r, thickness, colour)
     {
-        let x1 = x - r;
-        let x2 = x + r;
-        let r2 = r * r;
+        const x1 = x - r;
+        const x2 = x + r;
+        const r2 = r * r;
 
-        let cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(...colour);
 
         for (let k = 0, xt2 = x2; k < thickness; ++k, --xt2)
         {
             for (let i = x1 + thickness; i < xt2; ++i)
             {
-                let yt = Math.sqrt(r2 +(i * i)) + y;
-                this.internalSetPixel(i, yt, cColour);
+                this.internalSetPixel(i, Math.sqrt(r2 + i * i) + y, cColour);
             }
         }
     }
 
     line(x1, x2, y1, y2, colour)
     {
-        let m = Math.floor((y2 - y1) / (x2 - x1));
-        let c = y1 - (m * x1);
+        const m = Math.floor((y2 - y1) / (x2 - x1));
+        const c = y1 - m * x1;
 
-        let cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(...colour);
 
         for (let i = x1; i <= x2; ++i)
         {
@@ -327,7 +325,7 @@ export class DrawingBuffer extends PixelBuffer
     //set the pixel at (x, y) to colour
     setPixel(x, y, colour)
     {
-        let offset = x + y * this.width * 4;
+        const offset = x + y * this.width * 4;
         this.rgba[offset]     = Math.floor(colour[0] * 255);
         this.rgba[offset + 1] = Math.floor(colour[1] * 255);
         this.rgba[offset + 2] = Math.floor(colour[2] * 255);
@@ -337,7 +335,7 @@ export class DrawingBuffer extends PixelBuffer
     finalise()
     {
         return {
-            width  : this.width, 
+            width  : this.width,
             height : this.height,
             data   : this.data
         };
@@ -351,8 +349,8 @@ export class DrawingBuffer extends PixelBuffer
 
     internalLine(x1, x2, y1, y2, cColour)
     {
-        let m = Math.floor((y2 - y1) / (x2 - x1));
-        let c = y1 - (m * x1);
+        const m = Math.floor((y2 - y1) / (x2 - x1));
+        const c = y1 - m * x1;
 
         for (let i = x1; i <= x2; ++i)
         {
@@ -362,10 +360,10 @@ export class DrawingBuffer extends PixelBuffer
 
     static combineColour(r, g, b, a)
     {
-        let colour = new Uint8Array(4);
+        const colour = new Uint8Array(4);
         colour[0] = Math.floor(r * 255);
         colour[1] = Math.floor(g * 255);
-        colour[2] = Math.floor(b * 255);		
+        colour[2] = Math.floor(b * 255);
         colour[3] = Math.floor(a * 255);
         return new Uint32Array(colour);
     }

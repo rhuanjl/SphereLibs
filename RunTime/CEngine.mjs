@@ -36,23 +36,22 @@ CEngine is designed to:
 - be as efficient as possible
 - integrate seemlessly with the Dispatch API
 - integrate seemlessly with SEngine and MEngine BUT also work alone
+- doesn't really work alone at the moment #FinishMe
 */
-
-
 
 //primary class for external use
 export class CEngine
 {
     /**
-	 * Creates an instance of CEngine.
-	 * 
-	 * cType = collision type 0 = tiles, 1 = polys
-	 * 
-	 * currently only type 1 works
-	 * 
-	 * @param {number} cType 
-	 * @memberof CEngine
-	 */
+     * Creates an instance of CEngine.
+     * 
+     * cType = collision type 0 = tiles, 1 = polys
+     * 
+     * currently only type 1 works
+     * 
+     * @param {number} cType 
+     * @memberof CEngine
+     */
     constructor(cType=1)
     {
         this.SEngine    = null;
@@ -62,43 +61,43 @@ export class CEngine
     }
 
     /**
-	 * Function for colliding an entity from SEngine with other entities and Map Obstructions
-	 * Returns an array of all found collisions
-	 * 
-	 * #needs better documentation
-	 * 
-	 * @param {any} ref 
-	 * @param {any} layer 
-	 * @param {any} x 
-	 * @param {any} y 
-	 * @param {number} [d_x=0] 
-	 * @param {number} [d_y=0] 
-	 * @param {any} polygons 
-	 * @returns 
-	 * @memberof CEngine
-	 */
+     * Function for colliding an entity from SEngine with other entities and Map Obstructions
+     * Returns an array of all found collisions
+     * 
+     * #needs better documentation
+     * 
+     * @param {any} ref 
+     * @param {any} layer 
+     * @param {any} x 
+     * @param {any} y 
+     * @param {number} [d_x=0] 
+     * @param {number} [d_y=0] 
+     * @param {any} polygons 
+     * @returns 
+     * @memberof CEngine
+     */
     collide(ref, layer, x, y, d_x=0, d_y=0, polygons)
     {
-        var i = 0, j = 0, k = 0, l = 0;
-        var collisions = [];
-        let tFract = this.tFract;
-        var s_x = 0, s_y = 0, l_x = 0, l_y = 0, t_x = 0, t_y = 0, n_x = 0, n_y = 0;
-        var m = 0, n = 0;
-        var map = this.MEngine.map;
-        var tile_map = map.layers[layer].tileMap;
-        let triggers = map.layers[layer].triggers;
-        let zones = map.layers[layer].zones;
-        let zonesLength = zones.length;
-        let maxCoord = this.SEngine.table[layer].length;
-        var tile_x = Math.floor(x * tFract);
-        var tile_y = Math.floor(y * tFract);
-        let polyLength = polygons.length;
+        let i = 0, j = 0, k = 0, l = 0;
+        const collisions = [];
+        const tFract = this.tFract;
+        let s_x = 0, s_y = 0, l_x = 0, l_y = 0, t_x = 0, t_y = 0, n_x = 0, n_y = 0;
+        let m = 0, n = 0;
+        const map = this.MEngine.map;
+        const tile_map = map.layers[layer].tileMap;
+        const triggers = map.layers[layer].triggers;
+        const zones = map.layers[layer].zones;
+        const zonesLength = zones.length;
+        const maxCoord = this.SEngine.table[layer].length;
+        const tile_x = Math.floor(x * tFract);
+        const tile_y = Math.floor(y * tFract);
+        const polyLength = polygons.length;
 
-        var c1 = 0, c2 = 0, c3 = 0;
+        let c1 = 0, c2 = 0, c3 = 0;
         switch (this.cType)
         {//#FIX ME 1 currently does nothing of any use without SEngine
         //#FIX ME 2 mode 0 is useless at the moment
-        case (0):
+        case 0:
             if (tile_x + d_x >= 0 && tile_y >= 0)
             {
                 c1 = this.SEngine.table[layer][tile_x + d_x][tile_y];
@@ -151,7 +150,7 @@ export class CEngine
                 }
             }
             break;
-        case (1):
+        case 1:
             for (l = 0; l < polyLength; ++ l)
             {//OPTIMISE ME this could be more efficient
                 if (polygons[l].type === 0)
@@ -182,7 +181,7 @@ export class CEngine
                 {
                     for (k = t_y; k < n_y; ++ k)
                     {
-                        let cache = this.SEngine.table[layer][j][k];
+                        const cache = this.SEngine.table[layer][j][k];
                         for (m = 0; m < cache.end; ++m)
                         {
                             if (cache.list[m] !== ref)
@@ -205,12 +204,12 @@ export class CEngine
                     n_x = Math.min(Math.floor((s_x + l_x) * map.fract_w), tile_map[0].length - 1);
                     n_y = Math.min(Math.floor((s_y + l_y) * map.fract_h), tile_map.length - 1);
 
-                    let polyToCollide = {
+                    const polyToCollide = {
                         type : polygons[l].type,
-                        x : polygons[l].x + d_x,
-                        y : polygons[l].y + d_y,
-                        w : polygons[l].w,
-                        h : polygons[l].h
+                        x    : polygons[l].x + d_x,
+                        y    : polygons[l].y + d_y,
+                        w    : polygons[l].w,
+                        h    : polygons[l].h
                     };
 
                     let tX = t_x * map.tile_w;
@@ -220,8 +219,8 @@ export class CEngine
                         let tY = t_y * map.tile_h;
                         for (j = t_y; j <= n_y; ++j)
                         {
-                            let tileObs = map.tiles[tile_map[j][i]].obs;
-							
+                            const tileObs = map.tiles[tile_map[j][i]].obs;
+
                             for (k = 0; k < tileObs.length; ++k)
                             {
                                 if (CEngine.polysCollide(tX, tY, tileObs[k], polyToCollide))
@@ -236,13 +235,13 @@ export class CEngine
                 }
                 if (triggers.length > 0)
                 {
-                    let width = tile_map[0].length;
-                    let offset = t_x + t_y * width;
-                    let xCount = n_x - t_x;
-                    let yCount = n_y - t_y;
-                    let last   = 1 + offset + xCount + yCount * width;
-                    let length = triggers.length;
-                    let cutoff = n_x;
+                    const width = tile_map[0].length;
+                    const offset = t_x + t_y * width;
+                    const xCount = n_x - t_x;
+                    const yCount = n_y - t_y;
+                    const last   = 1 + offset + xCount + yCount * width;
+                    const length = triggers.length;
+                    const cutoff = n_x;
 
                     //am I sure this works - it seems like a very odd code pattern...
                     for (i = 0; i < length && triggers[i].index < offset; ++i);
@@ -252,7 +251,7 @@ export class CEngine
                         for (; i < length; ++i, ++xOffset)
                         {
                             if (triggers[i].index < last )
-                            {						
+                            {
                                 if (xOffset === width)
                                 {
                                     xOffset = 0;
@@ -284,7 +283,7 @@ export class CEngine
                     {
                         map.dir = 0;
                     }
-                    else if ((s_x + l_x) > map.width)
+                    else if (s_x + l_x > map.width)
                     {
                         map.dir = 1;
                     }
@@ -292,7 +291,7 @@ export class CEngine
                     {
                         map.dir = 2;
                     }
-                    else if ((s_y + l_y) > map.height)
+                    else if (s_y + l_y > map.height)
                     {
                         map.dir = 3;
                     }
@@ -301,38 +300,43 @@ export class CEngine
                         map.leaving = false;
                     }
                 }
-			
+
             }
             break;
-        case (2):
+        case 2:
             throw new CEngineError("unknown cType, expected 0 or 1, " + this.cType + " was supplied");
         }
         return collisions;
     }
 
     /**
-	 * Static method for colliding two polys
-	 * the first poly is translated by x, y before the comparison
-	 * 
-	 * Supports rectangles and circles only
-	 * 
-	 * @static
-	 * @param {number} [x=0] 
-	 * @param {number} [y=0] 
-	 * @param {any} _one 
-	 * @param {any} two 
-	 * @returns 
-	 * @memberof CEngine
-	 */
+     * Static method for colliding two polys
+     * the first poly is translated by x, y before the comparison
+     * 
+     * Supports rectangles and circles only
+     * 
+     * @static
+     * @param {number} [x=0] 
+     * @param {number} [y=0] 
+     * @param {any} _one 
+     * @param {any} two 
+     * @returns 
+     * @memberof CEngine
+     */
     static polysCollide(x=0, y=0, _one, two)
     {
         let result = false;
-        let one = {x: _one.x + x, y:_one.y + y, type: _one.type, w:_one.w, h:_one.h};
+        const one = {
+            x    : _one.x + x,
+            y    : _one.y + y,
+            type : _one.type,
+            w    : _one.w,
+            h    : _one.h};
         if (one.type === 0)
         {
             if (two.type === 0)
             {//circle with circle
-                result = (((one.x - two.x) * (one.x - two.x) + (one.y - two.y) * (one.y - two.y)) <= ((one.w + two.w) * (one.w + two.w)));
+                result = (one.x - two.x) * (one.x - two.x) + (one.y - two.y) * (one.y - two.y) <= (one.w + two.w) * (one.w + two.w);
             }
             else if (two.type === 1)
             {//circle with rect
@@ -340,7 +344,7 @@ export class CEngine
                 x_d = x_d < 0 ? -x_d : x_d;
                 let y_d = one.y - two.y - two.h / 2;
                 y_d = y_d < 0 ? -y_d : y_d;
-                if ((x_d > (two.w/2 + one.w)) || (y_d > (two.h / 2 + one.w)))
+                if (x_d > two.w / 2 + one.w || y_d > two.h / 2 + one.w)
                 {//distance between centres > radius + half width or height of square
                     result = false;
                 }
@@ -354,7 +358,7 @@ export class CEngine
                     {//final check pythag
                         x_d = x_d - two.w / 2;
                         y_d = y_d - two.h / 2;
-                        result = ((x_d * x_d + y_d * y_d) <= one.w * one.w);
+                        result = x_d * x_d + y_d * y_d <= one.w * one.w;
                     }
                 }
             }
@@ -371,7 +375,7 @@ export class CEngine
                 x_d = x_d < 0 ? -x_d : x_d;
                 let y_d = two.y - one.y - one.h /2;
                 y_d = y_d < 0 ? -y_d : y_d;
-                if ((x_d > (one.w/2 + two.w)) || (y_d > (one.h/2 + two.w)))
+                if (x_d > one.w / 2 + two.w || y_d > one.h / 2 + two.w)
                 {//distance between centres > radius + half width or height of square
                     result = false;
                 }
@@ -385,17 +389,16 @@ export class CEngine
                     {//final check pythag
                         x_d = x_d - one.w/2;
                         y_d = y_d - one.h/2;
-                        result = ((x_d * x_d + y_d * y_d) <= two.w * two.w);
+                        result = x_d * x_d + y_d * y_d <= two.w * two.w;
                     }
                 }
             }
             else if (two.type === 1)
             {//rect with rect
-                result = (
-                    (one.x <= (two.x + two.w)) &&
-                    ((one.x + one.w) >= two.x) &&
-                    (one.y <= (two.y + two.h)) &&
-                    ((one.y + one.h) >= two.y));
+                result = one.x <= two.x + two.w &&
+                         one.x + one.w >= two.x &&
+                         one.y <= two.y + two.h &&
+                         one.y + one.h >= two.y;
             }
             else
             {
@@ -437,218 +440,3 @@ class CEngineError extends Error
         super("CEngine Error: " + message);
     }
 }
-
-
-//Everything below here is incomplete/not yet usable
-
-
-//add type, source and polygon
-
-/* polygon format
-    type: 0 = circle, 1 = rect
-    x, y = coords of top left for rects centre for circles
-    w = width of rect, radius of circle
-    h = height of rect, 0 for circles*/
-
-//sort polygons into segments to optimise collision performance
-//this is an idea that is not currently used
-/*CEngine.prototype.sortPolys = function(width, height, segment_width, segment_height, layers)
-{
-  this.segments = new Array(layers);
-  var polygons;
-
-  for (var i = 0, j = 0, k = 0, l = 0; i < layers; ++ i)
-  {
-    this.segments[i] = new Array(1 + (segment_width / width)|0);
-    for (j = 0; j < this.segments[i].length; ++ j)
-    {
-      this.segments[i][j] = new Array(1 + (segument_height / height)|0);
-      for (k = 0; k < this.segments[i][j].length; ++ k)
-      {
-        this.segments[i][j][k] = new Segment(width * j, height * k, width, height, this.max_length);
-        polygons = this.collide("n/a", i, 0, 0, 0, 0, 0, [this.segments[i][j][k]]);
-        for (l = 0; l < polygons.length; ++l)
-        {//master array with tiered referencing? adjust collision object so we can use that?
-          this.segments[i][j][k].polygons[l]  = polygons[l];
-        }
-      }
-    }
-  }
-}
-
-function Segment(x, y, w, h, max_length)
-{//subdivide this - map_polys - entity_polys - other_polys
-	this.x        = x;
-	this.y        = y;
-	this.x2       = x + w;
-	this.y2       = y + h;
-	this.polygons = new Array(max_length);
-	this.length   = 0;
-
-	//these extra properties let us use the Segment as a Poly
-	this.type = 1;
-	this.w    = w;
-	this.h    = h;
-}
-*/
-/*
-var heap = new ArrayBuffer(0x10000);
-var stdlib = { Math: Math, Int32Array : Int32Array};
-var lib = new asmJS(stdlib, null, heap);
-
-function asmJS(stdlib, foreign, heap)
-{
-	"use asm";
-	var access = new stdlib.Int32Array(heap);
-	var imul = stdlib.Math.imul;
-	var fround = stdlib.Math.fround;
-	var sqrt = stdlib.Math.sqrt;
-	var oneLength = 0;
-	var twoLength = 0;
-	var offset = 0;
-	var safeOffset = 0;
-	
-	function seperatingAxisTheorem(one, two)
-	{
-		one = one|0;
-		two = two|0;
-
-		oneLength = one|0;
-		twoLength = two|0;
-		safeOffset = (imul((one + two)|0,2) + 1)|0;
-
-
-
-	}
-
-
-
-
-	
-	function norm_p_y (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-
-		var temp_x = 0;
-		var temp_y = 0;
-
-		temp_x = perpX(shape, vertex)|0;
-		temp_y = perpY(shape, vertex)|0;
-		
-		return fround((temp_y|0) / sqrt(fround((imul(temp_x, temp_x) + imul(temp_y, temp_y))|0)));
-	}
-
-	function norm_p_x (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-
-		var temp_x = 0;
-		var temp_y = 0;
-
-		temp_x = perpX(shape, vertex)|0;
-		temp_y = perpY(shape, vertex)|0;
-		
-		return fround((temp_x|0) / sqrt(fround((imul(temp_x, temp_x) + imul(temp_y, temp_y))|0)));
-	}
-
-	function norm_x (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-
-		var temp_x = 0;
-		var temp_y = 0;
-
-		temp_x = x(shape, vertex)|0;
-		temp_y = y(shape, vertex)|0;
-		
-		return fround((temp_x|0) / sqrt(fround((imul(temp_x, temp_x) + imul(temp_y, temp_y))|0)));
-	}
-
-	function norm_y (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-
-		var temp_x = 0;
-		var temp_y = 0;
-
-		temp_x = x(shape, vertex)|0;
-		temp_y = y(shape, vertex)|0;
-		
-		return fround((temp_y|0) / sqrt(fround((imul(temp_x, temp_x) + imul(temp_y, temp_y))|0)));
-	}
-
-	function x (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-		if (shape == 1)
-		{
-			offset = imul(vertex, 2);
-		}
-		else
-		{
-			offset = imul(vertex + oneLength, 2);
-		}
-		return access[offset] |0;
-	}
-
-	function y (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-		if (shape == 1)
-		{
-			offset = imul(vertex, 2);
-		}
-		else
-		{
-			offset = imul(vertex + oneLength, 2);
-		}
-		return access[offset+1] |0;
-	}
-
-	function perpX (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-		if (shape == 1)
-		{
-			offset = imul(vertex, 2);
-		}
-		else
-		{
-			offset = imul(vertex + oneLength, 2);
-		}
-		return access[offset+1] |0;
-	}
-
-	function perpY (shape, vertex)
-	{
-		shape = shape|0;
-		vertex = vertex|0;
-		if (shape == 1)
-		{
-			offset = imul(vertex, 2);
-		}
-		else
-		{
-			offset = imul(vertex + oneLength, 2);
-		}
-		return -access[offset] |0;
-	}
-
-	function dot(shape1, vertex1, shape2, vertex2)
-	{
-		shape1  = shape1|0;
-		vertex1 = vertex1|0;
-		shape2  = shape2|0;
-		vertex2 = vertex2|0;
-		return imul(x(shape1, vertex1), x(shape2, vertex2)) + imul(y(shape1, vertex1), y(shape2, vertex2));
-	}
-
-	return {seperatingAxisTheorem : seperatingAxisTheorem};
-}*/
