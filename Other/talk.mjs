@@ -24,17 +24,17 @@ import {Input} from "./input";
 export class Talking
 {
     /**
-	 * Creates an instance of Talking.
-	 * @param {object} HUD - instance of HUDSystem class
-	 * @param {object} windowStyle - instance of windowStyle class from HUDsystem.mjs
-	 * @param {number} [x=5] -x coordiante for text boxes
-	 * @param {number} [y=(Surface.Screen.height * 2/3)] - y coordinate for textboxes
-	 * @param {array} [keys=[Key.Enter, Key.Space]] - allowed Keys for closing a textbox
-	 * @param {number} [width=Surface.Screen.width - 10] - width of textboxes
-	 * @param {number} [height=Surface.Screen.height /3 - 10] -height of textboxes
-	 * @param {object} [font=Font.Default] -font to use for text
-	 * @memberof Talking
-	 */
+     * Creates an instance of Talking.
+     * @param {object} HUD - instance of HUDSystem class
+     * @param {object} windowStyle - instance of windowStyle class from HUDsystem.mjs
+     * @param {number} [x=5] -x coordiante for text boxes
+     * @param {number} [y=(Surface.Screen.height * 2/3)] - y coordinate for textboxes
+     * @param {array} [keys=[Key.Enter, Key.Space]] - allowed Keys for closing a textbox
+     * @param {number} [width=Surface.Screen.width - 10] - width of textboxes
+     * @param {number} [height=Surface.Screen.height /3 - 10] -height of textboxes
+     * @param {object} [font=Font.Default] -font to use for text
+     * @memberof Talking
+     */
     constructor(HUD, windowStyle, x = 5, y = (Surface.Screen.height * 2/3), keys = [Key.Enter, Key.Space],
         width = Surface.Screen.width - 10, height = Surface.Screen.height /3 - 10, font = Font.Default)
     {
@@ -52,65 +52,65 @@ export class Talking
     }
 
     /**
-	 * async Talk function
-	 * call this with await if you want to pause your current function untll the talk completes
-	 * as this is asynch it does not block the event loop
-	 * @param {string} speaker - name of person speaking appears on first line
-	 * @param {string} text - appears on second line (and on - auto wordwrapped)
-	 * @returns {promise} - resolves when textbox closed
-	 * @memberof Talking
-	 */
+     * async Talk function
+     * call this with await if you want to pause your current function untll the talk completes
+     * as this is asynch it does not block the event loop
+     * @param {string} speaker - name of person speaking appears on first line
+     * @param {string} text - appears on second line (and on - auto wordwrapped)
+     * @returns {promise} - resolves when textbox closed
+     * @memberof Talking
+     */
     async talk(speaker, text)
     {
-        return await this.queueTalk(speaker, [text]);
+        return this.queueTalk(speaker, [text]);
     }
-	
+
     /**
-	 * async multi-talk function
-	 * call this with await if you want to pause your current function untll the talk completes
-	 * as this is asynch it does not block the event loop
-	 * @param {string} speaker  - name of person speaking appears on first line
-	 * @param {array} textQueue - array of different things to say - each entry is drawn as one text box
-	 * 							- when each textbox is closed the next one opens
-	 * @returns {promise} - resolves when textbox closed
-	 * @memberof Talking
-	 */
+     * async multi-talk function
+     * call this with await if you want to pause your current function untll the talk completes
+     * as this is asynch it does not block the event loop
+     * @param {string} speaker  - name of person speaking appears on first line
+     * @param {array} textQueue - array of different things to say - each entry is drawn as one text box
+     *                             - when each textbox is closed the next one opens
+     * @returns {promise} - resolves when textbox closed
+     * @memberof Talking
+     */
     async queueTalk(speaker, textQueue)
     {
         for (let i = 0; i < textQueue.length; ++i)
         {
-            this.queue.push({speaker: speaker, text:textQueue[i]});
+            this.queue.push({speaker : speaker, text : textQueue[i]});
         }
         this.input.takeInput();
 
-        return await this.processQueue();
+        return this.processQueue();
     }
 
     /**
-	 * proxess Queue - internal function do not call this
-	 * This is the logic used for the above talk operations
-	 * 1. Removes the first queued talk from the queue
-	 * 2. Adds that talk to the HUDSystem
-	 * 3. yields to the event loop untill input is recieved
-	 * 4. upon reciving input removes the talk from the HUD
-	 * 5. Return to 1 untill queue empty
-	 * 6. Surrenders control of input and returns
-	 * @returns {promise} - resovles when all talking is finished
-	 * @memberof Talking
-	 */
+     * proxess Queue - internal function do not call this
+     * This is the logic used for the above talk operations
+     * 1. Removes the first queued talk from the queue
+     * 2. Adds that talk to the HUDSystem
+     * 3. yields to the event loop untill input is recieved
+     * 4. upon reciving input removes the talk from the HUD
+     * 5. Return to 1 untill queue empty
+     * 6. Surrenders control of input and returns
+     * @returns {promise} - resovles when all talking is finished
+     * @memberof Talking
+     */
     async processQueue()
     {
         while (this.queue.length > 0)
         {
-            let x = this.x;
-            let y = this.y;
-            let width = this.width;
-            let height = this.height;
-            let ws = this.windowStyle;
-            let HUD = this.HUD;
-            let hudRefs = [];
-			
-            let current = this.queue.shift();
+            const x = this.x;
+            const y = this.y;
+            const width = this.width;
+            const height = this.height;
+            const ws = this.windowStyle;
+            const HUD = this.HUD;
+            const hudRefs = [];
+
+            const current = this.queue.shift();
             hudRefs.push(HUD.addStatic(ws.renderWindow(x, y, width, height, this.mask)));
             if (current.speaker.length > 0)
             {

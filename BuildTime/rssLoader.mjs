@@ -36,31 +36,30 @@ import {DataStream} from "cell-runtime";
 
 export function convertRSS(outputFile, inputFile)
 {
-    let data = loadRSS(inputFile[0]);
-    writeSprite(outputFile, data);
+    writeSprite(outputFile, loadRSS(inputFile[0]));
 }
 
 
 export function loadRSS(filename)
 {
-    let inputFile = new DataStream(filename, FileOp.Read);
+    const inputFile = new DataStream(filename, FileOp.Read);
 
-    let header = inputFile.readStruct(RSSHeader);
+    const header = inputFile.readStruct(RSSHeader);
     inputFile.position = inputFile.position + 106;
     if (header.version !== 3)
     {
         throw new Error("Incompatible RSS file cannot be loaded - " + filename);
     }
-    let images = new TileBuffer(inputFile, header.frameWidth, header.frameHeight, header.numImages);
-    let rssDirections = new Array(header.numDirections);
+    const images = new TileBuffer(inputFile, header.frameWidth, header.frameHeight, header.numImages);
+    const rssDirections = new Array(header.numDirections);
     let imagesWide = 0;
 
     for (let i = 0; i < header.numDirections; ++i)
     {
-        let numFrames = inputFile.readInt16(true);
+        const numFrames = inputFile.readInt16(true);
         inputFile.position = inputFile.position + 6;
-        let name = inputFile.readString16(true);
-        let frames = new Array(numFrames);
+        const name = inputFile.readString16(true);
+        const frames = new Array(numFrames);
         for (let j = 0; j < numFrames; ++j)
         {
             frames[j] = {
@@ -70,28 +69,27 @@ export function loadRSS(filename)
             inputFile.position = inputFile.position + 4;
         }
         rssDirections[i] =
-  {
-      name	  : name,
-      numFrames : numFrames,
-      frames	  : frames
-  };
+        {
+            name      : name,
+            numFrames : numFrames,
+            frames    : frames
+        };
         imagesWide = Math.max(imagesWide, numFrames);
     }
 
-    let spriteSheet = new MapBuffer(imagesWide, header.numDirections, images);
-
-    let outputDirections = new Array(header.numDirections);
+    const spriteSheet = new MapBuffer(imagesWide, header.numDirections, images);
+    const outputDirections = new Array(header.numDirections);
 
     for (let i = 0; i < header.numDirections; ++i)
     {
         outputDirections[i] =
-  {//#FIX ME - speed, ignores rss frame delay
-      id:rssDirections[i].name,
-      vector:[0,0,0],
-      speed:5, 
-      frames:rssDirections[i].numFrames,
-      reset:5
-  };
+        {//#FIX ME - speed, ignores rss frame delay
+            id     : rssDirections[i].name,
+            vector : [0,0,0],
+            speed  : 5,
+            frames : rssDirections[i].numFrames,
+            reset  : 5
+        };
         //give vectors to directions
         let x = 0, y = 0, z = 0;
         if (outputDirections[i].id.indexOf("north") !== -1)
@@ -117,34 +115,33 @@ export function loadRSS(filename)
         }
     }
 
-    let offset = [Math.floor((header.baseX1+header.baseX2)/2), Math.floor((header.baseY1+header.baseY2)/2)];
+    const offset = [Math.floor((header.baseX1+header.baseX2)/2), Math.floor((header.baseY1+header.baseY2)/2)];
 
-    let poly = {
+    const poly = {
         type : 1,//#FIX ME this is wrong
-        x : Math.floor(Math.min(header.baseX1, header.baseX2)),
-        y : Math.floor(Math.min(header.baseY1, header.baseY2)),
-        w : Math.abs(header.baseX1 - header.baseX2),
-        h : Math.abs(header.baseY1 - header.baseY2)
+        x    : Math.floor(Math.min(header.baseX1, header.baseX2)),
+        y    : Math.floor(Math.min(header.baseY1, header.baseY2)),
+        w    : Math.abs(header.baseX1 - header.baseX2),
+        h    : Math.abs(header.baseY1 - header.baseY2)
     };
     return {
-        directions   : outputDirections,
-        spriteSheet  : spriteSheet.tileBufferToTexture(),
-        frameWidth   : header.frameWidth,
-        frameHeight  : header.frameHeight,
-        poly         : poly,
-        offset		 : offset
+        directions  : outputDirections,
+        spriteSheet : spriteSheet.tileBufferToTexture(),
+        frameWidth  : header.frameWidth,
+        frameHeight : header.frameHeight,
+        poly        : poly,
+        offset      : offset
     };
 }
 
 
 export function writeSprite (filename, data)
 {
-    let outputFile = new DataStream(filename, FileOp.Write);
+    const outputFile = new DataStream(filename, FileOp.Write);
 
     //dimensions
     outputFile.writeUint16(data.frameWidth, true);
     outputFile.writeUint16(data.frameHeight, true);
-
 
     //poly
     outputFile.writeUint8(1);//number of polys, with an rss it'll always be 1
@@ -157,14 +154,13 @@ export function writeSprite (filename, data)
     //offset to apply when drawing - v1 used mid point of base as coordinates
     outputFile.writeUint16(data.offset[0], true);
     outputFile.writeUint16(data.offset[1], true);
-	
 
     //directions
     outputFile.writeUint16(data.directions.length, true);
 
     for (let i = 0; i < data.directions.length; ++i)
     {
-        let dat = data.directions[i];
+        const dat = data.directions[i];
         outputFile.writeString16(dat.id,true);
         outputFile.writeInt8(dat.vector[0]);
         outputFile.writeInt8(dat.vector[1]);
@@ -182,7 +178,7 @@ export function writeSprite (filename, data)
 //will run slightly faster and be easier to follow
 const RSSHeader =
 {
-    signature     : {type : "fstring", length: 4},
+    signature     : {type : "fstring", length : 4},
     version       : {type : "uint16le"},
     numImages     : {type : "uint16le"},
     frameWidth    : {type : "uint16le"},

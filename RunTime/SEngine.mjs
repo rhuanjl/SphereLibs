@@ -61,25 +61,25 @@ const spriteLAYER = 10;
 export class SEngine
 {
     /**
-	 * Creates an instance of SEngine.
-	 * @param {object} runTime - object to be available in entity scripts
-	 * @param {object} CEngine - instance of CEngine class (unless you don't need collisions)
-	 * @param {number} tSize  - size of collision segment, if using tileMovement this should be tile width
-	 * 							For normal movement use a number 4-5x the width of your sprites
-	 * @param {boolean} [useCEngine=true] -true for collisions
-	 * @param {boolean} [tileMovement=false] -currently tileMovement is broken, must be false
-	 * @param {number} [maxPerSeg=20] - future feature for now always leave as 20
-	 * @param {string} [shaderPath="shaders/"] -path to where the customised shaders can be found
-	 * @memberof SEngine
-	 */
+     * Creates an instance of SEngine.
+     * @param {object} runTime - object to be available in entity scripts
+     * @param {object} CEngine - instance of CEngine class (unless you don't need collisions)
+     * @param {number} tSize  - size of collision segment, if using tileMovement this should be tile width
+     *                             For normal movement use a number 4-5x the width of your sprites
+     * @param {boolean} [useCEngine=true] -true for collisions
+     * @param {boolean} [tileMovement=false] -currently tileMovement is broken, must be false
+     * @param {number} [maxPerSeg=20] - future feature for now always leave as 20
+     * @param {string} [shaderPath="shaders/"] -path to where the customised shaders can be found
+     * @memberof SEngine
+     */
     constructor(runTime, CEngine, tSize, useCEngine=true, tileMovement=false, maxPerSeg=20, shaderPath="shaders/")
     {
         this.entities     = [];
         this._renders     = [];
         this.waiting      = 0;
         this.shader       = new Shader({
-            fragmentFile: shaderPath + "customised.frag.glsl",
-            vertexFile: shaderPath + "customised.vert.glsl"});
+            fragmentFile : shaderPath + "customised.frag.glsl",
+            vertexFile   : shaderPath + "customised.vert.glsl"});
         this.useCEngine   = useCEngine;
         if (useCEngine)
         {
@@ -87,7 +87,7 @@ export class SEngine
         }
         this.ready        = false;
         this.tSize        = tSize;
-        this._tFract      = (1 / tSize);
+        this._tFract      = 1 / tSize;
         this.layers       = 0;
         this.tileMovement = tileMovement;
         this.runTime      = runTime;
@@ -106,28 +106,28 @@ export class SEngine
     }
 
     /**
-	 * Add an entity to your SEngine
-	 * This is a wrapper around new Entity that supplies certain required environment variables
-	 * use this instead of calling new Entity diretly
-	 * 
-	 * @param {any} id -id/name for the entity, 
-	 * @param {any} sprite -array of sprite objects (see Sprite class below) #MayChange to single sprite object
-	 * @param {boolean} [persist=false] -true to keep it when changing map, false to delete on map change
-	 * @param {number} [x=0] -initial coordinates
-	 * @param {number} [y=0] 
-	 * @param {any} [scale=[1, 1]] -x/y scaling to apply
-	 * @param {number} [layer=0] -initial layer
-	 * @param {any} [scripts={}] -entity scripts object - see blankScripts object for template
-	 * @returns instance of Entity
-	 * @memberof SEngine
-	 */
+     * Add an entity to your SEngine
+     * This is a wrapper around new Entity that supplies certain required environment variables
+     * use this instead of calling new Entity diretly
+     * 
+     * @param {any} id -id/name for the entity, 
+     * @param {any} sprite -array of sprite objects (see Sprite class below) #MayChange to single sprite object
+     * @param {boolean} [persist=false] -true to keep it when changing map, false to delete on map change
+     * @param {number} [x=0] -initial coordinates
+     * @param {number} [y=0] 
+     * @param {any} [scale=[1, 1]] -x/y scaling to apply
+     * @param {number} [layer=0] -initial layer
+     * @param {any} [scripts={}] -entity scripts object - see blankScripts object for template
+     * @returns instance of Entity
+     * @memberof SEngine
+     */
     addEntity (id, sprite, persist=false, x=0, y=0, layer=0, speed = 100, scale=[1, 1], scripts={})
     {
         if (scale[0] < 0 || scale[1] < 0)
         {
             throw new SEngineError("negative scale specified for entity" + id);
         }
-        let newEntity = new Entity(id, sprite, x, y, speed, persist, scale, scripts, this, this.shader, this.tSize, this._tFract, layer, this.tileMovement, this.DEBUG_MODE);
+        const newEntity = new Entity(id, sprite, x, y, speed, persist, scale, scripts, this, this.shader, this.tSize, this._tFract, layer, this.tileMovement, this.DEBUG_MODE);
         if (scripts.hasOwnProperty("onSetup"))
         {
             newEntity.queueMove(newEntity.dir, 1, spriteSCRIPT, scripts.onSetup);
@@ -146,27 +146,27 @@ export class SEngine
 
 
     /**
-	 * reset(mapWidth, mapHeight,mapLayers, surface)
-	 * Initialises/Resets SEngine for a new map
-	 * When using SEngine with MEngine
-	 * MEngine will call this when yous et a map
-	 * If not using MEngine you must call this yourself
-	 * Use it to set the width, height and number of layers of the map your sprites can move on
-	 * This initialises collision detection and sets this.ready to true
-	 * calling it also deletes any entities for whom persist = false
-	 * 
-	 * @param {number} mapWidth 
-	 * @param {number} mapHeight 
-	 * @param {number} mapLayers 
-	 * @param {object} [surface=Surface.Screen] - surface to draw to
-	 * @memberof SEngine
-	 */
+     * reset(mapWidth, mapHeight,mapLayers, surface)
+     * Initialises/Resets SEngine for a new map
+     * When using SEngine with MEngine
+     * MEngine will call this when yous et a map
+     * If not using MEngine you must call this yourself
+     * Use it to set the width, height and number of layers of the map your sprites can move on
+     * This initialises collision detection and sets this.ready to true
+     * calling it also deletes any entities for whom persist = false
+     * 
+     * @param {number} mapWidth 
+     * @param {number} mapHeight 
+     * @param {number} mapLayers 
+     * @param {object} [surface=Surface.Screen] - surface to draw to
+     * @memberof SEngine
+     */
     reset(mapWidth, mapHeight, mapLayers, surface = Surface.Screen)
     {
         this.width = surface.width;
         this.height = surface.height;
         this.layers = mapLayers;
-        let persistantEntities = [];
+        const persistantEntities = [];
         for (let i = 0,length = this.entities.length; i < length; ++i)
         {
             if (this.entities[i].persist === true)
@@ -185,7 +185,7 @@ export class SEngine
         }
         for (let i = 0, length = persistantEntities.length; i < length; ++i)
         {
-            let entity = persistantEntities[i];
+            const entity = persistantEntities[i];
             entity.internalLayer = Math.min(entity.layer, mapLayers - 1);
             this.entities.push(entity);
             this.initEntity(entity);
@@ -194,17 +194,18 @@ export class SEngine
     }
 
     /**
-	 * getEntity(id)
-	 * Returns the entity object represented by the supplied id
-	 * 
-	 * #FIX ME could this use a WeakMap for better performance?
-	 * @param {any} id 
-	 * @returns 
-	 * @memberof SEngine
-	 */
+     * getEntity(id)
+     * Returns the entity object represented by the supplied id
+     * 
+     * #FIX ME could this use a WeakMap for better performance?
+     * @param {any} id 
+     * @returns 
+     * @memberof SEngine
+     */
     getEntity(id)
     {
-        for (var i = 0; i < this.entities.length && this.entities[i].id !== id; ++i);
+        let i = 0;
+        for (; i < this.entities.length && this.entities[i].id !== id; ++i);
         if (i === this.entities.length)
         {
             throw new SEngineError("Attempt to get entity " + id + " but no such entity exists");
@@ -213,46 +214,46 @@ export class SEngine
     }
 
     /**
-	 * addInput(key, continuous, parameter, script)
-	 * Binds the function: script to the key: key
-	 * if continuous is false the function will only be called once each time the key is pressed
-	 * if continous is true the function will be called every frame as long as the key is pressed
-	 * the parameter object will be passed to the function as its second parameter the runtime
-	 * object as its first
-	 * 
-	 * Note you must call SEngine.input.takeInput() to enable the input
-	 * 
-	 * @param {number} key 
-	 * @param {boolean} continuous 
-	 * @param {object} parameter 
-	 * @param {function} script 
-	 * @returns 
-	 * @memberof SEngine
-	 */
+     * addInput(key, continuous, parameter, script)
+     * Binds the function: script to the key: key
+     * if continuous is false the function will only be called once each time the key is pressed
+     * if continous is true the function will be called every frame as long as the key is pressed
+     * the parameter object will be passed to the function as its second parameter the runtime
+     * object as its first
+     * 
+     * Note you must call SEngine.input.takeInput() to enable the input
+     * 
+     * @param {number} key 
+     * @param {boolean} continuous 
+     * @param {object} parameter 
+     * @param {function} script 
+     * @returns 
+     * @memberof SEngine
+     */
     addInput(key, continuous, parameter, onPress=function(){}, onRelease=function(){})
     {
         this.inputs.push({
-            key : key,
+            key        : key,
             continuous : continuous,
-            parameter : parameter,
-            onPress : onPress,
-            onRelease : onRelease,
-            active : false
+            parameter  : parameter,
+            onPress    : onPress,
+            onRelease  : onRelease,
+            active     : false
         });
         return this.inputs.length;
     }
 
     /**
-	 * Remove an input previously added with addInput
-	 * 
-	 * @param {any} key 
-	 * @memberof SEngine
-	 */
+     * Remove an input previously added with addInput
+     * 
+     * @param {any} key 
+     * @memberof SEngine
+     */
     removeInput(key)
     {
         let index = 0;
-        let inputs = this.inputs;
-        let length = inputs.length;
+        const inputs = this.inputs;
+        const length = inputs.length;
         for (; index < length && inputs[index].key !== key; ++index);
 
         if (index === length)
@@ -264,80 +265,43 @@ export class SEngine
     }
 
     /**
-	 * idle ()
-	 * this.waiting = number of entities with no action queued
-	 * this returns true if that is all entities - i.e. if nothing is happening
-	 * 
-	 * @returns 
-	 * @memberof SEngine
-	 */
+     * idle ()
+     * this.waiting = number of entities with no action queued
+     * this returns true if that is all entities - i.e. if nothing is happening
+     * 
+     * @returns 
+     * @memberof SEngine
+     */
     get idle ()
     {
-        return (this.waiting === this.entities.length);
+        return this.waiting === this.entities.length;
     }
 
     /**
-	 * Adds simple 4 directional movement + talk activation to the supplied entity
-	 * Note you must call SEngine.input.takeInput() to enable the input
-	 * 
-	 * @param {object} entity - object representing an entity within this SEngine instance
-	 * @memberof SEngine
-	 */
+     * Adds simple 4 directional movement + talk activation to the supplied entity
+     * Note you must call SEngine.input.takeInput() to enable the input
+     * 
+     * @param {object} entity - object representing an entity within this SEngine instance
+     * @memberof SEngine
+     */
     addDefaultInput(entity)
     {
         if (this._default === true)
         {
             this.removeDefaultInput();
         }
-		
         entity.attached = true;
         this._default = true;
-        this.addInput(Key.Up, true, entity, function(runTime, entity)
-        {
-            if (entity.waiting === true)
-            {//this could be optimised - but would be uglier
-                entity.queueMove("north");
-            }
-        });
-        this.addInput(Key.Down, true, entity, function(runTime, entity)
-        {
-            if (entity.waiting === true)
-            {
-                entity.queueMove("south");
-            }
-        });
-        this.addInput(Key.Left, true, entity, function(runTime, entity)
-        {
-            if (entity.waiting === true)
-            {
-                entity.queueMove("west");
-            }
-        });
-        this.addInput(Key.Right, true, entity, function(runTime, entity)
-        {
-            if (entity.waiting === true)
-            {
-                entity.queueMove("east");
-            }
-        });
+        this.addInput(Key.Up, true, entity, moveNorth);
+        this.addInput(Key.Down, true, entity, moveSouth);
+        this.addInput(Key.Left, true, entity, moveWest);
+        this.addInput(Key.Right, true, entity, moveEast);
 
         if (this.useCEngine === true)
         {
-            for (var i = 0; i < this.entities.length && this.entities[i].id !== entity.id; ++i);
-            this.addInput(Key.Enter, false, {CEngine:this.CEngine, entity:entity, ref: i, entities: this.entities}, function(runTime, inputs)
-            {
-                let entity = inputs.entity;
-                let vec = entity._vectors[entity.dir];
-                let target = inputs.CEngine.collide(inputs.ref, entity.internalLayer, entity._x, entity._y, vec[0] * 2, vec[1] * 2, entity.poly);
-                for (let j = 0, done = false; j < target.length && done === false; ++j)
-                {
-                    if (target[j].type === 0)
-                    {
-                        inputs.entities[target[j].ref].scripts.onTalk(runTime, inputs.entities[target[j].ref], inputs.entity);
-                        done = true;
-                    }
-                }
-            });
+            let i = 0;
+            for (; i < this.entities.length && this.entities[i].id !== entity.id; ++i);
+            this.addInput(Key.Enter, false, { CEngine : this.CEngine, entity : entity, ref : i, entities : this.entities}, talkHandler);
         }
     }
 
@@ -346,17 +310,14 @@ export class SEngine
         if (this._default === true)
         {
             let index = 0;
-            let entities = this.entities;
-            let length = entities.length;
+            const entities = this.entities;
+            const length = entities.length;
             for (; index < length && entities[index].attached !== true; ++ index);
-	
             if (index === length)
             {
                 throw new SEngineError("attempt to remove Default Input when this does not exist.");
             }
-	
             entities[index].attached = false;
-	
             this.removeInput(Key.Enter);
             this.removeInput(Key.Up);
             this.removeInput(Key.Down);
@@ -366,35 +327,36 @@ export class SEngine
     }
 
     /**
-	 * update (offset = [0, 0], scale = 1)
-	 * updates the system this does the following things
-	 * 1. checks for any inputs added with addINput above
-	 * 2. loops through all entities processing the first action in their queues
-	 * 		- if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
-	 * 		- i.e. the next action is processed too
-	 * 3. sets scale and offset ready for rendering
-	 * scale = zoom in/out for everything
-	 * offset = translation for everything - used to move around a map
-	 * 
-	 * NOTE when using MEngine with SEngine MEngine.update calls this function
-	 * Only call this yourself if not using MENgine
-	 * 
-	 * #FIX ME - add a feature to freeze the whole SEngine?
-	 * #FIX ME - move these params to render?
-	 * @param {any} [offset=[0, 0]] 
-	 * @param {number} [scale=1] 
-	 * @memberof SEngine
-	 */
+     * update (offset = [0, 0], scale = 1)
+     * updates the system this does the following things
+     * 1. checks for any inputs added with addINput above
+     * 2. loops through all entities processing the first action in their queues
+     *         - if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
+     *         - i.e. the next action is processed too
+     * 3. sets scale and offset ready for rendering
+     * scale = zoom in/out for everything
+     * offset = translation for everything - used to move around a map
+     * 
+     * NOTE when using MEngine with SEngine MEngine.update calls this function
+     * Only call this yourself if not using MENgine
+     * 
+     * #FIX ME - add a feature to freeze the whole SEngine?
+     * #FIX ME - move these params to render?
+     * @param {any} [offset=[0, 0]] 
+     * @param {number} [scale=1] 
+     * @memberof SEngine
+     */
     update ()
     {
+        let cType = 0;
         if (this.useCEngine === true)
         {
-            var cType = this.CEngine.cType;
+            cType = this.CEngine.cType;
         }
-        let inputSys = this.input;
+        const inputSys = this.input;
         for (let i = 0, length = this.inputs.length; i < length; ++i)
         {
-            let input = this.inputs[i];
+            const input = this.inputs[i];
             if (input.continuous === true)
             {
                 if (inputSys.isPressed(input.key) === true)
@@ -435,7 +397,7 @@ export class SEngine
         {
             stopped = false;
             entity = this.entities[i];
-            if (entity.frozen === true) 
+            if (entity.frozen === true)
             {
                 if (entity.frame !== 0 && entity._sprite.dirs[entity.dir].reset > -1)
                 {
@@ -474,7 +436,7 @@ export class SEngine
             }
             else
             {
-                let action = entity.queue[entity.end];
+                const action = entity.queue[entity.end];
                 if (action.type === spriteMOVE || action.type === spriteANIMATE)
                 {//individual conditions to avoid dependence on ordering
                     if (entity._sprite.dir_Id[entity.queue[entity.end].direction] !== entity.dir)
@@ -489,7 +451,7 @@ export class SEngine
                         entity.ticks = (entity.ticks + 1) % entity._sprite.dirs[entity.dir].dt;
                         if (entity.ticks === 0)
                         {
-                            entity.frame = (entity.frame + 1) % (entity._sprite.dirs[entity.dir].frames.length);
+                            entity.frame = (entity.frame + 1) % entity._sprite.dirs[entity.dir].frames.length;
                             entity.needsUpdate = true;
                         }
                     }
@@ -498,7 +460,7 @@ export class SEngine
                 {
                     vec = entity._vectors[entity.dir];
                     pVec = entity._pVectors[entity.dir];
-                    if ((this.tileMovement === true) && action.pos < this.tSize)
+                    if (this.tileMovement === true && action.pos < this.tSize)
                     {
                         if (action.pos === 0 && this.useCEngine === true)
                         {//#FIX ME the +1 stuff should be gone
@@ -510,7 +472,7 @@ export class SEngine
                                     if (collisions[j].type === 0)
                                     {
                                         stopped = true;
-                                        let collidedWith = this.entities[collisions[j].ref];
+                                        const collidedWith = this.entities[collisions[j].ref];
                                         if (collidedWith.attached === true)
                                         {
                                             entity.scripts.onTouchPlayer(this.runTime, entity, collidedWith);
@@ -526,7 +488,7 @@ export class SEngine
                                     }
                                     else if (collisions[j].type === 2)
                                     {
-                                        let collidedWith = this.entities[collisions[j].ref];
+                                        const collidedWith = this.entities[collisions[j].ref];
                                         if (collidedWith.attached === true)
                                         {
                                             collisions[j].scripts.onTouchPlayer(this.runTime, entity);
@@ -572,15 +534,15 @@ export class SEngine
                             {
                                 this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
                             }
-                            entity.tile_x = (entity._x * this._tFract) | 0;
-                            entity.tile_y = (entity._y * this._tFract) | 0;
+                            entity.tile_x = Math.floor(entity._x * this._tFract);
+                            entity.tile_y = Math.floor(entity._y * this._tFract);
                             stopped = true;
                         }
                         else if (this.useCEngine === true)
                         {
-                            dX = ((entity._px + pVec[0]) >> 7) - entity._x;
-                            dY = ((entity._py + pVec[1]) >> 7) - entity._y;	
-							
+                            dX = (entity._px + pVec[0] >> 7) - entity._x;
+                            dY = (entity._py + pVec[1] >> 7) - entity._y;
+
                             collisions = this.CEngine.collide(i, entity.internalLayer, entity._x, entity._y, dX, dY, entity.poly);
                             if (collisions.length > 0)
                             {
@@ -589,7 +551,7 @@ export class SEngine
                                     if (collisions[j].type === 0)
                                     {
                                         stopped = true;
-                                        let collidedWith = this.entities[collisions[j].ref];
+                                        const collidedWith = this.entities[collisions[j].ref];
                                         if (collidedWith.attached === true)
                                         {
                                             entity.scripts.onTouchPlayer(this.runTime, entity, collidedWith);
@@ -662,7 +624,7 @@ export class SEngine
                         }
                         else if (cType === 0)
                         {
-                            let newTileY = Math.floor(action.pos * this._tFract);
+                            const newTileY = Math.floor(action.pos * this._tFract);
                             this.tObs[entity.internalLayer][entity.tile_x][newTileY] = i + 1;
                             this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
                         }
@@ -682,7 +644,7 @@ export class SEngine
                         }
                         else if (cType === 0)
                         {
-                            let newTileX = Math.floor(action.pos * this._tFract);
+                            const newTileX = Math.floor(action.pos * this._tFract);
                             this.tObs[entity.internalLayer][newTileX][entity.tile_y] = i + 1;
                             this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
                         }
@@ -745,48 +707,38 @@ export class SEngine
         //currently made stable with added position value - probably a tad slow
         for (let i = 0; i < this.layers; ++i)
         {
-            this._renders[i].sort(function (entity_one, entity_two)
-            {
-                let test = entity_one._y - entity_two._y;
-                if (test !== 0) 
-                {
-                    return test;
-                }
-                else
-                {
-                    return (entity_one.position - entity_two.position);
-                }
-            });
+            this._renders[i].sort(compareEntities);
         }
     }
 
     /**
-	 * Draw one layer of entities
-	 * Self explanatory
-	 * 
-	 * Note when using MEngine this is called by MEngine#render
-	 * Only call it yourself if using SEngine without MEngine
-	 * 
-	 * If you have multiple layers of entities and are not using MEngine
-	 * You will need to call it once per layer
-	 * @param {object} [surface=Surface.Screen] 
-	 * @param {number} [layer=0] 
-	 * @memberof SEngine
-	 */
+     * Draw one layer of entities
+     * Self explanatory
+     * 
+     * Note when using MEngine this is called by MEngine#render
+     * Only call it yourself if using SEngine without MEngine
+     * 
+     * If you have multiple layers of entities and are not using MEngine
+     * You will need to call it once per layer
+     * @param {object} [surface=Surface.Screen] 
+     * @param {number} [layer=0] 
+     * @memberof SEngine
+     */
     renderLayer(offset = [0, 0], zoom = 1, surface = Surface.Screen, layer = 0)
     {
-        let thisLength = this._renders[layer].length;
+        const thisLength = this._renders[layer].length;
         let currentRender;
-        let coords = [0, 0];
-        let transformed = this.transformed;
-        let renderQueue = this._renders[layer];
-        let sWidth = this.width;
-        let sHeight = this.height;
-        let uZoom = Math.floor(1024 / zoom);
-        let zFract = 1 / zoom;
+        const coords = [0, 0];
+        const transformed = this.transformed;
+        const renderQueue = this._renders[layer];
+        const sWidth = this.width;
+        const sHeight = this.height;
+        const uZoom = Math.floor(1024 / zoom);
+        const zFract = 1 / zoom;
+        let transformation;
         if (transformed === true)
         {
-            var transformation = this.transform;
+            transformation = this.transform;
         }
         for (let j = 0; j < thisLength; ++j)
         {
@@ -794,14 +746,14 @@ export class SEngine
             currentRender.position = j;
             if (currentRender.visible === true)
             {
-                coords[0] = ((currentRender._x - (currentRender.scale[0] *  currentRender._sprite.o[0]) - offset[0]) * uZoom) >> 10;
-                coords[1] = ((currentRender._y  - (currentRender.scale[1] *  currentRender._sprite.o[1]) - offset[1]) * uZoom) >> 10;
-                let w_scale = (currentRender.scale[0] * zFract);
-                let h_scale = (currentRender.scale[1] * zFract);
+                coords[0] = (currentRender._x - currentRender.scale[0] * currentRender._sprite.o[0] - offset[0]) * uZoom >> 10;
+                coords[1] = (currentRender._y - currentRender.scale[1] * currentRender._sprite.o[1] - offset[1]) * uZoom >> 10;
+                const w_scale = currentRender.scale[0] * zFract;
+                const h_scale = currentRender.scale[1] * zFract;
                 if (coords[0] < sWidth &&
                     coords[1] < sHeight &&
-                    (coords[0] + Math.ceil(w_scale * currentRender._sprite.w)) > 0 &&
-                    (coords[1] + Math.ceil(h_scale * currentRender._sprite.h)) > 0 )
+                    coords[0] + Math.ceil(w_scale * currentRender._sprite.w) > 0 &&
+                    coords[1] + Math.ceil(h_scale * currentRender._sprite.h) > 0 )
                 {
                     //Future idea: should have a method for z coordinates
                     if (currentRender.needsUpdate === true)
@@ -834,17 +786,17 @@ export class SEngine
     }
 
     /**
-	 * loadMapEntities (list, scripts)
-	 * This is called when setting a map in MEngine to load all the map entities
-	 * 
-	 * #DOCUMENT me - this needs better explanation for use without MEngine
-	 * @param {any} list 
-	 * @param {any} scripts 
-	 * @memberof SEngine
-	 */
+     * loadMapEntities (list, scripts)
+     * This is called when setting a map in MEngine to load all the map entities
+     * 
+     * #DOCUMENT me - this needs better explanation for use without MEngine
+     * @param {any} list 
+     * @param {any} scripts 
+     * @memberof SEngine
+     */
     loadMapEntities (list, scripts)
     {//#FIX ME add exception catching
-        let length = list.length;
+        const length = list.length;
         let scriptSet;
         for (let i = 0; i < length; ++i)
         {
@@ -861,18 +813,18 @@ export class SEngine
     }
 
     /**
-	 * lazyLoadSprite (fileName)
-	 * Checks an array of pre-loaded spritesets for the requested sprite
-	 * If the sprite is found returns it
-	 * If not found loads the sprite, adds it to the array and returns it
-	 * 
-	 * @param {any} fileName 
-	 * @returns 
-	 * @memberof SEngine
-	 */
+     * lazyLoadSprite (fileName)
+     * Checks an array of pre-loaded spritesets for the requested sprite
+     * If the sprite is found returns it
+     * If not found loads the sprite, adds it to the array and returns it
+     * 
+     * @param {any} fileName 
+     * @returns 
+     * @memberof SEngine
+     */
     lazyLoadSprite (fileName)
     {//#FIX ME add exception catching
-        let name = fileName.substring(fileName.lastIndexOf("/") + 1);
+        const name = fileName.substring(fileName.lastIndexOf("/") + 1);
         if (!this.sprites[name])
         {
             this.sprites[name] = loadSES(fileName);
@@ -887,14 +839,14 @@ export class SEngine
     //pulled out into a seperate function from reset() for neatness/intelligibility
     initColisions(mapWidth, mapHeight, mapLayers)
     {
-        let tilesAccross = Math.max(Math.ceil(mapWidth * this._tFract), Math.ceil(mapHeight * this._tFract)) + 1;
+        const tilesAccross = Math.max(Math.ceil(mapWidth * this._tFract), Math.ceil(mapHeight * this._tFract)) + 1;
         this.tilesAccross = tilesAccross;
         this.layers = mapLayers;
-        let CEngineCall = {};
+        const CEngineCall = {};
         CEngineCall.entities = this.entities;
         switch (this.CEngine.cType)
         {
-        case (0):
+        case 0:
             //setup a tile map for colisions
             if (this.tileMovement !== true)
             {
@@ -912,7 +864,7 @@ export class SEngine
             }
             CEngineCall.table = this.tObs;
             break;
-        case (1):
+        case 1:
             //set up segments for collisions
             this.sObs = new Array(mapLayers);
             for (let i = 0; i < mapLayers; ++ i)
@@ -925,8 +877,8 @@ export class SEngine
                     {
                         this.sObs[i][j][k] =
                         {
-                            list:new Array(this.maxPerSeg),
-                            end:0
+                            list : new Array(this.maxPerSeg),
+                            end  : 0
                         };
                         this.sObs[i][j][k].list.fill(0);
                     }
@@ -944,7 +896,7 @@ export class SEngine
     //called from SEngine#addEntity and from SEngine#reset, should not be used anywhere else
     initEntity(entity)
     {
-        let layer = entity.layer;
+        const layer = entity.layer;
         if (layer < 0 || layer >= this.layers)
         {
             throw new SEngineError("out of range layer specified for entity" + entity.id);
@@ -953,13 +905,13 @@ export class SEngine
         {
             switch (this.CEngine.cType)
             {
-            case (0):
+            case 0:
                 this.tObs[layer][entity.tile_x][entity.tile_y] = this.entities.length;//the apparent error here is intentional
                 break;
-            case (1):
+            case 1:
                 this.updateCollisions(this.entities.length-1, entity._x, entity._y, 0, 0, layer, layer, true);
             }
-        }	
+        }
         this._renders[layer].push(entity);
     }
 
@@ -969,17 +921,16 @@ export class SEngine
     //note this does not check for collisions
     updateCollisions (ref, x, y, d_x, d_y, layer1, layer2, initial=false, destroy=false)
     {
-        let polygons = this.entities[ref].poly;
-        let tFract = this._tFract;
-		
+        const polygons = this.entities[ref].poly;
+        const tFract = this._tFract;
         //where did we start - this will break if a polygon goes above the top or off to the left of a sprite
         //such behaviour should not be expected so won't allow for it
         //#FIX ME add in an error message to ENtity creation for out of bounds polys
-        let start_x1 = Math.floor(x * tFract);
-        let start_y1 = Math.floor(y * tFract);
-		
+        const start_x1 = Math.floor(x * tFract);
+        const start_y1 = Math.floor(y * tFract);
+
         let max_w = 0, max_h = 0;
-		
+
         for (let i = 0; i < polygons.length; ++i)
         {
             if (polygons[i].type === 1)
@@ -989,23 +940,23 @@ export class SEngine
             }
             else if (polygons[i].type === 0)
             {//note the use of w for both directions here is intentional as if this is a circle it's the radius
-                max_w = (polygons[i].w * 2) > max_w ? (polygons[i].w * 2) : max_w;
-                max_h = (polygons[i].w * 2) > max_h ? (polygons[i].w * 2) : max_h;
+                max_w = polygons[i].w * 2 > max_w ? polygons[i].w * 2 : max_w;
+                max_h = polygons[i].w * 2 > max_h ? polygons[i].w * 2 : max_h;
             }
         }
-		
-        let start_x2 = Math.ceil((x + max_w) * tFract);
-        let start_y2 = Math.ceil((y + max_h) * tFract);
-		
-        let end_x1   = Math.floor((x + d_x) * tFract);
-        let end_y1   = Math.floor((y + d_y) * tFract);
-        let end_x2   = Math.ceil((x + max_w + d_x) * tFract);
-        let end_y2   = Math.ceil((y + max_h + d_y) * tFract);
-		
+
+        const start_x2 = Math.ceil((x + max_w) * tFract);
+        const start_y2 = Math.ceil((y + max_h) * tFract);
+
+        const end_x1   = Math.floor((x + d_x) * tFract);
+        const end_y1   = Math.floor((y + d_y) * tFract);
+        const end_x2   = Math.ceil((x + max_w + d_x) * tFract);
+        const end_y2   = Math.ceil((y + max_h + d_y) * tFract);
+
         let i = Math.max(Math.min(start_x1, end_x1) - 1, 0);
         max_w = Math.max(start_x2, end_x2) + 1;
-		
-        let min_h = Math.max(Math.min(start_y1, end_y1) - 1, 0);
+
+        const min_h = Math.max(Math.min(start_y1, end_y1) - 1, 0);
         max_h  = Math.max(start_y2, end_y2) + 1;
 
         for (let j = min_h; i < max_w; ++ i, j = min_h)
@@ -1034,7 +985,7 @@ export class SEngine
     //hopefully JIT should inline these
     popSegment (i, j, layer, ref)
     {
-        let sOb = this.sObs[layer][i][j];
+        const sOb = this.sObs[layer][i][j];
         let location = sOb.end;
         for (let k = 0; k < location; ++ k)
         {
@@ -1052,7 +1003,7 @@ export class SEngine
 
     pushSegment (i, j, layer, ref)
     {
-        let sOb = this.sObs[layer][i][j];
+        const sOb = this.sObs[layer][i][j];
         sOb.list[sOb.end] = ref;
         ++sOb.end;
     }
@@ -1067,47 +1018,47 @@ export class SEngine
  */
 export function loadSES(inputFile)
 {
-    let source = new DataStream(inputFile, FileOp.Read);
+    const source = new DataStream(inputFile, FileOp.Read);
 
-    let frameWidth = source.readUint16(true);
-    let frameHeight = source.readUint16(true);
+    const frameWidth = source.readUint16(true);
+    const frameHeight = source.readUint16(true);
 
-    let polyCount = source.readUint8(true);
-    let polygons = new Array(polyCount);
+    const polyCount = source.readUint8(true);
+    const polygons = new Array(polyCount);
     for (let i = 0; i < polyCount; ++i)
     {
         polygons[i] =
         {
-            type:source.readUint8(true),
-            x : source.readInt16(true),
-            y : source.readInt16(true),
-            w : source.readUint16(true),
-            h : source.readUint16(true)
+            type : source.readUint8(true),
+            x    : source.readInt16(true),
+            y    : source.readInt16(true),
+            w    : source.readUint16(true),
+            h    : source.readUint16(true)
         };
     }
-    let offsetX = source.readUint16(true);
-    let offsetY = source.readUint16(true);
+    const offsetX = source.readUint16(true);
+    const offsetY = source.readUint16(true);
 
-    let numDirections = source.readUint16(true);
-	
-    let directions = new Array(numDirections);
+    const numDirections = source.readUint16(true);
+
+    const directions = new Array(numDirections);
     for (let i = 0; i < numDirections; ++i)
     {
         directions[i] =
         {
-            id: source.readString16(true),
+            id     : source.readString16(true),
             vector : [source.readInt8(), source.readInt8(),source.readInt8()],
-            speed : source.readUint8(),
+            speed  : source.readUint8(),
             frames : source.readUint8(),
-            reset : source.readUint8()
+            reset  : source.readUint8()
         };
     }
-    let fullWidth = source.readUint16(true);
-    let fullHeight = source.readUint16(true);
-	
-    let image = new Texture(fullWidth, fullHeight, source.read(fullWidth * fullHeight * 4));
+    const fullWidth = source.readUint16(true);
+    const fullHeight = source.readUint16(true);
 
-    let template = new STemplate (directions, 0, 0, offsetX, offsetY, frameWidth, frameHeight, true, true, polygons);
+    const image = new Texture(fullWidth, fullHeight, source.read(fullWidth * fullHeight * 4));
+
+    const template = new STemplate (directions, 0, 0, offsetX, offsetY, frameWidth, frameHeight, true, true, polygons);
     return new Sprite(inputFile.substring(inputFile.lastIndexOf("/")), image, template);
 }
 
@@ -1140,11 +1091,12 @@ class Entity
         this._shader.setFloatVector(tex_move, [0,0,1]);
         this._shader.setInt("mask_mode",0);
         this._scale = scale;
+        let obs_shapes, debugColour;
 
         if (DEBUG_MODE)
         {
-            var obs_shapes = new Array(sprite.col.length);
-            var debugColour = new Color(0.9, 0.1, 0);
+            obs_shapes = new Array(sprite.col.length);
+            debugColour = new Color(0.9, 0.1, 0);
         }
 
         this.poly = new Array(sprite.col.length);
@@ -1152,19 +1104,19 @@ class Entity
         {
             this.poly[i] =
             {
-                type: sprite.col[i].type,
-                x:    sprite.col[i].x * scale[0] + x,
-                y:    sprite.col[i].y * scale[1] + y,
-                w:    sprite.col[i].w * scale[0],
-                h:    sprite.col[i].h * scale[1]
+                type : sprite.col[i].type,
+                x    : sprite.col[i].x * scale[0] + x,
+                y    : sprite.col[i].y * scale[1] + y,
+                w    : sprite.col[i].w * scale[0],
+                h    : sprite.col[i].h * scale[1]
             };
             if (DEBUG_MODE)
             {
                 obs_shapes[i] = new Shape(ShapeType.LineLoop, null, new VertexList([
-                    {x:this.poly[i].x                  - x, y:this.poly[i].y - y,                  color:debugColour},
-                    {x:this.poly[i].x                  - x, y:this.poly[i].y + this.poly[i].h - y, color:debugColour},
-                    {x:this.poly[i].x + this.poly[i].w - x, y:this.poly[i].y + this.poly[i].h - y, color:debugColour},
-                    {x:this.poly[i].x + this.poly[i].w - x, y:this.poly[i].y - y,                  color:debugColour}]));
+                    {x : this.poly[i].x                  - x, y : this.poly[i].y - y,                  color : debugColour},
+                    {x : this.poly[i].x                  - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y - y,                  color : debugColour}]));
             }
         }
         if (DEBUG_MODE)
@@ -1175,13 +1127,13 @@ class Entity
 
         //coordinates
         this.zoom = 1; /*not strictly needed
-		- most entities will never use a zoom propery
-		- BUT sometimes want it for using an entity for map zoom
-		- have it on all entities to avoid having different virtual clases
-		- this is a significant performance optimisation due to how the JIT works*/
+        - most entities will never use a zoom propery
+        - BUT sometimes want it for using an entity for map zoom
+        - have it on all entities to avoid having different virtual clases
+        - this is a significant performance optimisation due to how the JIT works*/
 
-        this.tile_x = ((x - sprite.o[0]) * tFract)|0;
-        this.tile_y = ((y - sprite.o[1]) * tFract)|0;
+        this.tile_x = Math.floor(x - sprite.o[0] * tFract);
+        this.tile_y = Math.floor(y - sprite.o[1] * tFract);
 
         if (tileMovement)
         {//snap to tile grid if using tile movement
@@ -1232,7 +1184,7 @@ class Entity
         this.data = {};
 
         //add a hook to SEngine - used by some of the convenience methods
-        if (typeof(SEngine) === "object")
+        if (typeof SEngine === "object")
         {
             this.SEngine = SEngine;
             this.inUse = true;
@@ -1245,62 +1197,63 @@ class Entity
 
 
     /**
-	 * get the sprite object
-	 * 
-	 * @memberof Entity
-	 */
+     * get the sprite object
+     * 
+     * @memberof Entity
+     */
     get sprite()
     {
         return this._sprite;
     }
-	
+
     /**
-	 * Set the sprite object
-	 * entityObject.sprite = spriteObject;
-	 * Supply the new spriteObject as the parameter
-	 * 
-	 * @memberof Entity
-	 */
+     * Set the sprite object
+     * entityObject.sprite = spriteObject;
+     * Supply the new spriteObject as the parameter
+     * 
+     * @memberof Entity
+     */
     set sprite(sprite)
     {
-        let shader   = this._shader;
+        const shader   = this._shader;
         this._sprite = sprite;
         this.model   = new Model(sprite.shape, shader);
 
         this.model.transform = this.trans;
         let DEBUG_MODE = false;
+        let obs_shapes, debugColour;
 
         if (this.inUse === true)
         {
             if (this.SEngine.DEBUG_MODE === true)
             {
                 DEBUG_MODE = true;
-                var obs_shapes = new Array(sprite.col.length);
-                var debugColour = new Color(0.9, 0.1, 0);
+                obs_shapes = new Array(sprite.col.length);
+                debugColour = new Color(0.9, 0.1, 0);
             }
         }
 
-        let x = this.x;
-        let y = this.y;
+        const x = this.x;
+        const y = this.y;
 
         this.poly = new Array(sprite.col.length);
         for (let i = 0; i < this.poly.length; ++i)
         {
             this.poly[i] =
             {
-                type: sprite.col[i].type,
-                x:    sprite.col[i].x * this._scale[0] + x,
-                y:    sprite.col[i].y * this._scale[1] + y,
-                w:    sprite.col[i].w * this._scale[0],
-                h:    sprite.col[i].h * this._scale[1]
+                type : sprite.col[i].type,
+                x    : sprite.col[i].x * this._scale[0] + x,
+                y    : sprite.col[i].y * this._scale[1] + y,
+                w    : sprite.col[i].w * this._scale[0],
+                h    : sprite.col[i].h * this._scale[1]
             };
             if (DEBUG_MODE)
             {
                 obs_shapes[i] = new Shape(ShapeType.LineLoop, null, new VertexList([
-                    {x:this.poly[i].x                  - x, y:this.poly[i].y - y,                  color:debugColour},
-                    {x:this.poly[i].x                  - x, y:this.poly[i].y + this.poly[i].h - y, color:debugColour},
-                    {x:this.poly[i].x + this.poly[i].w - x, y:this.poly[i].y + this.poly[i].h - y, color:debugColour},
-                    {x:this.poly[i].x + this.poly[i].w - x, y:this.poly[i].y - y,                  color:debugColour}]));
+                    {x : this.poly[i].x                  - x, y : this.poly[i].y - y,                  color : debugColour},
+                    {x : this.poly[i].x                  - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y - y,                  color : debugColour}]));
             }
         }
         if (DEBUG_MODE)
@@ -1322,8 +1275,8 @@ class Entity
         if (this.inUse === true)
         {
             let index = 0;
-            let entities = this.SEngine.entities;
-            let length = entities.length;
+            const entities = this.SEngine.entities;
+            const length = entities.length;
             for (; index < length && entities[index].id !== this.id; ++index);
             if (index === length)
             {
@@ -1341,11 +1294,11 @@ class Entity
 
     set speed(value)
     {
-        let flooredValue = value |0;
+        const flooredValue = value |0;
         if (this._speed !== flooredValue)
         {
             this._speed = flooredValue;
-            let dirs = this.sprite.dirs;
+            const dirs = this.sprite.dirs;
             for (let i = 0; i < dirs.length; ++i)
             {
                 this._pVectors[i] = [dirs[i].vector[0] * flooredValue, dirs[i].vector[1] * flooredValue];
@@ -1360,30 +1313,31 @@ class Entity
     }
 
     /**
-	 * faceEntity(entity, immediate = true)
-	 * makes this Entity face towards entity
-	 * if immediate is true this is done by setting properties immediately
-	 * if immediate is false it is queued to happen after any other queued movements
-	 * 
-	 * @param {any} entity 
-	 * @param {boolean} [immediate=true] 
-	 * @memberof Entity
-	 */
+     * faceEntity(entity, immediate = true)
+     * makes this Entity face towards entity
+     * if immediate is true this is done by setting properties immediately
+     * if immediate is false it is queued to happen after any other queued movements
+     * 
+     * @param {any} entity 
+     * @param {boolean} [immediate=true] 
+     * @memberof Entity
+     */
     faceEntity(entity, immediate = true)
     {
-        let dx = entity._x - this._x;
-        let dy = entity._y - this._y;
-        let dirs = this._sprite.dirs;
-        let options = [];
-        let i = 0, length = dirs.length;
+        const dx = entity._x - this._x;
+        const dy = entity._y - this._y;
+        const dirs = this._sprite.dirs;
+        const options = [];
+        const length = dirs.length;
+        let i = 0;
         for (; i < length; ++i)
         {
-            let temp1 = dx - dirs[i].vector[0];
-            let temp2 = dy - dirs[i].vector[1];
-            options[i] = ((temp1 * temp1) + (temp2 * temp2));
+            const temp1 = dx - dirs[i].vector[0];
+            const temp2 = dy - dirs[i].vector[1];
+            options[i] = temp1 * temp1 + temp2 * temp2;
         }
-        let target = Math.min(...options);
-        for (i=0; options[i] !== target; ++i);
+        const target = Math.min(...options);
+        for (i = 0; options[i] !== target; ++i);
         if (immediate === true)
         {
             this.dir = i;
@@ -1395,27 +1349,27 @@ class Entity
         }
 
     }
-	
+
     //#FIX Me this will show triggers as obstructions, could that be misleading?
     /**
-	 * Entity#obstructions
-	 * an array of items obstructing the entity
-	 * 
-	 * @readonly
-	 * @memberof Entity
-	 */
+     * Entity#obstructions
+     * an array of items obstructing the entity
+     * 
+     * @readonly
+     * @memberof Entity
+     */
     get obstructions ()
     {
         if (this.inUse === true)
         {
-            let dirs = this._sprite.dirs;
-            let obstructions = [];
-            let collisionTest = this.SEngine.CEngine.collide;
-            let id = this.id;
-            let layer = this.internalLayer;
-            let x = this._x;
-            let y = this._y;
-            let poly = this.poly;
+            const dirs = this._sprite.dirs;
+            const obstructions = [];
+            const collisionTest = this.SEngine.CEngine.collide;
+            const id = this.id;
+            const layer = this.internalLayer;
+            const x = this._x;
+            const y = this._y;
+            const poly = this.poly;
             for (let i = 0, length = dirs.length; i < length; ++i)
             {
                 obstructions.push({direction : dirs[i].id, collisions : collisionTest(id, layer, x, y, dirs[i].vector[0], dirs[i].vector[1], poly)});
@@ -1430,25 +1384,25 @@ class Entity
 
     //#Finalise me - experimental method
     /**
-	 * Specifies whether the entity would be obstructed with it's crurent x,y on the specified layer
-	 * 
-	 * @param {any} layer 
-	 * @returns 
-	 * @memberof Entity
-	 */
+     * Specifies whether the entity would be obstructed with it's crurent x,y on the specified layer
+     * 
+     * @param {any} layer 
+     * @returns 
+     * @memberof Entity
+     */
     obstructedOnLayer(layer)
     {
         if (this.inUse === true)
         {
             let index = 0;
-            let entities = this.SEngine.entities;
-            let length = entities.length;
+            const entities = this.SEngine.entities;
+            const length = entities.length;
             for (; index < length && entities[index].id !== this.id; ++index);
             if (index === length)
             {
                 throw new SEngineError("Obstructions requested for in use entity but entity not found in SEngine.");
             }
-            return (this.SEngine.CEngine.collide(index, layer, this._x, this._y, 0, 0, this.poly).length > 0);
+            return this.SEngine.CEngine.collide(index, layer, this._x, this._y, 0, 0, this.poly).length > 0;
         }
         else
         {
@@ -1457,26 +1411,27 @@ class Entity
     }
 
     /**
-	 * obstructionsInDirection(direction)
-	 * Specifies whether the entity would be obstructed
-	 * if it attempted to move in the specified direction
-	 * 
-	 * @param {any} direction 
-	 * @returns 
-	 * @memberof Entity
-	 */
+     * obstructionsInDirection(direction)
+     * Specifies whether the entity would be obstructed
+     * if it attempted to move in the specified direction
+     * 
+     * @param {any} direction 
+     * @returns 
+     * @memberof Entity
+     */
     obstructionsInDirection(direction)
     {
-        let dirs = this._sprite.dirs;
-        for (var i = 0; dirs[i].id !== direction; ++i);
+        const dirs = this._sprite.dirs;
+        let i = 0;
+        for (; dirs[i].id !== direction; ++i);
         if (dirs[i].id !== direction)
         {
             throw new SEngineError("obstructions test requested for non-existent direction");
         }
-        let vec = dirs[i].vector;
+        const vec = dirs[i].vector;
         let index = 0;
-        let entities = this.SEngine.entities;
-        let length = entities.length;
+        const entities = this.SEngine.entities;
+        const length = entities.length;
         for (; index < length && entities[index].id !== this.id; ++index);
         if (index === length)
         {
@@ -1484,13 +1439,13 @@ class Entity
         }
         return this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, vec[0], vec[1], this.poly);
     }
-	
+
     /**
-	 * Entity#layer
-	 * queues a teleport to the specified layer
-	 * 
-	 * @memberof Entity
-	 */
+     * Entity#layer
+     * queues a teleport to the specified layer
+     * 
+     * @memberof Entity
+     */
     set layer(value)
     {
         if (value !== this.internalLayer)
@@ -1501,11 +1456,11 @@ class Entity
     }
 
     /**
-	 * Entity#x
-	 * queues a teleport to the specified x
-	 * 
-	 * @memberof Entity
-	 */
+     * Entity#x
+     * queues a teleport to the specified x
+     * 
+     * @memberof Entity
+     */
     set x (value)
     {
         if (value !== this._x || this.waiting === false)
@@ -1520,11 +1475,11 @@ class Entity
     }
 
     /**
-	 * Entity#y
-	 * queues a teleport to the specified y
-	 * 
-	 * @memberof Entity
-	 */
+     * Entity#y
+     * queues a teleport to the specified y
+     * 
+     * @memberof Entity
+     */
     set y (value)
     {
         if (value !== this._y || this.waiting === false)
@@ -1544,36 +1499,36 @@ class Entity
     }
 
     /**
-	 * Entity#waiting
-	 * True if the entity has no actions queued
-	 * Teleports are not counted as they are executed for free
-	 * 
-	 * @readonly
-	 * @memberof Entity
-	 */
+     * Entity#waiting
+     * True if the entity has no actions queued
+     * Teleports are not counted as they are executed for free
+     * 
+     * @readonly
+     * @memberof Entity
+     */
     get waiting()
     {
-        return (this.queueLength === 0);
+        return this.queueLength === 0;
     }
 
     /**
-	 * Entity#fullyWaiting
-	 * True if entity has nothing queued at all (including teleports)
-	 * 
-	 * @readonly
-	 * @memberof Entity
-	 */
+     * Entity#fullyWaiting
+     * True if entity has nothing queued at all (including teleports)
+     * 
+     * @readonly
+     * @memberof Entity
+     */
     get fullyWaiting()
     {
-        return (this.insert === this.end);
+        return this.insert === this.end;
     }
 
     /**
-	 * Returns number of actions queued excluding teleports
-	 * 
-	 * @readonly
-	 * @memberof Entity
-	 */
+     * Returns number of actions queued excluding teleports
+     * 
+     * @readonly
+     * @memberof Entity
+     */
     get queueLength()
     {
         if (this.insert === this.end)
@@ -1583,7 +1538,7 @@ class Entity
         else
         {//remove layer changes from queueLength as they don't take up a tick
             let _return = 0;
-            let queue = this.queue;
+            const queue = this.queue;
             for (let i = this.end, insert = this.insert; i < insert; ++i )
             {
                 if (queue[i].type < spriteY)//values above this are instant teleports
@@ -1597,13 +1552,13 @@ class Entity
 
 
     /**
-	 * Entity#fullQueueLength
-	 * Returns the number of actions queued
-	 * Including teleports
-	 * 
-	 * @readonly
-	 * @memberof Entity
-	 */
+     * Entity#fullQueueLength
+     * Returns the number of actions queued
+     * Including teleports
+     * 
+     * @readonly
+     * @memberof Entity
+     */
     get fullQueueLength()
     {
         return this.insert - this.end;
@@ -1617,12 +1572,12 @@ class Entity
     }
 
     /**
-	 * Entity#direction
-	 * The name of the ddirection the entity is facing e.g. "north"
-	 * 
-	 * #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
-	 * @memberof Entity
-	 */
+     * Entity#direction
+     * The name of the ddirection the entity is facing e.g. "north"
+     * 
+     * #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
+     * @memberof Entity
+     */
     get direction()
     {
         return this._sprite.dirs[this.dir].id;
@@ -1638,21 +1593,21 @@ class Entity
     }
 
     /**
-	 * Entity#destroy()
-	 * "remove" entity from SEngine
-	 * if processQueue is true any remaining actions are completed first
-	 * if it's false or omitted remaining actions are cancelled 
-	 * 
-	 * Entity is not fully removed, however it is removed from:
-	 * - collision detection and
-	 * - the render list and
-	 * - it's queue will no longer be processed
-	 * 
-	 * NOTE THERE IS CURRENTLY NO METHOD to reverse this #FIX ME?
-	 * 
-	 * @param {boolean} [processQueue=false] 
-	 * @memberof Entity
-	 */
+     * Entity#destroy()
+     * "remove" entity from SEngine
+     * if processQueue is true any remaining actions are completed first
+     * if it's false or omitted remaining actions are cancelled 
+     * 
+     * Entity is not fully removed, however it is removed from:
+     * - collision detection and
+     * - the render list and
+     * - it's queue will no longer be processed
+     * 
+     * NOTE THERE IS CURRENTLY NO METHOD to reverse this #FIX ME?
+     * 
+     * @param {boolean} [processQueue=false] 
+     * @memberof Entity
+     */
     destroy(processQueue = false)
     {
         if (processQueue === false)
@@ -1663,33 +1618,33 @@ class Entity
     }
 
     /**
-	 * queueMove (dir, units = 1, type = 0, script)
-	 * function for queuing movement commands
-	 * dir = name of direction
-	 * units = how far to move
-	 * note specifying 0 (or negative )units = move forever or untill clearQueue is called
-	 * type 0 (or no specified type) = move
-	 * type 1 = animate without moving
-	 * type 2 = execute the function passed as the script parameter
-	 * 			- note 1 : assumed to be a function already - don't pass a string,
-	 * 			- note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
-	 * type 3 = face specified direction
-	 * ...space for future options
-	 * Note 7-10 are reserved for features used through other Entity methods, don't use directly
-	 * @param {any} dir 
-	 * @param {number} [units=1] 
-	 * @param {number} [type=0] 
-	 * @param {any} script 
-	 * @memberof Entity
-	 */
+     * queueMove (dir, units = 1, type = 0, script)
+     * function for queuing movement commands
+     * dir = name of direction
+     * units = how far to move
+     * note specifying 0 (or negative )units = move forever or untill clearQueue is called
+     * type 0 (or no specified type) = move
+     * type 1 = animate without moving
+     * type 2 = execute the function passed as the script parameter
+     *             - note 1 : assumed to be a function already - don't pass a string,
+     *             - note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
+     * type 3 = face specified direction
+     * ...space for future options
+     * Note 7-10 are reserved for features used through other Entity methods, don't use directly
+     * @param {any} dir 
+     * @param {number} [units=1] 
+     * @param {number} [type=0] 
+     * @param {any} script 
+     * @memberof Entity
+     */
     queueMove (dir, units = 1, type = 0, script)
     {
         if (this.insert === this.queue.length)
         {
             if (this.end > 4)
             {
-                let size = this.insert - this.end;
-                let queue = this.queue;
+                const size = this.insert - this.end;
+                const queue = this.queue;
                 for (let i = 0, pos = this.end; i < size; ++i)
                 {
                     queue[i] = queue[i + pos];
@@ -1715,11 +1670,11 @@ class Entity
         {
             this.queue[this.insert] =
             {
-                type       : spriteSCRIPT,
-                direction  : dir,
-                ticks      : units,
-                pos        : 0,
-                script     : script,
+                type      : spriteSCRIPT,
+                direction : dir,
+                ticks     : units,
+                pos       : 0,
+                script    : script,
             };
         }
         else
@@ -1762,7 +1717,7 @@ export class Sprite
         //don't need to do this but it slightly optimisises the render function
         //and makes it prettier
         this.frames = new Array(this.dirs.length);
-        for (var i = 0, j = 0; i < this.dirs.length; ++i)
+        for (let i = 0, j = 0; i < this.dirs.length; ++i)
         {
             this.frames[i] = new Array(this.dirs[i].frames.length);
             for (j = 0; j < this.dirs[i].frames.length; ++j)
@@ -1773,10 +1728,10 @@ export class Sprite
         this.col    = template.col;
         this.type   = template.type;
         this.shape  = new Shape(ShapeType.TriStrip, atlas,new VertexList([
-            {x:0,         y:0,          z:0, u:0,                 v:1                    ,color:Color.White},
-            {x:template.w,y:0,          z:0, u:this.w/atlas.width,v:1                    ,color:Color.White},
-            {x:0,         y:template.h, z:0, u:0,                 v:1-this.h/atlas.height,color:Color.White},
-            {x:template.w,y:template.h, z:0, u:this.w/atlas.width,v:1-this.h/atlas.height,color:Color.White}]));
+            {x : 0,          y : 0,          z : 0, u : 0,                 v : 1                       },
+            {x : template.w, y : 0,          z : 0, u : this.w/atlas.width,v : 1                       },
+            {x : 0,          y : template.h, z : 0, u : 0,                 v : 1 - this.h/atlas.height },
+            {x : template.w, y : template.h, z : 0, u : this.w/atlas.width,v : 1 - this.h/atlas.height }]));
     }
 }
 
@@ -1798,8 +1753,8 @@ export class Sprite
   stacked = true/false; true = if frames are horizontal each direction has a seperate row, false = one frame after another
             true = if directions are vertical each direction has a seperate column etc
   colision_polygon - for shape based colisions the vertices of the colision shape
-	                 must provide as an array of vertex objects, each object should have properties x and y
-	                 ignored if using tile based colisions (or if not doing colisiond detection) coordinates are relative to
+                     must provide as an array of vertex objects, each object should have properties x and y
+                     ignored if using tile based colisions (or if not doing colisiond detection) coordinates are relative to
 */
 
 
@@ -1811,7 +1766,7 @@ export class STemplate
         this.dirs_Id = {};
         let t_x = x;
         let t_y = y;
-        for (var i = 0; i < dirs.length; ++i)
+        for (let i = 0; i < dirs.length; ++i)
         {
             this.dirs[i] = new Direction(dirs[i].id, dirs[i].vector, dirs[i].speed, dirs[i].frames, dirs[i].reset, t_x,t_y, width, height, horizontal);
             this.dirs_Id[dirs[i].id] = i;
@@ -1875,11 +1830,11 @@ class Direction
         this.vector = vector;
         this.dt     = frame_speed;
         this.reset  = reset;
-        var ux      = x;
-        var vy      = y;
-        for (var i = 0; i < num_frames; ++i)
+        let ux    = x;
+        let vy    = y;
+        for (let i = 0; i < num_frames; ++i)
         {
-            this.frames[i] = {u:ux,v:vy};
+            this.frames[i] = {u : ux, v : vy};
             if (horizontal)
             {
                 ux = ux + width;
@@ -1901,5 +1856,65 @@ class SEngineError extends Error
     constructor(message)
     {
         super("SEngine Error: " + message);
+    }
+}
+
+function compareEntities(entity_one, entity_two)
+{
+    const test = entity_one._y - entity_two._y;
+    if (test !== 0)
+    {
+        return test;
+    }
+    else
+    {
+        return entity_one.position - entity_two.position;
+    }
+}
+
+function moveNorth (runTime, entity)
+{
+    if (entity.waiting === true)
+    {//this could be optimised - but would be uglier
+        entity.queueMove("north");
+    }
+}
+
+function moveSouth (runTime, entity)
+{
+    if (entity.waiting === true)
+    {
+        entity.queueMove("south");
+    }
+}
+
+function moveWest(runTime, entity)
+{
+    if (entity.waiting === true)
+    {
+        entity.queueMove("west");
+    }
+}
+
+function moveEast(runTime, entity)
+{
+    if (entity.waiting === true)
+    {
+        entity.queueMove("east");
+    }
+}
+
+function talkHandler(runTime, inputs)
+{
+    const entity = inputs.entity;
+    const vec = entity._vectors[entity.dir];
+    const target = inputs.CEngine.collide(inputs.ref, entity.internalLayer, entity._x, entity._y, vec[0] * 2, vec[1] * 2, entity.poly);
+    for (let j = 0, done = false; j < target.length && done === false; ++j)
+    {
+        if (target[j].type === 0)
+        {
+            inputs.entities[target[j].ref].scripts.onTalk(runTime, inputs.entities[target[j].ref], inputs.entity);
+            done = true;
+        }
     }
 }

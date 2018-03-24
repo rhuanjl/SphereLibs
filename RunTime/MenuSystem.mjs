@@ -53,12 +53,12 @@ import {Input} from "./input";
 export class MenuSystem extends HUDSystem
 {
     /**
-	 * Creates an instance of MenuSystem.
-	 * @param {number} [x=0] -Coordinates of top left corner
-	 * @param {number} [y=0] 
-	 * @param {object} [font=Font.Default] Spehre font object for text
-	 * @memberof MenuSystem
-	 */
+     * Creates an instance of MenuSystem.
+     * @param {number} [x=0] -Coordinates of top left corner
+     * @param {number} [y=0] 
+     * @param {object} [font=Font.Default] Spehre font object for text
+     * @memberof MenuSystem
+     */
     constructor(x = 0, y = 0, font = Font.Default)
     {
         super(true);
@@ -81,15 +81,15 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Add a key with an effect to the MenuSystem
-	 * Effect is currently called as a parameterless function
-	 * 
-	 * #FIX ME add a parameter?
-	 * 
-	 * @param {number} key 
-	 * @param {function} effect 
-	 * @memberof MenuSystem
-	 */
+     * Add a key with an effect to the MenuSystem
+     * Effect is currently called as a parameterless function
+     * 
+     * #FIX ME add a parameter?
+     * 
+     * @param {number} key 
+     * @param {function} effect 
+     * @memberof MenuSystem
+     */
     addInputKey(key, effect)
     {
         if (this.keys.indexOf(key) === -1)
@@ -104,14 +104,14 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Remove a key
-	 * 
-	 * @param {number} key 
-	 * @memberof MenuSystem
-	 */
+     * Remove a key
+     * 
+     * @param {number} key 
+     * @memberof MenuSystem
+     */
     removeInputKey(key)
     {
-        let offset = this.keys.indexOf(key);
+        const offset = this.keys.indexOf(key);
         if (offset !== -1)
         {
             this.keys.splice(offset,1);
@@ -124,10 +124,10 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Add default keys for a vertical list menu
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * Add default keys for a vertical list menu
+     * 
+     * @memberof MenuSystem
+     */
     addVListKeys()
     {
         this.addInputKey(Key.Down,   ()=>this.selectionDown());
@@ -137,18 +137,18 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Add a text option to a menu
-	 * 
-	 * By default these stack one above the other if no coordinates given
-	 * #Improve me - add alternate defaults
-	 * 
-	 * @param {string} text 
-	 * @param {number} [x=this.nextX] 
-	 * @param {number} [y=this.nextY] 
-	 * @param {object} [unselectedColour=Color.White] 
-	 * @param {object} [selectedColour=Color.Blue] 
-	 * @memberof MenuSystem
-	 */
+     * Add a text option to a menu
+     * 
+     * By default these stack one above the other if no coordinates given
+     * #Improve me - add alternate defaults
+     * 
+     * @param {string} text 
+     * @param {number} [x=this.nextX] 
+     * @param {number} [y=this.nextY] 
+     * @param {object} [unselectedColour=Color.White] 
+     * @param {object} [selectedColour=Color.Blue] 
+     * @memberof MenuSystem
+     */
     addTextOption(text, x = this.nextX, y = this.nextY, unselectedColour = Color.White, selectedColour = Color.Blue)
     {
         this.options.push(new TextOption(this, text, x, y, unselectedColour, selectedColour));
@@ -156,26 +156,26 @@ export class MenuSystem extends HUDSystem
         {
             switch (this.direction)
             {
-            case (0):
+            case 0:
                 this.nextY = y + this.font.height;
                 break;
-            case (1):
+            case 1:
                 this.nextY = y - this.font.height;
                 break;
-    //implement horizontal too
+            //implement horizontal too
             }
         }
     }
 
     /**
-	 * Add any kind of option
-	 * 
-	 * Must have a selected() and an unselected method()
-	 * Must be a dynamic object (as defined in HUDSystem) - add as a dynamic object first
-	 * 
-	 * @param {any} option 
-	 * @memberof MenuSystem
-	 */
+     * Add any kind of option
+     * 
+     * Must have a selected() and an unselected method()
+     * Must be a dynamic object (as defined in HUDSystem) - add as a dynamic object first
+     * 
+     * @param {any} option 
+     * @memberof MenuSystem
+     */
     addOption(option)
     {
         if (!option.selected)
@@ -186,45 +186,45 @@ export class MenuSystem extends HUDSystem
         {
             throw new MenuSystemError("added an option with no deselection method");
         }
-        let position = this.dynamicIDs.indexOf(option.token);
+        const position = this.dynamicIDs.indexOf(option.token);
         if (position === -1)
         {
             throw new MenuSystemError("added an option that is not yet a Dynamic HUD Object");
         }
         this.options.push(option);
     }
-	
+
     /**
-	 * Remove an option from the menu
-	 * 
-	 * @param {any} token 
-	 * @memberof MenuSystem
-	 */
+     * Remove an option from the menu
+     * 
+     * @param {any} token 
+     * @memberof MenuSystem
+     */
     removeOption(token)
     {
         let position = 0;
-        let options = this.options;
+        const options = this.options;
         for (; token !== options[position].token; ++position);
         options.splice(position,1);
         this.remove(token);
     }
 
     /**
-	 * Called on update when the menu is running
-	 * Overwrite this if you'd like something to happen once a frame during the menu
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * Called on update when the menu is running
+     * Overwrite this if you'd like something to happen once a frame during the menu
+     * 
+     * @memberof MenuSystem
+     */
     update()
     {
         //blank function that can be overwritten to add any custom updates
     }
 
     /**
-	 * internal update function don't use externally
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * internal update function don't use externally
+     * 
+     * @memberof MenuSystem
+     */
     internalUpdate()
     {
         this.update();
@@ -235,15 +235,15 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Process inputs during the menu's execution
-	 * Don't call this externally
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * Process inputs during the menu's execution
+     * Don't call this externally
+     * 
+     * @memberof MenuSystem
+     */
     async processUpdate()
     {
         this.waiting = true;
-        let key = await this.input.waitForInput(this.keys);
+        const key = await this.input.waitForInput(this.keys);
         this.effects[this.keys.indexOf(key)]();
         if (this.selection !== this.lastSelection)
         {
@@ -255,13 +255,13 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * Start the menu
-	 * 
-	 * This returns a promise that resolves as the id number of the selected option when the menu finishes
-	 * 
-	 * @returns 
-	 * @memberof MenuSystem
-	 */
+     * Start the menu
+     * 
+     * This returns a promise that resolves as the id number of the selected option when the menu finishes
+     * 
+     * @returns 
+     * @memberof MenuSystem
+     */
     start()
     {
         if (this.keys.length < 1 || this.keys.length !== this.effects.length)
@@ -284,10 +284,10 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * End the menu stops updating/drawing AND resolves the promise created by start()
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * End the menu stops updating/drawing AND resolves the promise created by start()
+     * 
+     * @memberof MenuSystem
+     */
     end()
     {
         this.executing = false;
@@ -302,21 +302,21 @@ export class MenuSystem extends HUDSystem
 
 
     /**
-	 * Dispose of the input object associated with the menu
-	 * Call this if never intending to use this menu again
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * Dispose of the input object associated with the menu
+     * Call this if never intending to use this menu again
+     * 
+     * @memberof MenuSystem
+     */
     dispose()
     {
         this.input.dispose();
     }
 
     /**
-	 * helper method - user chooses currently selected option
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * helper method - user chooses currently selected option
+     * 
+     * @memberof MenuSystem
+     */
     confirm()
     {
         this.lastSelection = this.selection;
@@ -324,22 +324,22 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * helper method - user cancels the menu
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * helper method - user cancels the menu
+     * 
+     * @memberof MenuSystem
+     */
     cancel()
     {
         this.lastSelection = this.selection;
         this.selection = -1;
         this.end();
-    }	
+    }
 
     /**
-	 * helper method - go up one selection
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * helper method - go up one selection
+     * 
+     * @memberof MenuSystem
+     */
     selectionUp()
     {
         if (this.selection > 0)
@@ -353,13 +353,13 @@ export class MenuSystem extends HUDSystem
     }
 
     /**
-	 * helper method - go down one selection
-	 * 
-	 * @memberof MenuSystem
-	 */
+     * helper method - go down one selection
+     * 
+     * @memberof MenuSystem
+     */
     selectionDown()
     {
-        if (this.selection < (this.options.length - 1))
+        if (this.selection < this.options.length - 1)
         {
             ++this.selection;
         }
