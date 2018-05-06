@@ -103,7 +103,12 @@ class internalTileBuffer extends PixelBuffer
         this.tilesHigh  = tilesHigh;
         this.strip      = this.tileSize * tilesWide;
     }
-
+    /**
+     * 
+     * 
+     * @returns 
+     * @memberof internalTileBuffer
+     */
     tileBufferToTexture()
     {
         //dereference everything to make the below loop smaller, neater and maybe even faster
@@ -143,7 +148,15 @@ export class MapBuffer extends internalTileBuffer
             tileBuffer.tileWidth, tileBuffer.tileHeight, tilesWide, tilesHigh);
         this.tileBuffer = tileBuffer;
     }
-
+    /**
+     *  setTileInBuffer(tile, target)
+     *  Sets the specified target in a MapBuffer to the provided tile from its tileBuffer
+     * 
+     * @param {number} tile 
+     * @param {number} target
+     * @returns {void} void
+     * @memberof MapBuffer
+     */
     setTileInBuffer(tile, target)
     {
         const tStart = this.tileSize * tile;
@@ -167,25 +180,52 @@ export class TileBuffer extends internalTileBuffer
 
 export class DrawingBuffer extends PixelBuffer
 {
-    constructor(width, height, prefilled, source)
+    /**
+    * Creates an instance of DrawingBuffer.
+    * @param {number} width 
+    * @param {number} height 
+    * @param {boolean} preFilled 
+    * @param {any} source 
+    * @memberof DrawingBuffer
+    */
+    constructor(width, height, preFilled, source)
     {
         let data;
-        if (prefilled === true)
+        if (preFilled === true)
         {
-            data = source.read(width * height * 4);
+            try
+            {
+                data = source.read(width * height * 4);
+            }
+            catch (e)
+            {
+                data = source.download();
+                if (data.length !== width * height * 4)
+                {
+                    throw new RangeError(`DrawingBuffer provided with ${data.length} sized source` +
+                                         `but source of size ${width * height * 4} required`);
+                }
+            }
         }
         else
         {
             data = new ArrayBuffer(width * height * 4);
         }
         super(data, width, height);
+        this._texture = null;
     }
-    //draw a different buffer on to this one
-    //the buffer parameter can be a DrawingBuffer OR the return value
-    //from DrawingBuffer#finalise or TileBuffer/MapBuffer#tileBufferToTexture
-    //if add is true the colour values of the buffer being drawn are added
-    //if add is false the buffer being drawn overwrites the one it's drawn on
-    //#FIX ME should allow multiplicative blending
+
+    /**
+     * drawBuffer(x, y, buffer, add)
+     * draw a different buffer on to this one
+     * if add is true the colour values of the buffer being drawn are added
+     * if add is false the buffer being drawn overwrites the one it's drawn on
+     * @param {number} x 
+     * @param {number} y 
+     * @param {PixelBuffer} buffer 
+     * @param {boolean} add 
+     * @memberof DrawingBuffer
+     */
     drawBuffer(x, y, buffer, add)
     {
         let input, output;
@@ -221,7 +261,12 @@ export class DrawingBuffer extends PixelBuffer
             }
         }
     }
-
+    /**
+     * mask(colour)
+     * Apply a colour mask represented as an array of 4 numbers to the whole buffer
+     * @param {[number, number, number, number]} colour 
+     * @memberof DrawingBuffer
+     */
     mask(colour)
     {
         const width = this.width;
@@ -312,7 +357,6 @@ export class DrawingBuffer extends PixelBuffer
     {
         const m = Math.floor((y2 - y1) / (x2 - x1));
         const c = y1 - m * x1;
-
         const cColour = DrawingBuffer.combineColour(...colour);
 
         for (let i = x1; i <= x2; ++i)
@@ -321,6 +365,45 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    rotate (radians)
+    {
+        const sin    = Math.sin(radians);
+        const cos    = Math.cos(radians);
+        const pixels = this.pixels;
+        const width  = this.width;
+        const height = this.height;
+        const temporaryData = new Uint32Array(width * height);
+        temporaryData.set(pixels);
+        for (let i = 0, j = 0; i < width; ++i, j = 0)
+        {
+            for (; j < height; ++j)
+            {
+                const inverseX = i * cos + j * sin;
+                const inverseY = j * cos - i * sin;
+                if (inverseX < 0 || inverseX > width || inverseY < 0|| inverseY > height)
+                {
+                    pixels[i + j * 4] = 1;
+                }
+                else
+                {
+                    pixels[i + j * 4] = temporaryData[inverseX + inverseY * 4];
+                }
+            }
+        }
+    }
+
+    get texture ()
+    {
+        if (this._texture !== null)
+        {
+            this._texture.upload(this.data);
+        }
+        else
+        {
+            this._texture = new Texture(this.width, this.height, this.data);
+        }
+        return this._texture;
+    }
 
     //set the pixel at (x, y) to colour
     setPixel(x, y, colour)

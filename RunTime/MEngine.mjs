@@ -29,7 +29,7 @@
  */
 
 
-import {MapBuffer, TileBuffer} from "./PixelBuffer";
+import {MapBuffer, TileBuffer} from "./PixelBuffer.mjs";
 import DataStream from "data-stream";
 
 
@@ -47,12 +47,12 @@ export class MEngine
 {
     /**
      * Creates an instance of MEngine.
-     * @param {any} runTime - object to be given to map scripts when they're called - not currently used
-     * @param {any} SEngine - instance of SEngine class to handle sprites
-     * @param {any} [CEngine=null] - instance of CENgine class to handle collisions (must be shared with the SEngine instance)
+     * @param {Object} runTime - object to be given to map scripts when they're called - not currently used
+     * @param {Object} SEngine - instance of SEngine class to handle sprites
+     * @param {Object} [CEngine=null] - instance of CENgine class to handle collisions (must be shared with the SEngine instance)
      * @param {string} [shaderPath="shaders/"] - path to customised shaders
-     * @param {any} [width=Surface.Screen.width] -dimensions of the surface this will draw on
-     * @param {any} [height=Surface.Screen.height]
+     * @param {number} [width=Surface.Screen.width] -dimensions of the surface this will draw on
+     * @param {number} [height=Surface.Screen.height]
      * @memberof MEngine
      */
     constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = Surface.Screen.width, height = Surface.Screen.height)
@@ -311,19 +311,20 @@ export class MEngine
      * 
      * Change the standard width and height of the box the map is drawn in
      * 
-     * #Experimental feature, not full tested
+     * #Experimental feature, not fully tested
      * 
-     * @param {any} width 
-     * @param {any} height 
+     * @param {number} width 
+     * @param {number} height 
+     * @returns {boolean}
      * @memberof MEngine
      */
     changeRes(width, height)
     {
         if (width >= this.map.width && height >= this.map.height)
         {
-            if (width == this.map.width && height == this.map.height)
+            if (width === this.s_width && height === this.s_height)
             {
-                return true; //nothing to do just return
+                return false; //nothing to do just return
             }
             this.s_width  = width;
             this.s_height = height;
@@ -336,6 +337,7 @@ export class MEngine
             {
                 layer.shape.vertexList = new_vertices;
             }
+            return true;
         }
         else
         {
@@ -348,7 +350,7 @@ export class MEngine
      * 
      * Set a map - used to set the first map and to change map later
      * Note this is an async function use it with an await or a .then
-     * if you wish to chedule anything to happen after the map loads
+     * if you wish to schedule anything to happen after the map loads
      * 
      * This should take 1 tick of the event loop/one frame to resolve 
      * I note however that if you do
@@ -455,7 +457,7 @@ export class MEngine
                 width      : inputFile.readUint16(true),
                 height     : inputFile.readUint16(true),
                 flags      : inputFile.readUint16(true),
-                parallaxX  : inputFile.readFloat32(true),//#FIX ME implement parallaxx and scroll
+                parallaxX  : inputFile.readFloat32(true),//#FIX ME implement parallax and scroll
                 parallaxY  : inputFile.readFloat32(true),
                 scrollX    : inputFile.readFloat32(true),
                 scrollY    : inputFile.readFloat32(true),
@@ -482,7 +484,7 @@ export class MEngine
 
                 for (; k < width; ++k, ++l)
                 {
-                    tileIndex = tempBuffer.getInt16(l*2, true);
+                    tileIndex = tempBuffer.getInt16(l * 2, true);
                     layers[i].tileMap[j][k] = tileIndex;
                     if (tiles[tileIndex].animated !== 1)
                     {

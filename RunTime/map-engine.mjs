@@ -75,7 +75,7 @@ export default class MapEngine
      * @param {number} [x=0] 
      * @param {number} [y=0] 
      * @param {number} [layer=0] 
-     * @returns 
+     * @returns {object} entity
      */
     createCharacter(name, spriteSet, x=0, y=0, layer=0)
     {
@@ -109,16 +109,16 @@ export default class MapEngine
      * Add another input of some kind to be monitored whilst the map is running
      * Only first two parameters are required, the other 3 are optional
      * 
-     * @param {any} key - key to check for
-     * @param {any} onPress - function to call when it's pressed
+     * @param {number} key - key to check for
+     * @param {function} onPress - function to call when it's pressed
      * @param {boolean} [continuous=false] - allow continuous input - function can trigger every frame
      *                                       or false to only call the function once for each press
      * @param {any} [parameter=null] - parameter to pass to the function, e.g. a person object
-     * @param {any} onRelease - function to call when the key is released
+     * @param {function} onRelease - function to call when the key is released
      * @returns - the number of inputs added in total (will be one higher each time this is called)
      * @memberof MapEngine
      */
-    addInput(key, onPress, continuous=false, parameter=null, onRelease)
+    addInput(key, onPress, continuous = false, parameter = null, onRelease = function(){})
     {
         return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
     }
@@ -130,7 +130,7 @@ export default class MapEngine
      * Throws an error if there is no entity with that name
      * 
      * @param {string} name 
-     * @returns 
+     * @returns {object} Entity
      */
     getEntity(name)
     {
@@ -138,10 +138,11 @@ export default class MapEngine
     }
 
     /**
-     * Readonly property, boolean true if all entities on the map have empty movement queues
+     * Readonly property, true if all entities on the map have empty movement queues
      * false if any entity is doing anything
      * 
-     * @readonly
+     * @returns {boolean} idle
+     * @readonly 
      */
     get idle()
     {
@@ -179,13 +180,14 @@ export default class MapEngine
      * changeMap(newMap)
      * Change map - note this is an async function
      * 
-     * @param {string} newMap //name of mapFile to change to ".mem" format
+     * @returns {Promise<boolean>} set - was the map set
+     * @param {string} newMap name of mapFile to change to ".mem" format
      */
     async changeMap(newMap)
     {
         if (this.started === true)
         {
-            await this.MEngine.setMap(newMap);
+            return this.MEngine.setMap(newMap);
         }
         else
         {

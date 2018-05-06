@@ -66,14 +66,14 @@ export class CEngine
      * 
      * #needs better documentation
      * 
-     * @param {any} ref 
-     * @param {any} layer 
-     * @param {any} x 
-     * @param {any} y 
+     * @param {string} ref 
+     * @param {number} layer 
+     * @param {number} x 
+     * @param {number} y 
      * @param {number} [d_x=0] 
      * @param {number} [d_y=0] 
-     * @param {any} polygons 
-     * @returns 
+     * @param {any[]} polygons 
+     * @returns {array} collisions
      * @memberof CEngine
      */
     collide(ref, layer, x, y, d_x=0, d_y=0, polygons)
@@ -320,7 +320,7 @@ export class CEngine
      * @param {number} [y=0] 
      * @param {any} _one 
      * @param {any} two 
-     * @returns 
+     * @returns {boolean} collided
      * @memberof CEngine
      */
     static polysCollide(x=0, y=0, _one, two)

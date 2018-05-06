@@ -66,6 +66,14 @@ module.exports = {
         "prefer-const" : "warn",
         "no-trailing-spaces" : "error",
         "no-tabs" : "error",
-        "no-unused-vars" : "warn"
+        "no-unused-vars" : "warn",
+        "no-extra-parens": ["warn", "all"],
+        "consistent-return" : "warn",
+        "eqeqeq" : "error",
+        "no-implicit-coercion" : "error",
+        "no-unused-expressions" : "error",
+        "curly": "error",
+        "no-invalid-this" : "error",
+        "no-shadow": "error"
     }
 }
