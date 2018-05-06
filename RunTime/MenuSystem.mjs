@@ -56,7 +56,7 @@ export class MenuSystem extends HUDSystem
      * Creates an instance of MenuSystem.
      * @param {number} [x=0] -Coordinates of top left corner
      * @param {number} [y=0] 
-     * @param {object} [font=Font.Default] Spehre font object for text
+     * @param {object} [font=Font.Default] Sphere font object for text
      * @memberof MenuSystem
      */
     constructor(x = 0, y = 0, font = Font.Default)
@@ -77,7 +77,7 @@ export class MenuSystem extends HUDSystem
         this.nextY         = y;
         this.direction     = 0;
         this.executing     = false;
-        this.handler;
+        this.handler       = null;
     }
 
     /**
@@ -299,8 +299,6 @@ export class MenuSystem extends HUDSystem
         this.handler.resolve(this.selection);
     }
 
-
-
     /**
      * Dispose of the input object associated with the menu
      * Call this if never intending to use this menu again
@@ -400,6 +398,11 @@ class TextOption
 
 class MenuSystemError extends Error
 {
+    /**
+    * Creates an instance of MenuSystemError.
+    * @param {string} message 
+    * @memberof MenuSystemError
+    */
     constructor(message)
     {
         super("MenuSystem Error: " + message);

@@ -614,7 +614,7 @@ export class SEngine
                     action.script(this.runTime, entity);
                     --action.ticks;
                 }
-                else if (action.type == spriteY)
+                else if (action.type === spriteY)
                 {
                     if (entity._y !== action.pos)
                     {
@@ -634,7 +634,7 @@ export class SEngine
                     action.ticks = 0;
                     --i;//when the action is teleporting let them take another action
                 }
-                else if (action.type == spriteX)
+                else if (action.type === spriteX)
                 {
                     if (entity._x !== action.pos)
                     {
@@ -654,7 +654,7 @@ export class SEngine
                     action.ticks = 0;
                     --i;//when the action is teleporting let them take another action
                 }
-                else if (action.type == spriteLAYER)
+                else if (action.type === spriteLAYER)
                 {
                     if (entity.internalLayer !== action.pos)
                     {
@@ -1078,7 +1078,7 @@ export function loadSES(inputFile)
  */
 class Entity
 {
-    constructor (id, sprite, x, y, speed, persist, scale, scripts, SEngine, shader, tSize, tFract, layer, tileMovement, DEBUG_MODE)
+    constructor (id, sprite, x, y, speed, persist, scale, scripts, sengine, shader, tSize, tFract, layer, tileMovement, DEBUG_MODE)
     {
         this.id = id;
 
@@ -1184,9 +1184,9 @@ class Entity
         this.data = {};
 
         //add a hook to SEngine - used by some of the convenience methods
-        if (typeof SEngine === "object")
+        if (typeof sengine === "object")
         {
-            this.SEngine = SEngine;
+            this.SEngine = sengine;
             this.inUse = true;
         }
         else

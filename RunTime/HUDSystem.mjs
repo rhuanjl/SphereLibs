@@ -53,15 +53,15 @@ export class HUDSystem
      */
     constructor(enableDynamic = false)
     {
-        this.staticShapes = [];
-        this.types = [];
-        this.staticIDs = [];
-        this.ids = [];
-        this.model;
-        this.ready = true;
-        this.transform = new Transform();
-        this.nextID = 0;
-        this.enableStatic = false;
+        this.staticShapes  = [];
+        this.types         = [];
+        this.staticIDs     = [];
+        this.ids           = [];
+        this.model         = null;
+        this.ready         = true;
+        this.transform     = new Transform();
+        this.nextID        = 0;
+        this.enableStatic  = false;
         this.enableDynamic = enableDynamic;
         if (enableDynamic === true)
         {
@@ -142,7 +142,7 @@ export class HUDSystem
      * Returns the dynamic object at the specified id i.e. the parameter given to addDynamic
      * 
      * @param {number} id 
-     * @returns 
+     * @returns dynamicObject
      * @memberof HUDSystem
      */
     getDynamic(id)
@@ -255,9 +255,19 @@ export class HUDSystem
         }
     }
 
-    //Helper functions for setup
-
-
+    /**
+     * addDynamicRect(x, y, width, height, colour, texture = null)
+     * Create a dynamic rectangle object and add it to the HUD
+     * 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} width 
+     * @param {number} height 
+     * @param {any} colour 
+     * @param {any} [texture=null] 
+     * @returns {number} id
+     * @memberof HUDSystem
+     */
     addDynamicRect(x, y, width, height, colour, texture = null)
     {
         if (this.enableDynamic === true)
@@ -281,7 +291,7 @@ export class HUDSystem
      * @param {number} [wrapWidth=Surface.Screen.width] -wordwrap width
      * @param {object} [font=Font.Default] - initial font to use
      * @param {object} [colour=Color.White] -initial colour
-     * @returns 
+     * @returns {number} id
      * @memberof HUDSystem
      */
     addVariableText(text, x, y, wrapWidth = Surface.Screen.width, font = Font.Default, colour=Color.White)
@@ -312,7 +322,7 @@ export class HUDSystem
      * @param {object} [colourOne=Color.Green] - colour at full size
      * @param {object} [colourTwo=Color.Red]  - colour to fade to as it shrinks
      * @param {object} [texture=null] -texture to use
-     * @returns 
+     * @returns {number} id
      * @memberof HUDSystem
      */
     addVariableBar(x, y, width, height, fadeDirection = 0, colourOne = Color.Green, colourTwo = Color.Red, texture = null)
@@ -338,7 +348,7 @@ export class HUDSystem
      * @param {any} [font=Font.Default]  - font to use
      * @param {any} [wrapWidth=Surface.Screen.width]  - word wrap width
      * @param {any} [colour=Color.White] 
-     * @returns {number} - id
+     * @returns {number} id
      * @memberof HUDSystem
      */
     addText(x, y, text, font=Font.Default, wrapWidth=Surface.Screen.width, colour=Color.White)
@@ -356,7 +366,7 @@ export class HUDSystem
      * @param {number} x 
      * @param {number} y 
      * @param {object} mask 
-     * @returns  {number} - id
+     * @returns  {number} id
      * @memberof HUDSystem
      */
     addImage(texture, x, y, mask)
@@ -373,7 +383,7 @@ export class HUDSystem
      * @param {number} x 
      * @param {number} y 
      * @param {object} mask -Sphere colour object(defaults to white)
-     * @returns 
+     * @returns {number} id
      * @memberof HUDSystem
      */
     addBuffer(buffer, x, y, mask)

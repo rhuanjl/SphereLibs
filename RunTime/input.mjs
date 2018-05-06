@@ -29,18 +29,30 @@
  */
 
 import Focus from "focus-target";
-let kb = Keyboard.Default;
+const kb = Keyboard.Default;
 
 export class Input
 {
+    /**
+     * Creates an instance of Input.
+     * @param {number} [priority=0] 
+     * @memberof Input
+     */
     constructor(priority = 0)
     {
-        this.keys;
         this.state = 0;
         this.value = 0;
         this.focus = new Focus({priority});
     }
-
+    /**
+     * 
+     * 
+     * @static
+     * @param {any} key 
+     * @param {boolean} [shifted=false] 
+     * @returns {string} character
+     * @memberof Input
+     */
     static getChar(key, shifted = false)
     {
         return kb.getChar(key, shifted);
@@ -92,15 +104,31 @@ export class Input
             return false;
         }
     }
-
+    /**
+     * Wait for input - returns a promise
+     * that resolves when the specified key is pressed
+     * 
+     * @param {any} key 
+     * @param {boolean} [allowContinuous=false] 
+     * @returns {Promise<number>} key
+     * @memberof Input
+     */
     async waitForKey(key, allowContinuous = false)
     {
         return this.waitForInput([key], allowContinuous);
     }
 
+    /**
+     * Wait for input - returns a promise
+     * that resolves when one of the specified keys is pressed
+     * 
+     * @param {number[]} keys 
+     * @param {boolean} [allowContinuous=false] 
+     * @returns {Promise<number>} pressedKey
+     * @memberof Input
+     */
     waitForInput(keys, allowContinuous = false)
     {
-        this.keys = keys;
         this.state = 0;
         return new Promise((resolve) =>
         {
@@ -113,28 +141,28 @@ export class Input
                     {
                     case 0:
                         this.state = 1;
-                        for (let i = 0; i < this.keys.length; ++i)
+                        for (let i = 0; i < keys.length; ++i)
                         {
-                            if (this.isPressed(this.keys[i]) === true)
+                            if (this.isPressed(keys[i]) === true)
                             {
                                 this.state = 0;
                             }
                         }
                         break;
                     case 1:
-                        for (let i = 0; i < this.keys.length; ++i)
+                        for (let i = 0; i < keys.length; ++i)
                         {
-                            if (this.isPressed(this.keys[i]) === true)
+                            if (this.isPressed(keys[i]) === true)
                             {
                                 this.state = 2;
-                                this.value = this.keys[i];
+                                this.value = keys[i];
                             }
                         }
                         break;
                     case 2:
-                        for (let i = 0; i < this.keys.length; ++i)
+                        for (let i = 0; i < keys.length; ++i)
                         {
-                            if (this.isPressed(this.keys[i]) === true)
+                            if (this.isPressed(keys[i]) === true)
                             {
                                 done = false;
                             }
@@ -153,12 +181,12 @@ export class Input
                 const job = Dispatch.onUpdate(() =>
                 {
                     let done = false;
-                    for (let i = 0; i < this.keys.length; ++i)
+                    for (let i = 0; i < keys.length; ++i)
                     {
-                        if (this.isPressed(this.keys[i]) === true)
+                        if (this.isPressed(keys[i]) === true)
                         {
                             done = true;
-                            this.value = this.keys[i];
+                            this.value = keys[i];
                         }
                     }
                     if (done)
@@ -171,6 +199,16 @@ export class Input
         });
     }
 
+    /**
+     * Returns a Promise that resolves with the next key input received
+     * if permittedKeys are specified ignores any key not in the array
+     * if not specified any key is permitted
+     * 
+     * @param {boolean} [clearQueue=true] 
+     * @param {number[]} [permittedKeys=[]] 
+     * @returns 
+     * @memberof Input
+     */
     async getNextKey(clearQueue = true, permittedKeys = [])
     {
         if (clearQueue === true)
@@ -213,7 +251,13 @@ export class Input
             }
         });
     }
-
+    /**
+     * Returns a Promise that resolves to true when priority is obtained
+     * 
+     * @param {boolean} [askForIt=true] 
+     * @returns {Promise<boolean>} true
+     * @memberof Input
+     */
     waitForPriority(askForIt = true)
     {
         if (askForIt === true)

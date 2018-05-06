@@ -5,10 +5,10 @@
 import MapEngine from "./map-engine";
 
 //instantiate the system
-let mapSys = new MapEngine();
+const mapSys = new MapEngine();
 
 //make a character - numbers are coordinates x, y and layer
-let hero = mapSys.createCharacter("hero", "hero.ses", 50, 100, 1);
+const hero = mapSys.createCharacter("hero", "hero.ses", 50, 100, 1);
 
 //attach default input (4 arrow keys to walk)
 mapSys.attachInput(hero);

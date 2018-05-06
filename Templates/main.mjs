@@ -14,14 +14,14 @@ import {HUDSystem, WindowStyle} from "./HUDSystem";
 import {Talking} from "./talk";
 
 
-//Sphere.frameRate = 60;//Map speed is controlled by sphere framerate defaults to 60, set something else if you want to go fasterslower
+//Sphere.frameRate = 60;//Map speed is controlled by sphere framerate defaults to 60, set something else if you want to go faster or slower
 
 class MapSystem
 {
     constructor(runTime)
     {
         this.runTime = runTime;
-        this.collisionSystem = new CEngine();//initiate collisionSysyem
+        this.collisionSystem = new CEngine();//initiate collisionSystem
         this.spriteSystem = new SEngine(runTime, this.collisionSystem, 50);//initiate SEngine
         this.mapSystem = new MEngine(runTime, this.spriteSystem, this.collisionSystem);//initiate MEngine
         this.HUD = new HUDSystem(true);//include a HUD in the MapSystem object - for drawing windows and text over the map
@@ -39,7 +39,7 @@ class MapSystem
         this.spriteSystem.addDefaultInput(character);
     }
 
-    async start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
+    async start(firstMap, cameraObject = {x : 0, y : 0, zoom : 1})
     {
         //Make Q = close down - this is a quick exit feature for testing
         this.spriteSystem.addInput(Key.Q, true, null, ()=>Sphere.shutDown());
@@ -107,27 +107,27 @@ class MapSystem
 
 
 //1.Make a window style
-let window = new WindowStyle("windows/reddishfetish.rws");
+const window = new WindowStyle("windows/reddishfetish.rws");
 
 //2. make a HUD
-let HUD = new HUDSystem(true);
+const HUD = new HUDSystem(true);
 
 //example HUD contents
 HUD.addStatic(window.renderWindow(10, 10, 130, 30, new Color(0.8,1,1,0.7)));
-let textRef = HUD.addVariableText("Hero speed is\n128",20, 15, 100);
-let textAccess = HUD.getDynamic(textRef);
+const textRef = HUD.addVariableText("Hero speed is\n128",20, 15, 100);
+const textAccess = HUD.getDynamic(textRef);
 
 //2.Set up a talking object
-let talking = new Talking(HUD, window);
+const talking = new Talking(HUD, window);
 
 //3. instantiate the system
-let system = new MapSystem(talking);
+const system = new MapSystem(talking);
 
 //4. hook the HUD object onto the system
 system.HUD = HUD;
 
 //5. Make a character
-let ourHero = system.createCharacter("Some Hero", "sprites/Theif01.ses", 250, 600, 1);
+const ourHero = system.createCharacter("Some Hero", "sprites/Theif01.ses", 250, 600, 1);
 
 //6. attach input to the character
 system.attachInput(ourHero);
