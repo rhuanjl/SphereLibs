@@ -393,7 +393,7 @@ export class SEngine
         let dY = 0;
         let collisions;
         this.waiting = 0;
-        for (let i = 0, length = this.inputs.length; i < length; ++i)
+        for (let i = 0, length = this.entities.length; i < length; ++i)
         {
             stopped = false;
             entity = this.entities[i];
