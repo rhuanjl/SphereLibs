@@ -2,7 +2,7 @@
 Copyright Richard Lawrence, please see MEngine.mjs for license details
 
 Usage:
-Each map must have a mapscript with the same name (except for the extension)
+Each map must have a map script with the same name (except for the extension)
 
 Currently three types of map scripts are supported:
 1. Trigger scripts
@@ -17,15 +17,15 @@ how to set up these objects*/
 Each property should:
 a) be named with the name of the trigger
 b) itself have two properties: onPlayer() and onOther()
-	when the player steps on the trigger onPLayer() will be called
-	when a different entitiy steps on the trigger onOther will be called
+    when the player steps on the trigger onPLayer() will be called
+    when a different entity steps on the trigger onOther will be called
 
 Each function takes two parameters:
 1. runTime - this is an object you pass
 to the SEngine constructor attach any runtime functions you want to call
-from mapscripts as properites of it.
+from map scripts as properties of it.
 2. player/other - this is the entity triggering the script - see SEngine.mjs
-for the properites they have, you can also store private data on them as extra
+for the properties they have, you can also store private data on them as extra
 properties*/
 
 export const triggerScripts =
@@ -58,15 +58,15 @@ export const triggerScripts =
 Each property should:
 a) be named with the name of the entity
 b) itself have six properties:
-	onSetup()
-	onDestroy()
-	onTouchPlayer()
-	onTouchOther()
-	onTalk()
-	onIdle()
+    onSetup()
+    onDestroy()
+    onTouchPlayer()
+    onTouchOther()
+    onTalk()
+    onIdle()
 
-	If you want a function to involve a delayed action try making it async
-	see example below (any of the scripts can be async)
+    If you want a function to involve a delayed action try making it async
+    see example below (any of the scripts can be async)
 
 TODO: add more documentation here -for now see comments in personTwo below*/
 
@@ -93,14 +93,14 @@ export const entityScripts =
         },
         async onTalk (runTime, self, player)//example async function
         {
-            self.frozen = true;//entity doesn't move when frozen (see SENgine.mjs)
+            self.frozen = true;//entity doesn't move when frozen (see SEngine.mjs)
             self.faceEntity(player);//face the player - see SEngine.mjs
-            if(self.data.talkedTo === false)
+            if (self.data.talkedTo === false)
             {
                 await runTime.talk(self.id, "Hey how are you?");//function would need to exist in your runTime object and return a promise
                 self.data.talkedTo = true;//keep track of the fact that we've talked
             }
-            else//if you've aready talked say something different
+            else//if you've already talked say something different
             {
                 await runTime.talk(self.id, "Haven't we talked before?");//function would need to exist in your runTime object and return a promise
             }
@@ -109,16 +109,16 @@ export const entityScripts =
         },
         onIdle (runTime, self)
         {//example random movement code
-            let chance = (Math.random() * 10)|0;
+            let chance = Math.floor(Math.random() * 10);
             let dir = "";
-            if(chance < 6)
+            if (chance < 6)
             {
                 dir = self.direction;
             }
             else
             {
-                chance = (Math.random() * 4)|0;
-                let options = ["north", "south", "east", "west"]
+                chance = Math.floor(Math.random() * 4);
+                const options = ["north", "south", "east", "west"];
                 dir = options[chance];
             }
             self.queueMove(dir, 8);
@@ -155,23 +155,23 @@ export const entityScripts =
 
 /*Map scripts for this map, object must be named mapScripts
 Should have eight properties:
-	onExit()
-	onEnter()
-	onUpdate()
-	onRender()
-	onLeaveEast()
-	onLeaveWest()
-	onLeaveNorth()
-	onLeaveSouth()
+    onExit()
+    onEnter()
+    onUpdate()
+    onRender()
+    onLeaveEast()
+    onLeaveWest()
+    onLeaveNorth()
+    onLeaveSouth()
 
-	The first 4 functions take 2 parameters:
-	1. runTime - runTime object supplied when instantiating MEngine
-	2. map - an object representing the map you're on
+    The first 4 functions take 2 parameters:
+    1. runTime - runTime object supplied when instantiating MEngine
+    2. map - an object representing the map you're on
 
-	The remaining 4 functions take an extra parameter:
-	3. player - an Entity object from SEngine - the player controlled entity that has walked off of the map
+    The remaining 4 functions take an extra parameter:
+    3. player - an Entity object from SEngine - the player controlled entity that has walked off of the map
 
-	*/
+    */
 
 
 export const mapScripts =
