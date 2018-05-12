@@ -129,7 +129,7 @@ function writeMEM(data, fileName)
 
 function loadRMP(fileName)
 {
-    const inputFile = new DataStream(fileName, FileOp.Read);
+    let inputFile = new DataStream(fileName, FileOp.Read);
 
     if (inputFile.readStringRaw(4) !== ".rmp")
     {
@@ -162,7 +162,8 @@ function loadRMP(fileName)
         6 - east script
         7 - south script
         8 - west script*/
-    for (let i = 0; i < numStrings; ++i)
+    const tilesetFile = inputFile.readString16(true);
+    for (let i = 1; i < numStrings; ++i)
     {
         inputFile.readString16(true);
     }
@@ -264,6 +265,12 @@ function loadRMP(fileName)
             steps : steps,
             name  : name
         };
+    }
+
+    if (tilesetFile.length > 0)
+    {
+        const splitPoint = fileName.lastIndexOf("/")+1;
+        inputFile = new DataStream(fileName.slice(0, splitPoint) + tilesetFile, FileOp.Read);
     }
 
     if (inputFile.readStringRaw(4) !== ".rts")

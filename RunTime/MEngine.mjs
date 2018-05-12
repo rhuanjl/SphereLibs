@@ -590,7 +590,16 @@ export class MEngine
         const identifier = startingName.slice(0,splitPoint) + "scripts/" + startingName.slice(splitPoint, startingName.length - 4) + ".mjs";
 
         //bring in the scripts
-        const scripts = await import(identifier);
+        let scripts;
+        try
+        {
+            scripts = await import(identifier);
+        }
+        catch (e)
+        {
+            SSj.log("WARNING: no map script exists for: " + fileName);
+        }
+
         const loadedScripts = Object.assign({triggerScripts : {}, mapScripts : templateScripts, entityScripts : {}}, scripts);
 
         if (this.useSEngine === true)
