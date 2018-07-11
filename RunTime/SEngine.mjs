@@ -565,23 +565,15 @@ export class SEngine
                                     {
                                         stopped = true;
                                     }
-                                    else if (collisions[j].type === 2)
+                                    else /* type 2 = trigger, type 3 = zone - handling is the same */
                                     {
-                                        try//fix me remove this checking by implementing defaul trigger scripts
+                                        if (entity.attached === true)
                                         {
-                                            if (entity.attached === true)
-                                            {
-                                                collisions[j].scripts.onPlayer(this.runTime, entity);
-                                            }
-                                            else
-                                            {
-                                                collisions[j].scripts.onOther(this.runTime, entity);
-                                            }
+                                            collisions[j].scripts.onPlayer(this.runTime, entity);
                                         }
-                                        catch (e)
+                                        else
                                         {
-                                            SSj.log("Trigger without a trigger script: " + collisions[j].ref);
-                                            SSj.log(e);
+                                            collisions[j].scripts.onOther(this.runTime, entity);
                                         }
                                     }
                                 }

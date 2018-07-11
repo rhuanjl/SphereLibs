@@ -247,6 +247,7 @@ export class CEngine
                     for (i = 0; i < length && triggers[i].index < offset; ++i);
                     if (i < length)
                     {
+                        const triggerScripts = this.MEngine.map.triggerScripts;
                         let xOffset = triggers[i].index % width;
                         for (; i < length; ++i, ++xOffset)
                         {
@@ -258,7 +259,14 @@ export class CEngine
                                 }
                                 if (xOffset >= t_x && xOffset <= cutoff)
                                 {
-                                    collisions.push(new Collision(triggerCollision, triggers[i].id, this.MEngine.map.triggerScripts[triggers[i].name]));
+                                    if (triggerScripts.hasOwnProperty(triggers[i].name))
+                                    {
+                                        collisions.push(new Collision(triggerCollision, triggers[i].id, triggerScripts[triggers[i].name]));
+                                    }
+                                    else
+                                    {
+                                        collisions.push(new Collision(triggerCollision, triggers[i].id, placeHolder(triggers[i].name, "TRIGGER")));
+                                    }
                                 }
                             }
                             else
@@ -272,7 +280,15 @@ export class CEngine
                 {
                     if (CEngine.polysCollide(d_x, d_y, polygons[l], zones[i].poly))
                     {
-                        collisions.push(new Collision(zoneCollision, zones[i].name));
+                        const zoneScripts = this.MEngine.map.zoneScripts;
+                        if (zoneScripts.hasOwnProperty(zones[i].name))
+                        {
+                            collisions.push(new Collision(zoneCollision, zones[i].name, zoneScripts[zones[i].name]));
+                        }
+                        else
+                        {
+                            collisions.push(new Collision(zoneCollision, zones[i].name, placeHolder(zones[i].name, "ZONE")));
+                        }
                     }
                 }
                 if (this.SEngine.entities[ref].attached === true)
@@ -424,6 +440,25 @@ const triggerCollision = 2;
 const zoneCollision = 3;
 //add more here
 
+function placeHolder(name, type)
+{
+    if (SSj.now() > 0)
+    {
+        const player = type + " - " + name + ": activated by player but no script exists for it";
+        const other = type + " - " + name + ": activated by other but no script exists for it";
+        return {
+            onPlayer : () => { SSj.log(player); },
+            onOther  : () => { SSj.log(other); }
+        };
+    }
+    else
+    {
+        return {
+            onPlayer : function()  { },
+            onOther  : function()  { }
+        };
+    }
+}
 
 //#ENHANCE ME - should this record above/below etc? if yes need to implement above
 function Collision(type, ref, scripts={})//ES5 style intentionally (performance issue)
