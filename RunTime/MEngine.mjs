@@ -600,7 +600,7 @@ export class MEngine
             SSj.log("WARNING: no map script exists for: " + fileName);
         }
 
-        const loadedScripts = Object.assign({triggerScripts : {}, mapScripts : templateScripts, entityScripts : {}}, scripts);
+        const loadedScripts = Object.assign({zoneScripts : {}, triggerScripts : {}, mapScripts : templateScripts, entityScripts : {}}, scripts);
 
         if (this.useSEngine === true)
         {
@@ -628,6 +628,7 @@ export class MEngine
             fract_h        : 1 / tileHeight,
             mapScripts     : loadedScripts.mapScripts,
             triggerScripts : loadedScripts.triggerScripts,
+            zoneScripts    : loadedScripts.zoneScripts,
             animations     : inUseAnimations
         };
 
