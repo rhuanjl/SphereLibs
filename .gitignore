@@ -1,3 +1,6 @@
 .DS_Store
-.eslintrc.json
+.eslintrc.js
+jsconfig.json
 .vscode
+Experiments
+typings

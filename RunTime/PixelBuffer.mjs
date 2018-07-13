@@ -72,7 +72,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-
 //#FIX ME needs blend modes so you can draw multiple things on one buffer properly
 
 //Internal class do not use directly

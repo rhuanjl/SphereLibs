@@ -40,8 +40,6 @@
 import {DrawingBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
-
-
 export class HUDSystem
 {
     /**
@@ -345,9 +343,9 @@ export class HUDSystem
      * @param {number} x  - top left coordinate
      * @param {number} y 
      * @param {string} text  - string to draw
-     * @param {any} [font=Font.Default]  - font to use
-     * @param {any} [wrapWidth=Surface.Screen.width]  - word wrap width
-     * @param {any} [colour=Color.White] 
+     * @param {Font} [font=Font.Default]  - font to use
+     * @param {number} [wrapWidth=Surface.Screen.width]  - word wrap width
+     * @param {Color} [colour=Color.White] 
      * @returns {number} id
      * @memberof HUDSystem
      */

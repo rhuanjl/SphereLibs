@@ -202,11 +202,18 @@ export class MenuSystem extends HUDSystem
      */
     removeOption(token)
     {
-        let position = 0;
         const options = this.options;
-        for (; token !== options[position].token; ++position);
-        options.splice(position,1);
-        this.remove(token);
+        const length = options.length;
+        for (let position = 0; position < length; ++position)
+        {
+            if (token === options[position].token)
+            {
+                options.splice(position, 1);
+                this.remove(token);
+                return;
+            }
+        }
+        throw new MenuSystemError ("Attempt to remove non-existent option from menu");
     }
 
     /**
@@ -307,7 +314,7 @@ export class MenuSystem extends HUDSystem
      */
     dispose()
     {
-        this.input.dispose();
+        this.input.disposeInput();
     }
 
     /**

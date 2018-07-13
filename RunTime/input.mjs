@@ -55,7 +55,7 @@ export class Input
      */
     static getChar(key, shifted = false)
     {
-        return kb.getChar(key, shifted);
+        return kb.charOf(key, shifted);
     }
 
     disposeInput()
@@ -93,6 +93,11 @@ export class Input
         }
     }
 
+    /**
+     * @param {number} key
+     * @returns
+     * @memberof Input
+     */
     isPressed(key)
     {
         if (this.focus.hasFocus)
