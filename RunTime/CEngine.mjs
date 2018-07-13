@@ -66,7 +66,7 @@ export class CEngine
      * 
      * #needs better documentation
      * 
-     * @param {string} ref 
+     * @param {number} ref 
      * @param {number} layer 
      * @param {number} x 
      * @param {number} y 
@@ -243,8 +243,7 @@ export class CEngine
                     const length = triggers.length;
                     const cutoff = n_x;
 
-                    //am I sure this works - it seems like a very odd code pattern...
-                    for (i = 0; i < length && triggers[i].index < offset; ++i);
+                    i = findFirst(triggers, offset);
                     if (i < length)
                     {
                         const triggerScripts = this.MEngine.map.triggerScripts;
@@ -440,12 +439,49 @@ const triggerCollision = 2;
 const zoneCollision = 3;
 //add more here
 
+
+/**
+ * Simple binary chop function - ssearches through an ordered array of objects
+ * looks for the first item with index property greater than or equal to specified value
+ * @param {{index : number}[]} array
+ * @param {number} target
+ * @returns
+ */
+function findFirst(array, target)
+{
+    let result = 0;
+    for (let min = 0, current = 0, max = array.length; max - min < 2; result = min + (max - min >> 1))
+    {
+        current = array[result].index;
+        if (current < target)
+        {
+            min = result + 1;
+        }
+        else
+        {
+            max = result - 1;
+        }
+    }
+    return result;
+}
+
+// should we output debug information to a terminal? detect if we're running in spheRun
+// SSj.now() returns 0 when in miniSphere
+const terminal = SSj.now() > 0 ? true : false;
+
+/**
+ * Function that returns placeholder methods for zone/trigger collisions
+ * Used when mapScript is missing the relevant zone or trigger
+ * @param {string} name
+ * @param {string} type
+ * @returns
+ */
 function placeHolder(name, type)
 {
-    if (SSj.now() > 0)
+    if (terminal)
     {
-        const player = type + " - " + name + ": activated by player but no script exists for it";
-        const other = type + " - " + name + ": activated by other but no script exists for it";
+        const player = `${type} - ${name}: activated by player but no script exists for it`;
+        const other = `${type} - ${name}: activated by other but no script exists for it`;
         return {
             onPlayer : () => { SSj.log(player); },
             onOther  : () => { SSj.log(other); }

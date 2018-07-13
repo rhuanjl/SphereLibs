@@ -110,15 +110,15 @@ export class SEngine
      * This is a wrapper around new Entity that supplies certain required environment variables
      * use this instead of calling new Entity diretly
      * 
-     * @param {any} id -id/name for the entity, 
-     * @param {any} sprite -array of sprite objects (see Sprite class below) #MayChange to single sprite object
+     * @param {string} id -id/name for the entity, 
+     * @param {Sprite} sprite - sprite object (see Sprite class below) #MayChange to single sprite object
      * @param {boolean} [persist=false] -true to keep it when changing map, false to delete on map change
      * @param {number} [x=0] -initial coordinates
      * @param {number} [y=0] 
-     * @param {any} [scale=[1, 1]] -x/y scaling to apply
+     * @param {number[]} [scale=[1, 1]] -x/y scaling to apply
      * @param {number} [layer=0] -initial layer
      * @param {any} [scripts={}] -entity scripts object - see blankScripts object for template
-     * @returns instance of Entity
+     * @returns {Entity}
      * @memberof SEngine
      */
     addEntity (id, sprite, persist=false, x=0, y=0, layer=0, speed = 100, scale=[1, 1], scripts={})
@@ -158,7 +158,7 @@ export class SEngine
      * @param {number} mapWidth 
      * @param {number} mapHeight 
      * @param {number} mapLayers 
-     * @param {object} [surface=Surface.Screen] - surface to draw to
+     * @param {Surface} [surface=Surface.Screen] - surface to draw to
      * @memberof SEngine
      */
     reset(mapWidth, mapHeight, mapLayers, surface = Surface.Screen)
@@ -197,20 +197,21 @@ export class SEngine
      * getEntity(id)
      * Returns the entity object represented by the supplied id
      * 
-     * #FIX ME could this use a WeakMap for better performance?
-     * @param {any} id 
-     * @returns 
+     * @param {string} id 
+     * @returns {Entity}
      * @memberof SEngine
      */
     getEntity(id)
     {
-        let i = 0;
-        for (; i < this.entities.length && this.entities[i].id !== id; ++i);
-        if (i === this.entities.length)
+        const length = this.entities.length;
+        for (let i = 0; i <  length; ++i)
         {
-            throw new SEngineError("Attempt to get entity " + id + " but no such entity exists");
+            if (this.entities[i].id === id)
+            {
+                return this.entities[i];
+            }
         }
-        return this.entities[i];
+        throw new SEngineError("Attempt to get entity " + id + " but no such entity exists");
     }
 
     /**
@@ -226,7 +227,8 @@ export class SEngine
      * @param {number} key 
      * @param {boolean} continuous 
      * @param {object} parameter 
-     * @param {function} script 
+     * @param {function} onPress
+     * @param {function} onRelease 
      * @returns 
      * @memberof SEngine
      */
@@ -246,22 +248,22 @@ export class SEngine
     /**
      * Remove an input previously added with addInput
      * 
-     * @param {any} key 
+     * @param {number} key 
      * @memberof SEngine
      */
     removeInput(key)
     {
-        let index = 0;
         const inputs = this.inputs;
         const length = inputs.length;
-        for (; index < length && inputs[index].key !== key; ++index);
-
-        if (index === length)
+        for (let index = 0; index < length; ++index)
         {
-            throw new SEngineError("Request to remove input that does not exist");
+            if (inputs[index].key === key)
+            {
+                inputs.splice(index, 1);
+                return;
+            }
         }
-
-        inputs.splice(index, 1);
+        throw new SEngineError("Request to remove input that does not exist");
     }
 
     /**
@@ -281,7 +283,7 @@ export class SEngine
      * Adds simple 4 directional movement + talk activation to the supplied entity
      * Note you must call SEngine.input.takeInput() to enable the input
      * 
-     * @param {object} entity - object representing an entity within this SEngine instance
+     * @param {Entity} entity - object representing an entity within this SEngine instance
      * @memberof SEngine
      */
     addDefaultInput(entity)
@@ -299,9 +301,14 @@ export class SEngine
 
         if (this.useCEngine === true)
         {
-            let i = 0;
-            for (; i < this.entities.length && this.entities[i].id !== entity.id; ++i);
-            this.addInput(Key.Enter, false, { CEngine : this.CEngine, entity : entity, ref : i, entities : this.entities}, talkHandler);
+            for (let i = 0; i < this.entities.length; ++i)
+            {
+                if (this.entities[i].id === entity.id)
+                {
+                    this.addInput(Key.Enter, false, { CEngine : this.CEngine, entity : entity, ref : i, entities : this.entities}, talkHandler);
+                    return;
+                }
+            }
         }
     }
 
@@ -309,21 +316,23 @@ export class SEngine
     {
         if (this._default === true)
         {
-            let index = 0;
             const entities = this.entities;
             const length = entities.length;
-            for (; index < length && entities[index].attached !== true; ++ index);
-            if (index === length)
+            for (let index = 0; index < length; ++ index)
             {
-                throw new SEngineError("attempt to remove Default Input when this does not exist.");
+                if (entities[index].attached === true)
+                {
+                    entities[index].attached = false;
+                    this.removeInput(Key.Enter);
+                    this.removeInput(Key.Up);
+                    this.removeInput(Key.Down);
+                    this.removeInput(Key.Left);
+                    this.removeInput(Key.Right);
+                    return true;
+                }
             }
-            entities[index].attached = false;
-            this.removeInput(Key.Enter);
-            this.removeInput(Key.Up);
-            this.removeInput(Key.Down);
-            this.removeInput(Key.Left);
-            this.removeInput(Key.Right);
         }
+        return false;
     }
 
     /**
@@ -341,9 +350,6 @@ export class SEngine
      * Only call this yourself if not using MENgine
      * 
      * #FIX ME - add a feature to freeze the whole SEngine?
-     * #FIX ME - move these params to render?
-     * @param {any} [offset=[0, 0]] 
-     * @param {number} [scale=1] 
      * @memberof SEngine
      */
     update ()
@@ -810,7 +816,7 @@ export class SEngine
      * If the sprite is found returns it
      * If not found loads the sprite, adds it to the array and returns it
      * 
-     * @param {any} fileName 
+     * @param {string} fileName 
      * @returns 
      * @memberof SEngine
      */
@@ -827,15 +833,23 @@ export class SEngine
     //Remaining SENgine functions are internal use only
     //scroll down to Entity class to see more external use functions
 
-    //for internal use only - this function initialises collision information
-    //pulled out into a seperate function from reset() for neatness/intelligibility
+    /**
+     * for internal use only - this function initialises collision information
+     * pulled out into a seperate function from reset() for neatness/intelligibility
+     * @param {number} mapWidth
+     * @param {number} mapHeight
+     * @param {number} mapLayers
+     * @memberof SEngine
+     */
     initColisions(mapWidth, mapHeight, mapLayers)
     {
         const tilesAccross = Math.max(Math.ceil(mapWidth * this._tFract), Math.ceil(mapHeight * this._tFract)) + 1;
         this.tilesAccross = tilesAccross;
         this.layers = mapLayers;
-        const CEngineCall = {};
-        CEngineCall.entities = this.entities;
+        const CEngineCall = {
+            entities : this.entities,
+            table    : null
+        };
         switch (this.CEngine.cType)
         {
         case 0:
@@ -886,6 +900,13 @@ export class SEngine
     //function for internal use only
     //used when adding new entities to the engine AND when changing map
     //called from SEngine#addEntity and from SEngine#reset, should not be used anywhere else
+
+    /**
+     *
+     *
+     * @param {Entity} entity
+     * @memberof SEngine
+     */
     initEntity(entity)
     {
         const layer = entity.layer;
@@ -911,13 +932,27 @@ export class SEngine
     //function for internal use only
     //updates which collision segment an entity is in
     //note this does not check for collisions
+    /**
+     *
+     *
+     * @param {number} ref
+     * @param {number} x
+     * @param {number} y
+     * @param {number} d_x
+     * @param {number} d_y
+     * @param {number} layer1
+     * @param {number} layer2
+     * @param {boolean} [initial=false]
+     * @param {boolean} [destroy=false]
+     * @memberof SEngine
+     */
     updateCollisions (ref, x, y, d_x, d_y, layer1, layer2, initial=false, destroy=false)
     {
         const polygons = this.entities[ref].poly;
         const tFract = this._tFract;
         //where did we start - this will break if a polygon goes above the top or off to the left of a sprite
         //such behaviour should not be expected so won't allow for it
-        //#FIX ME add in an error message to ENtity creation for out of bounds polys
+        //#FIX ME add in an error message to Entity creation for out of bounds polys
         const start_x1 = Math.floor(x * tFract);
         const start_y1 = Math.floor(y * tFract);
 
@@ -975,6 +1010,13 @@ export class SEngine
     //inlining these two functions in the above could optimise
     //but would be a pain - particularly if supporting layer changes
     //hopefully JIT should inline these
+    /**
+     * @param {number} i
+     * @param {number} j
+     * @param {number} layer
+     * @param {number} ref
+     * @memberof SEngine
+     */
     popSegment (i, j, layer, ref)
     {
         const sOb = this.sObs[layer][i][j];
@@ -993,6 +1035,13 @@ export class SEngine
         }
     }
 
+    /**
+     * @param {number} i
+     * @param {number} j
+     * @param {number} layer
+     * @param {number} ref
+     * @memberof SEngine
+     */
     pushSegment (i, j, layer, ref)
     {
         const sOb = this.sObs[layer][i][j];
@@ -1015,13 +1064,13 @@ export function loadSES(inputFile)
     const frameWidth = source.readUint16(true);
     const frameHeight = source.readUint16(true);
 
-    const polyCount = source.readUint8(true);
+    const polyCount = source.readUint8();
     const polygons = new Array(polyCount);
     for (let i = 0; i < polyCount; ++i)
     {
         polygons[i] =
         {
-            type : source.readUint8(true),
+            type : source.readUint8(),
             x    : source.readInt16(true),
             y    : source.readInt16(true),
             w    : source.readUint16(true),
@@ -1064,7 +1113,7 @@ export function loadSES(inputFile)
  * always create Entities via the SEngine#addEntity method
  * 
  * However each entity you create that way will be an instance of this class
- * Read down for methods and properites available for use
+ * Read down for methods and properties available for use
  * 
  * @class Entity
  */
@@ -1119,9 +1168,9 @@ class Entity
 
         //coordinates
         this.zoom = 1; /*not strictly needed
-        - most entities will never use a zoom propery
+        - most entities will never use a zoom property
         - BUT sometimes want it for using an entity for map zoom
-        - have it on all entities to avoid having different virtual clases
+        - have it on all entities to avoid having different virtual classes
         - this is a significant performance optimisation due to how the JIT works*/
 
         this.tile_x = Math.floor(x - sprite.o[0] * tFract);
@@ -1172,7 +1221,7 @@ class Entity
         this.needsUpdate = true;//change of frame or direction
         this.attached = false;//is this player controlled
 
-        //object to hold any user added properites
+        //object to hold any user added properties
         this.data = {};
 
         //add a hook to SEngine - used by some of the convenience methods
@@ -1264,24 +1313,26 @@ class Entity
             this._vectors[i] = [sprite.dirs[i].vector[0], sprite.dirs[i].vector[1]];
         }
 
+        this.needsUpdate = true;
+
         if (this.inUse === true)
         {
-            let index = 0;
             const entities = this.SEngine.entities;
             const length = entities.length;
-            for (; index < length && entities[index].id !== this.id; ++index);
-            if (index === length)
+            for (let index = 0; index < length; ++index)
             {
-                throw new SEngineError("Sprite change requested for in use entity but entity not found in SEngine.");
+                if (entities[index].id === this.id)
+                {
+                    this.SEngine.updateCollisions(index, this._x, this._y, 0, 0, this.internalLayer,this.internalLayer,false,false);
+                    if (this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, 0, 0, this.poly).length > 0)
+                    {
+                        throw new SEngineError("Sprite change requested that creates collision - this is not permitted.");
+                    }
+                    return;
+                }
             }
-            this.SEngine.updateCollisions(index, this._x, this._y, 0, 0, this.internalLayer,this.internalLayer,false,false);
-            if (this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, 0, 0, this.poly).length > 0)
-            {
-                throw new SEngineError("Sprite change requested that creates collision - this is not permitted.");
-            }
+            throw new SEngineError("Sprite change requested for in use entity but entity not found in SEngine.");
         }
-
-        this.needsUpdate = true;
     }
 
     set speed(value)
@@ -1310,7 +1361,7 @@ class Entity
      * if immediate is true this is done by setting properties immediately
      * if immediate is false it is queued to happen after any other queued movements
      * 
-     * @param {any} entity 
+     * @param {Entity} entity 
      * @param {boolean} [immediate=true] 
      * @memberof Entity
      */
@@ -1321,23 +1372,27 @@ class Entity
         const dirs = this._sprite.dirs;
         const options = [];
         const length = dirs.length;
-        let i = 0;
-        for (; i < length; ++i)
+        let targetIndex = 0;
+
+        for (let i = 0, smallest = Infinity; i < length; ++i)
         {
             const temp1 = dx - dirs[i].vector[0];
             const temp2 = dy - dirs[i].vector[1];
             options[i] = temp1 * temp1 + temp2 * temp2;
+            if (options[i] < smallest)
+            {
+                targetIndex = i;
+                smallest = options[i];
+            }
         }
-        const target = Math.min(...options);
-        for (i = 0; options[i] !== target; ++i);
         if (immediate === true)
         {
-            this.dir = i;
+            this.dir = targetIndex;
             this.needsUpdate = true;
         }
         else
         {
-            this.queueMove(dirs[i].id, 0, spriteFACE);
+            this.queueMove(dirs[targetIndex].id, 0, spriteFACE);
         }
 
     }
@@ -1376,7 +1431,7 @@ class Entity
 
     //#Finalise me - experimental method
     /**
-     * Specifies whether the entity would be obstructed with it's crurent x,y on the specified layer
+     * Specifies whether the entity would be obstructed with it's current x,y on the specified layer
      * 
      * @param {any} layer 
      * @returns 
@@ -1386,15 +1441,16 @@ class Entity
     {
         if (this.inUse === true)
         {
-            let index = 0;
             const entities = this.SEngine.entities;
             const length = entities.length;
-            for (; index < length && entities[index].id !== this.id; ++index);
-            if (index === length)
+            for (let index = 0; index < length; ++index)
             {
-                throw new SEngineError("Obstructions requested for in use entity but entity not found in SEngine.");
+                if (entities[index].id === this.id)
+                {
+                    return this.SEngine.CEngine.collide(index, layer, this._x, this._y, 0, 0, this.poly).length > 0;
+                }
             }
-            return this.SEngine.CEngine.collide(index, layer, this._x, this._y, 0, 0, this.poly).length > 0;
+            throw new SEngineError("Obstructions requested for in use entity but entity not found in SEngine.");
         }
         else
         {
@@ -1414,22 +1470,25 @@ class Entity
     obstructionsInDirection(direction)
     {
         const dirs = this._sprite.dirs;
-        let i = 0;
-        for (; dirs[i].id !== direction; ++i);
-        if (dirs[i].id !== direction)
+        let length = dirs.length;
+        for (let i = 0; i < length; ++i)
         {
-            throw new SEngineError("obstructions test requested for non-existent direction");
+            if (dirs[i].id === direction)
+            {
+                const vec = dirs[i].vector;
+                const entities = this.SEngine.entities;
+                length = entities.length;
+                for (let index = 0; index < length; ++index)
+                {
+                    if (entities[index].id === this.id)
+                    {
+                        return this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, vec[0], vec[1], this.poly);
+                    }
+                }
+                throw new SEngineError("Obstructions requested for in use entity but entity not found in SEngine.");
+            }
         }
-        const vec = dirs[i].vector;
-        let index = 0;
-        const entities = this.SEngine.entities;
-        const length = entities.length;
-        for (; index < length && entities[index].id !== this.id; ++index);
-        if (index === length)
-        {
-            throw new SEngineError("Obstructions requested for in use entity but entity not found in SEngine.");
-        }
-        return this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, vec[0], vec[1], this.poly);
+        throw new SEngineError("obstructions test requested for non-existent direction");
     }
 
     /**
@@ -1565,7 +1624,7 @@ class Entity
 
     /**
      * Entity#direction
-     * The name of the ddirection the entity is facing e.g. "north"
+     * The name of the direction the entity is facing e.g. "north"
      * 
      * #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
      * @memberof Entity
@@ -1614,7 +1673,7 @@ class Entity
      * function for queuing movement commands
      * dir = name of direction
      * units = how far to move
-     * note specifying 0 (or negative )units = move forever or untill clearQueue is called
+     * note specifying 0 (or negative )units = move forever or until clearQueue is called
      * type 0 (or no specified type) = move
      * type 1 = animate without moving
      * type 2 = execute the function passed as the script parameter
@@ -1623,10 +1682,10 @@ class Entity
      * type 3 = face specified direction
      * ...space for future options
      * Note 7-10 are reserved for features used through other Entity methods, don't use directly
-     * @param {any} dir 
+     * @param {string} dir 
      * @param {number} [units=1] 
      * @param {number} [type=0] 
-     * @param {any} script 
+     * @param {function} [script] 
      * @memberof Entity
      */
     queueMove (dir, units = 1, type = 0, script)
@@ -1645,44 +1704,41 @@ class Entity
                 this.end = 0;
             }
         }
-        //#future note - when adding anything ensure all the inline objects here have the same format
-        //this has a performance impact
         if (type === spriteLAYER || type === spriteX || type === spriteY)
         {
-            this.queue[this.insert] =
-            {
-                type      : type,
-                direction : dir,
-                ticks     : 1,
-                pos       : units,
-                script    : ""
-            };
+            this.queue[this.insert] = new Action (type, dir, 1, units, doNothing);
         }
         else if (type === spriteSCRIPT)
         {
-            this.queue[this.insert] =
-            {
-                type      : spriteSCRIPT,
-                direction : dir,
-                ticks     : units,
-                pos       : 0,
-                script    : script,
-            };
+            this.queue[this.insert] = new Action (spriteSCRIPT, dir, units, 0, script);
         }
         else
         {
-            this.queue[this.insert] =
-            {
-                type      : type,
-                direction : dir,
-                ticks     : units,
-                pos       : 0,
-                script    : ""
-            };
+            this.queue[this.insert] = new Action (type, dir, units, 0, doNothing);
         }
         ++this.insert;
     }
 }
+
+/**
+ * Action factory method used to ensure that queue actions retain same signiture
+ * required for performance. Note this an ES5 function not a class also for performance.
+ * @param {number} type
+ * @param {string} direction
+ * @param {number} ticks
+ * @param {number} pos
+ * @param {function} script
+ */
+function Action (type, direction, ticks, pos, script)
+{
+    this.type = type;
+    this.direction = direction;
+    this.ticks = ticks;
+    this.pos = pos;
+    this.script = script;
+}
+
+function doNothing () {}
 
 /**
  * a sprite object
@@ -1706,7 +1762,7 @@ export class Sprite
         this.a_w    = atlas.width;
         this.a_h    = atlas.height;
         //make a lookup table for texture movement
-        //don't need to do this but it slightly optimisises the render function
+        //don't need to do this but it slightly optimises the render function
         //and makes it prettier
         this.frames = new Array(this.dirs.length);
         for (let i = 0, j = 0; i < this.dirs.length; ++i)
@@ -1718,7 +1774,6 @@ export class Sprite
             }
         }
         this.col    = template.col;
-        this.type   = template.type;
         this.shape  = new Shape(ShapeType.TriStrip, atlas,new VertexList([
             {x : 0,          y : 0,          z : 0, u : 0,                 v : 1                       },
             {x : template.w, y : 0,          z : 0, u : this.w/atlas.width,v : 1                       },
@@ -1739,20 +1794,20 @@ export class Sprite
    - speed: number of ticks to wait before changing frame
   x = x coordinate in image file of first frame
   y = y coordinate in image file of first frame
-  x_o,y_o = offset for drawing, if 0 sprite images are drawn with top left cornaer at sprite's coordinate, adjust to move sprite relative to coordinates
-  width,hieght = dimensions of each frame
+  x_o,y_o = offset for drawing, if 0 sprite images are drawn with top left corner at sprite's coordinate, adjust to move sprite relative to coordinates
+  width,height = dimensions of each frame
   horizontal =true/false the frames of each direction appear horizontally through the image
-  stacked = true/false; true = if frames are horizontal each direction has a seperate row, false = one frame after another
-            true = if directions are vertical each direction has a seperate column etc
-  colision_polygon - for shape based colisions the vertices of the colision shape
+  stacked = true/false; true = if frames are horizontal each direction has a separate row, false = one frame after another
+            true = if directions are vertical each direction has a separate column etc
+  collision_polygon - for shape based colisions the vertices of the collision shape
                      must provide as an array of vertex objects, each object should have properties x and y
-                     ignored if using tile based colisions (or if not doing colisiond detection) coordinates are relative to
+                     ignored if using tile based colisions (or if not doing collision detection) coordinates are relative to
 */
 
 
 export class STemplate
 {
-    constructor (dirs, x, y, x_o, y_o, width, height, horizontal, stacked, colision_polygon)
+    constructor (dirs, x, y, x_o, y_o, width, height, horizontal, stacked, collision_polygon)
     {
         this.dirs = [];
         this.dirs_Id = {};
@@ -1781,7 +1836,7 @@ export class STemplate
         }
         this.x_o = x_o;
         this.y_o = y_o;
-        this.col = colision_polygon;
+        this.col = collision_polygon;
         this.w = width;
         this.h = height;
     }
@@ -1845,12 +1900,24 @@ const tex_move = "tex_move";
 
 class SEngineError extends Error
 {
+    /**
+     *Creates an instance of SEngineError.
+     * @param {string} message
+     * @memberof SEngineError
+     */
     constructor(message)
     {
         super("SEngine Error: " + message);
     }
 }
 
+/**
+ *
+ *
+ * @param {Entity} entity_one
+ * @param {Entity} entity_two
+ * @returns number
+ */
 function compareEntities(entity_one, entity_two)
 {
     const test = entity_one._y - entity_two._y;
@@ -1864,6 +1931,12 @@ function compareEntities(entity_one, entity_two)
     }
 }
 
+/**
+ *
+ *
+ * @param {*} runTime
+ * @param {Entity} entity
+ */
 function moveNorth (runTime, entity)
 {
     if (entity.waiting === true)
@@ -1872,6 +1945,12 @@ function moveNorth (runTime, entity)
     }
 }
 
+/**
+ *
+ *
+ * @param {*} runTime
+ * @param {Entity} entity
+ */
 function moveSouth (runTime, entity)
 {
     if (entity.waiting === true)
@@ -1880,6 +1959,12 @@ function moveSouth (runTime, entity)
     }
 }
 
+/**
+ *
+ *
+ * @param {*} runTime
+ * @param {Entity} entity
+ */
 function moveWest(runTime, entity)
 {
     if (entity.waiting === true)
@@ -1888,6 +1973,12 @@ function moveWest(runTime, entity)
     }
 }
 
+/**
+ *
+ *
+ * @param {*} runTime
+ * @param {Entity} entity
+ */
 function moveEast(runTime, entity)
 {
     if (entity.waiting === true)

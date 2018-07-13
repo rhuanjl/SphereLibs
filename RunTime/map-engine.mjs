@@ -29,9 +29,9 @@
  */
 
 //Import the components of the map-engine
-import {MEngine} from "./MEngine.mjs";//core map-engine
-import {SEngine, loadSES} from "./SEngine.mjs";//Sprite/Entity handling and function for loading a sprite
-import {CEngine} from "./CEngine.mjs";//collision handling
+import {MEngine} from "./MEngine";//core map-engine
+import {SEngine, loadSES} from "./SEngine";//Sprite/Entity handling and function for loading a sprite
+import {CEngine} from "./CEngine";//collision handling
 
 //Note there are additional dependencies imported through tha above files:
 //The following two modules must be in the same folder as these modules

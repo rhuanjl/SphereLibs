@@ -29,7 +29,7 @@
  */
 
 
-import {MapBuffer, TileBuffer} from "./PixelBuffer.mjs";
+import {MapBuffer, TileBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
 
@@ -644,7 +644,18 @@ export class MEngine
     }
 }
 
-//set up a map animation
+
+/**
+ * set up a map animation
+ *
+ * @param {array} animationsArray
+ * @param {number} x
+ * @param {number} y
+ * @param {number} firstTile
+ * @param {Shader} shader
+ * @param {array} inUseAnimations
+ * @returns
+ */
 function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
 {
     const allAnims = animationsArray.length;
@@ -658,7 +669,7 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
     }
 
     let i = 0, j = 0, k = 0;
-    //I could avoid these loops by storing 4 bytes of extra information per tile in the map file
+    //We could avoid these loops by storing 4 bytes of extra information per tile in the map file
     //and then adding 2 extra Ints to each tile object - considering this is only a hit on loading a map
     //and probably quite a small one I thought better to have the loops
     for (; i < allAnims && found === false; ++i)
@@ -740,6 +751,11 @@ const tex_move = "tex_move";
 //Custom error object for MEngine may be fancier in future - for now just adds a prefix
 class MEngineError extends Error
 {
+    /**
+     *Creates an instance of MEngineError.
+     * @param {string} message
+     * @memberof MEngineError
+     */
     constructor(message)
     {
         super("MEngine error: " + message);

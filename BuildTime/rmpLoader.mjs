@@ -220,7 +220,7 @@ function loadRMP(fileName)
         {
             throw new Error("layer number " + layer + "for entity" + i + " but total layers in rmp are " + numLayers);
         }
-        if (type == 1)
+        if (type === 1)
         {
             entities.push(
                 {
@@ -238,7 +238,7 @@ function loadRMP(fileName)
             inputFile.position = inputFile.readUint16(true) + inputFile.position;
             inputFile.position = inputFile.position + 16;//skip the reserved bytes
         }
-        else if (type == 2)
+        else if (type === 2)
         {
             layers[layer].triggers.push(
                 {
@@ -305,7 +305,7 @@ function loadRMP(fileName)
 
         const tileName = inputFile.readStringRaw(nameLength);
         const tileObs = [];
-        if (obsType == 1)
+        if (obsType === 1)
         {
             for (let j = 0; j < tileSize; ++j)
             {
