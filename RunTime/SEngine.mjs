@@ -51,7 +51,7 @@ const spriteLAYER = 10;
 
 /**
  * Key class - SEngine
- * An instnace of SEngine is an environment for Sprites
+ * An instance of SEngine is an environment for Sprites
  * Any given map can only use one instance at a time
  * In most games just one instance will be required
  * 
@@ -63,7 +63,7 @@ export class SEngine
     /**
      * Creates an instance of SEngine.
      * @param {object} runTime - object to be available in entity scripts
-     * @param {object} CEngine - instance of CEngine class (unless you don't need collisions)
+     * @param {CEngine} CEngine - instance of CEngine class (unless you don't need collisions)
      * @param {number} tSize  - size of collision segment, if using tileMovement this should be tile width
      *                             For normal movement use a number 4-5x the width of your sprites
      * @param {boolean} [useCEngine=true] -true for collisions
@@ -74,7 +74,9 @@ export class SEngine
      */
     constructor(runTime, CEngine, tSize, useCEngine=true, tileMovement=false, maxPerSeg=20, shaderPath="shaders/")
     {
+        /** @type {Entity[]} */
         this.entities     = [];
+        /** @type {Entity[][]} */
         this._renders     = [];
         this.waiting      = 0;
         this.shader       = new Shader({
@@ -92,15 +94,19 @@ export class SEngine
         this.tileMovement = tileMovement;
         this.runTime      = runTime;
         this.folder       = "@";
+        /*** @type {[name : string]: Sprite } */
         this.sprites      = {};
+        /*** @type {[number, number]} */
         this.offset       = [0,0];
         this.width        = 0;
         this.height       = 0;
         this._default     = false;
+        /** @type {Transform} */
         this.transform    = null;
         this.transformed  = false;
         this.DEBUG_MODE   = false;
         this.input        = new Input();
+        /** @type {SEngineInput[]} */
         this.inputs       = [];
         this.maxPerSeg    = maxPerSeg;
     }
@@ -111,11 +117,11 @@ export class SEngine
      * use this instead of calling new Entity diretly
      * 
      * @param {string} id -id/name for the entity, 
-     * @param {Sprite} sprite - sprite object (see Sprite class below) #MayChange to single sprite object
+     * @param {Sprite} sprite - sprite object (see Sprite class below)
      * @param {boolean} [persist=false] -true to keep it when changing map, false to delete on map change
      * @param {number} [x=0] -initial coordinates
      * @param {number} [y=0] 
-     * @param {number[]} [scale=[1, 1]] -x/y scaling to apply
+     * @param {[number, number]} [scale=[1, 1]] -x/y scaling to apply
      * @param {number} [layer=0] -initial layer
      * @param {any} [scripts={}] -entity scripts object - see blankScripts object for template
      * @returns {Entity}
@@ -130,7 +136,7 @@ export class SEngine
         const newEntity = new Entity(id, sprite, x, y, speed, persist, scale, scripts, this, this.shader, this.tSize, this._tFract, layer, this.tileMovement, this.DEBUG_MODE);
         if (scripts.hasOwnProperty("onSetup"))
         {
-            newEntity.queueMove(newEntity.dir, 1, spriteSCRIPT, scripts.onSetup);
+            newEntity.queueMove(newEntity._sprite.dirs[newEntity.dir].id, 1, spriteSCRIPT, scripts.onSetup);
         }
         this.entities.push(newEntity);
         if (this.ready === true)
@@ -166,6 +172,7 @@ export class SEngine
         this.width = surface.width;
         this.height = surface.height;
         this.layers = mapLayers;
+        /** @type {Entity[]} */
         const persistantEntities = [];
         for (let i = 0,length = this.entities.length; i < length; ++i)
         {
@@ -224,31 +231,33 @@ export class SEngine
      * 
      * Note you must call SEngine.input.takeInput() to enable the input
      * 
-     * @param {number} key 
+     * @param {Key} key 
      * @param {boolean} continuous 
      * @param {object} parameter 
      * @param {function} onPress
      * @param {function} onRelease 
-     * @returns 
+     * @returns {number}
      * @memberof SEngine
      */
     addInput(key, continuous, parameter, onPress=function(){}, onRelease=function(){})
     {
-        this.inputs.push({
-            key        : key,
-            continuous : continuous,
-            parameter  : parameter,
-            onPress    : onPress,
-            onRelease  : onRelease,
-            active     : false
-        });
-        return this.inputs.length;
+        const inputs = this.inputs;
+        const length = inputs.length;
+        for (let index = 0; index < length; ++index)
+        {
+            if (inputs[index].key === key)
+            {
+                throw new SEngineError("Attempt to add an input handler for a key that already has one.");
+            }
+        }
+        inputs[length] = new SEngineInput(key, continuous, parameter,onPress, onRelease);
+        return inputs.length;
     }
 
     /**
      * Remove an input previously added with addInput
      * 
-     * @param {number} key 
+     * @param {Key} key 
      * @memberof SEngine
      */
     removeInput(key)
@@ -336,15 +345,12 @@ export class SEngine
     }
 
     /**
-     * update (offset = [0, 0], scale = 1)
+     * update 
      * updates the system this does the following things
-     * 1. checks for any inputs added with addINput above
+     * 1. checks for any inputs added with addInput above
      * 2. loops through all entities processing the first action in their queues
      *         - if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
      *         - i.e. the next action is processed too
-     * 3. sets scale and offset ready for rendering
-     * scale = zoom in/out for everything
-     * offset = translation for everything - used to move around a map
      * 
      * NOTE when using MEngine with SEngine MEngine.update calls this function
      * Only call this yourself if not using MENgine
@@ -733,6 +739,7 @@ export class SEngine
         const sHeight = this.height;
         const uZoom = Math.floor(1024 / zoom);
         const zFract = 1 / zoom;
+        /** @type {Transform} */
         let transformation;
         if (transformed === true)
         {
@@ -817,7 +824,7 @@ export class SEngine
      * If not found loads the sprite, adds it to the array and returns it
      * 
      * @param {string} fileName 
-     * @returns 
+     * @returns {Sprite}
      * @memberof SEngine
      */
     lazyLoadSprite (fileName)
@@ -1119,11 +1126,28 @@ export function loadSES(inputFile)
  */
 class Entity
 {
+    /**
+     *Creates an instance of Entity.
+     * @param {string} id
+     * @param {Sprite} sprite
+     * @param {number} x
+     * @param {number} y
+     * @param {number} speed
+     * @param {boolean} persist
+     * @param {[number, number]} scale
+     * @param {object} scripts
+     * @param {SEngine} sengine
+     * @param {Shader} shader
+     * @param {number} tSize
+     * @param {number} tFract
+     * @param {number} layer
+     * @param {boolean} tileMovement
+     * @param {boolean} DEBUG_MODE
+     * @memberof Entity
+     */
     constructor (id, sprite, x, y, speed, persist, scale, scripts, sengine, shader, tSize, tFract, layer, tileMovement, DEBUG_MODE)
     {
         this.id = id;
-
-        //setup the sprite
         this._sprite = sprite;
         this.trans   = new Transform();
         this._shader = shader.clone();
@@ -1132,6 +1156,38 @@ class Entity
         this._shader.setFloatVector(tex_move, [0,0,1]);
         this._shader.setInt("mask_mode",0);
         this._scale = scale;
+
+        this.internalLayer = layer;
+
+        this._px = x * 128;
+        this._py = y * 128;
+
+        this._speed = speed;
+
+        this._pVectors = [];
+        this._vectors = [];
+
+        //set various generic properties
+        this.persist = persist;
+        this.frozen = false;
+        this.visible = true;
+        this.scale = scale;
+        this.frame = 0;
+        this.ticks = 0;
+        this.end = 0;
+        /** @type {number} */
+        this.insert = 0;
+
+        /** @type {number} */
+        this.dir = 0;
+        /** @type {Action[]} */
+        this.queue = [];//movement queue
+
+
+        this.position = 0;//place in render queue
+        this.needsUpdate = true;//change of frame or direction
+        this.attached = false;//is this player controlled
+
         let obs_shapes, debugColour;
 
         if (DEBUG_MODE)
@@ -1186,15 +1242,6 @@ class Entity
             this._x = x;
             this._y = y;
         }
-        this.internalLayer = layer;
-
-        this._px = x * 128;
-        this._py = y * 128;
-
-        this._speed = speed;
-
-        this._pVectors = [];
-        this._vectors = [];
 
         for (let i = 0; i < sprite.dirs.length; ++i)
         {
@@ -1204,22 +1251,6 @@ class Entity
 
         //scripts
         this.scripts = Object.assign({}, blankScripts, scripts);
-
-        //set various generic properties
-        this.persist = persist;
-        this.frozen = false;
-        this.visible = true;
-        this.scale = scale;
-        this.frame = 0;
-        this.ticks = 0;
-        this.dir = 0;
-        this.queue = [];//movement queue
-        this.end = 0;
-        this.insert = 0;
-
-        this.position = 0;//place in render queue
-        this.needsUpdate = true;//change of frame or direction
-        this.attached = false;//is this player controlled
 
         //object to hold any user added properties
         this.data = {};
@@ -1252,6 +1283,7 @@ class Entity
      * entityObject.sprite = spriteObject;
      * Supply the new spriteObject as the parameter
      * 
+     * @param {Sprite} sprite
      * @memberof Entity
      */
     set sprite(sprite)
@@ -1303,8 +1335,9 @@ class Entity
             this.obs_model.transform = this.trans;
         }
 
-
+        /** @type {[number, number][]} */
         this._pVectors = [];
+        /** @type {[number, number][]} */
         this._vectors = [];
 
         for (let i = 0; i < sprite.dirs.length; ++i)
@@ -1323,7 +1356,7 @@ class Entity
             {
                 if (entities[index].id === this.id)
                 {
-                    this.SEngine.updateCollisions(index, this._x, this._y, 0, 0, this.internalLayer,this.internalLayer,false,false);
+                    this.SEngine.updateCollisions(index, this._x, this._y, 0, 0, this.internalLayer, this.internalLayer,false,false);
                     if (this.SEngine.CEngine.collide(index, this.internalLayer, this._x, this._y, 0, 0, this.poly).length > 0)
                     {
                         throw new SEngineError("Sprite change requested that creates collision - this is not permitted.");
@@ -1751,11 +1784,19 @@ function doNothing () {}
  */
 export class Sprite
 {
+    /**
+     *Creates an instance of Sprite.
+     * @param {string} id
+     * @param {Texture} atlas
+     * @param {STemplate} template
+     * @memberof Sprite
+     */
     constructor (id, atlas, template)
     {
         this.id     = id;
         this.dirs   = template.dirs;
         this.dir_Id = template.dirs_Id;
+        /** @type {[number, number]} */
         this.o      = [template.x_o,template.y_o];
         this.w      = template.w;
         this.h      = template.h;
@@ -1774,7 +1815,7 @@ export class Sprite
             }
         }
         this.col    = template.col;
-        this.shape  = new Shape(ShapeType.TriStrip, atlas,new VertexList([
+        this.shape  = new Shape(ShapeType.TriStrip, atlas, new VertexList([
             {x : 0,          y : 0,          z : 0, u : 0,                 v : 1                       },
             {x : template.w, y : 0,          z : 0, u : this.w/atlas.width,v : 1                       },
             {x : 0,          y : template.h, z : 0, u : 0,                 v : 1 - this.h/atlas.height },
@@ -1804,28 +1845,43 @@ export class Sprite
                      ignored if using tile based colisions (or if not doing collision detection) coordinates are relative to
 */
 
-
 export class STemplate
 {
+    /**
+     *Creates an instance of STemplate.
+     * @param {{id : string, vector : [number, number, number], speed : number, frames : number, reset : number}[]} dirs
+     * @param {number} x
+     * @param {number} y
+     * @param {number} x_o
+     * @param {number} y_o
+     * @param {number} width
+     * @param {number} height
+     * @param {boolean} horizontal
+     * @param {boolean} stacked
+     * @param {object} collision_polygon
+     * @memberof STemplate
+     */
     constructor (dirs, x, y, x_o, y_o, width, height, horizontal, stacked, collision_polygon)
     {
+        /** @type {Direction[]} */
         this.dirs = [];
+        /** @type {{[name : string]: number}} */
         this.dirs_Id = {};
         let t_x = x;
         let t_y = y;
         for (let i = 0; i < dirs.length; ++i)
         {
-            this.dirs[i] = new Direction(dirs[i].id, dirs[i].vector, dirs[i].speed, dirs[i].frames, dirs[i].reset, t_x,t_y, width, height, horizontal);
+            this.dirs[i] = new Direction(dirs[i].id, dirs[i].vector, dirs[i].speed, dirs[i].frames, dirs[i].reset, t_x, t_y, width, height, horizontal);
             this.dirs_Id[dirs[i].id] = i;
-            if (horizontal && stacked)
+            if (horizontal === true && stacked === true)
             {
                 t_y += height;
             }
-            else if (horizontal)
+            else if (horizontal === true)
             {
                 t_x += width * dirs[i].frames;
             }
-            else if (stacked)
+            else if (stacked === true)
             {
                 t_x += width;
             }
@@ -1870,9 +1926,24 @@ const blankScripts =
 //horizontal true if the frames of the spirte are drawn accross the image file, false if they're drawn down the image file
 class Direction
 {
+    /**
+     *Creates an instance of Direction.
+     * @param {string} id
+     * @param {[number, number, number]} vector
+     * @param {number} frame_speed
+     * @param {number} num_frames
+     * @param {number} reset
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {boolean} horizontal
+     * @memberof Direction
+     */
     constructor (id, vector, frame_speed, num_frames, reset, x, y, width, height, horizontal)
     {
         this.id     = id;
+        /** @type {{u : number, v : number}[]} */
         this.frames = [];
         this.vector = vector;
         this.dt     = frame_speed;
@@ -1934,7 +2005,7 @@ function compareEntities(entity_one, entity_two)
 /**
  *
  *
- * @param {*} runTime
+ * @param {object} runTime
  * @param {Entity} entity
  */
 function moveNorth (runTime, entity)
@@ -1948,7 +2019,7 @@ function moveNorth (runTime, entity)
 /**
  *
  *
- * @param {*} runTime
+ * @param {object} runTime
  * @param {Entity} entity
  */
 function moveSouth (runTime, entity)
@@ -1962,7 +2033,7 @@ function moveSouth (runTime, entity)
 /**
  *
  *
- * @param {*} runTime
+ * @param {object} runTime
  * @param {Entity} entity
  */
 function moveWest(runTime, entity)
@@ -1987,8 +2058,16 @@ function moveEast(runTime, entity)
     }
 }
 
+/**
+ *
+ *
+ * @param {object} runTime
+ * @param {{CEngine : CEngine, entity : Entity, ref : number, entities : Entity[]}} inputs
+ * @returns {void}
+ */
 function talkHandler(runTime, inputs)
 {
+    /** @type {Entity} */
     const entity = inputs.entity;
     const vec = entity._vectors[entity.dir];
     const target = inputs.CEngine.collide(inputs.ref, entity.internalLayer, entity._x, entity._y, vec[0] * 2, vec[1] * 2, entity.poly);
@@ -1999,5 +2078,27 @@ function talkHandler(runTime, inputs)
             inputs.entities[target[j].ref].scripts.onTalk(runTime, inputs.entities[target[j].ref], inputs.entity);
             done = true;
         }
+    }
+}
+
+class SEngineInput
+{
+    /**
+     *Creates an instance of SEngineInput.
+     * @param {Key} key
+     * @param {boolean} continuous
+     * @param {object} parameter
+     * @param {Function} onPress
+     * @param {Function} onRelease
+     * @memberof SEngineInput
+     */
+    constructor(key, continuous, parameter, onPress, onRelease)
+    {
+        this.key        = key;
+        this.continuous = continuous;
+        this.parameter  = parameter;
+        this.onPress    = onPress;
+        this.onRelease  = onRelease;
+        this.active     = false;
     }
 }

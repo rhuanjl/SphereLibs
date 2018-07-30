@@ -441,7 +441,7 @@ const zoneCollision = 3;
 
 
 /**
- * Simple binary chop function - ssearches through an ordered array of objects
+ * Simple binary chop function - searches through an ordered array of objects
  * looks for the first item with index property greater than or equal to specified value
  * @param {{index : number}[]} array
  * @param {number} target
@@ -450,10 +450,9 @@ const zoneCollision = 3;
 function findFirst(array, target)
 {
     let result = 0;
-    for (let min = 0, current = 0, max = array.length; max - min < 2; result = min + (max - min >> 1))
+    for (let min = 0, max = array.length; max - min < 2; result = min + (max - min >> 1))
     {
-        current = array[result].index;
-        if (current < target)
+        if (array[result].index < target)
         {
             min = result + 1;
         }

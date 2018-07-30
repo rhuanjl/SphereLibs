@@ -48,7 +48,7 @@ export class Input
      * 
      * 
      * @static
-     * @param {any} key 
+     * @param {Key} key 
      * @param {boolean} [shifted=false] 
      * @returns {string} character
      * @memberof Input
@@ -94,7 +94,7 @@ export class Input
     }
 
     /**
-     * @param {number} key
+     * @param {Key} key
      * @returns
      * @memberof Input
      */
@@ -113,7 +113,7 @@ export class Input
      * Wait for input - returns a promise
      * that resolves when the specified key is pressed
      * 
-     * @param {any} key 
+     * @param {Key} key 
      * @param {boolean} [allowContinuous=false] 
      * @returns {Promise<number>} key
      * @memberof Input
@@ -127,9 +127,9 @@ export class Input
      * Wait for input - returns a promise
      * that resolves when one of the specified keys is pressed
      * 
-     * @param {number[]} keys 
+     * @param {Key[]} keys 
      * @param {boolean} [allowContinuous=false] 
-     * @returns {Promise<number>} pressedKey
+     * @returns {Promise<Key>} pressedKey
      * @memberof Input
      */
     waitForInput(keys, allowContinuous = false)
@@ -210,8 +210,8 @@ export class Input
      * if not specified any key is permitted
      * 
      * @param {boolean} [clearQueue=true] 
-     * @param {number[]} [permittedKeys=[]] 
-     * @returns 
+     * @param {Key[]} [permittedKeys=[]] 
+     * @returns {Promise<Key>} pressedKey
      * @memberof Input
      */
     async getNextKey(clearQueue = true, permittedKeys = [])
