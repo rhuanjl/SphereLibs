@@ -235,8 +235,8 @@ export class MEngine
                 for (let i = 0; i < numAnims; ++ i)
                 {
                     const currentRender = thisLayer.animations[i].data;
-                    coords[0] = thisLayer.animations[i].x - offset[0] * uZoom >> 10;
-                    coords[1] = thisLayer.animations[i].y - offset[1] * uZoom >> 10;
+                    coords[0] = (thisLayer.animations[i].x - offset[0]) * uZoom >> 10;
+                    coords[1] = (thisLayer.animations[i].y - offset[1]) * uZoom >> 10;
 
                     if (coords[0] < sWidth &&//only draw the animated tiles that are visible
                         coords[1] < sHeight &&
