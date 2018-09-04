@@ -37,9 +37,9 @@
 
 //Dependencies you may need to update the paths
 //HUDSystem for drawing the menu
-import {HUDSystem} from "./HUDSystem";
+import HUDSystem from "./HUDSystem";
 //input system for input
-import {Input} from "./input";
+import Input from "./input";
 
 /**
  * Currently one MenuSystem instance = one menu
