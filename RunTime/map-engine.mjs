@@ -67,6 +67,29 @@ export default class MapEngine
     }
 
     /**
+     * set the path for map scripts
+     * note expected to be relative to map files
+     * 
+     * @memberof MapEngine
+     */
+    set mapScriptsPath (value)
+    {
+        value = value.slice(-1) === "/" ? value : value + "/";
+        this.MEngine.scriptsPath = value;
+    }
+
+    /**
+     * set the path for map scripts
+     * note expected to be relative to map files
+     * 
+     * @memberof MapEngine
+     */
+    get mapScriptsPath ()
+    {
+        return this.MEngine.scriptsPath;
+    }
+
+    /**
      * createCharacter(name, spriteSet, x=0, y=0, layer=0)
      * Create an entity and add them to the map
      * Returns the entity object

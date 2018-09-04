@@ -55,7 +55,7 @@ export class MEngine
      * @param {number} [height=Surface.Screen.height]
      * @memberof MEngine
      */
-    constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = Surface.Screen.width, height = Surface.Screen.height)
+    constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = Surface.Screen.width, height = Surface.Screen.height, scriptsPath = "scripts/")
     {
         this.shader         = new Shader({
             fragmentFile : shaderPath + "customised.frag.glsl",
@@ -70,6 +70,7 @@ export class MEngine
         this.DEBUG_MODE     = false;
         this.col_tile_size  = 100;
         this.useSEngine     = false;
+        this.scriptsPath    = scriptsPath;
         if (SEngine !== null)
         {
             this.SEngine = SEngine;
@@ -587,7 +588,7 @@ export class MEngine
 
         const startingName = inputFile.fileName;
         const splitPoint = startingName.lastIndexOf("/")+1;
-        const identifier = startingName.slice(0,splitPoint) + "scripts/" + startingName.slice(splitPoint, startingName.length - 4) + ".mjs";
+        const identifier = FS.fullPath(this.scriptsPath + startingName.slice(splitPoint, startingName.length - 4) + ".mjs", startingName.slice(0,splitPoint));
 
         //bring in the scripts
         let scripts;
@@ -597,10 +598,17 @@ export class MEngine
         }
         catch (e)
         {
-            SSj.log("WARNING: no map script exists for: " + fileName);
+            SSj.log("WARNING: map script failed to load for: " + fileName);
+            SSj.log("Error was " + e);
+            scripts = {};
         }
 
         const loadedScripts = Object.assign({zoneScripts : {}, triggerScripts : {}, mapScripts : templateScripts, entityScripts : {}}, scripts);
+
+        if (scripts.hasOwnProperty("mapScripts"))
+        {
+            Object.assign(loadedScripts.mapScripts, templateScripts, scripts.mapScripts);
+        }
 
         if (this.useSEngine === true)
         {
