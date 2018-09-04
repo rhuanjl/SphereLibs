@@ -29,9 +29,9 @@
  */
 
 //Import the components of the map-engine
-import {MEngine} from "./MEngine";//core map-engine
-import {SEngine, loadSES} from "./SEngine";//Sprite/Entity handling and function for loading a sprite
-import {CEngine} from "./CEngine";//collision handling
+import MEngine from "./MEngine";//core map-engine
+import SEngine, {loadSES} from "./SEngine";//Sprite/Entity handling and function for loading a sprite
+import CEngine from "./CEngine";//collision handling
 
 //Note there are additional dependencies imported through tha above files:
 //The following two modules must be in the same folder as these modules
@@ -56,7 +56,7 @@ export default class MapEngine
     {
         this.runTime = runTime;
         this.CEngine = new CEngine();
-        this.SEngine = new SEngine(runTime, this.CEngine, 50);//initiate SEngine
+        this.SEngine = new SEngine(runTime, this.CEngine);//initiate SEngine
         this.MEngine = new MEngine(runTime, this.SEngine, this.CEngine);//initiate MEngine
         this.started = false;
         this.paused = false;

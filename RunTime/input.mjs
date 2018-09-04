@@ -31,7 +31,7 @@
 import Focus from "focus-target";
 const kb = Keyboard.Default;
 
-export class Input
+export default class Input
 {
     /**
      * Creates an instance of Input.

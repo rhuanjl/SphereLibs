@@ -40,7 +40,7 @@
 import {DrawingBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
-export class HUDSystem
+export default class HUDSystem
 {
     /**
      * Creates an instance of HUDSystem.
