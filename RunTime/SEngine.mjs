@@ -35,7 +35,7 @@ DataStream (from sphere Run time) for loading sprite files
 
 May need to change paths depending on your setup*/
 import DataStream from "data-stream";
-import {Input} from "./input";
+import Input from "./input";
 
 /*Queued action types
 These are used to indicate what type of action a sprite has queued
@@ -50,7 +50,7 @@ const spriteX = 9;
 const spriteLAYER = 10;
 
 /**
- * Key class - SEngine
+ * SEngine
  * An instance of SEngine is an environment for Sprites
  * Any given map can only use one instance at a time
  * In most games just one instance will be required
@@ -58,7 +58,7 @@ const spriteLAYER = 10;
  * @export
  * @class SEngine
  */
-export class SEngine
+export default class SEngine
 {
     /**
      * Creates an instance of SEngine.
@@ -72,7 +72,7 @@ export class SEngine
      * @param {string} [shaderPath="shaders/"] -path to where the customised shaders can be found
      * @memberof SEngine
      */
-    constructor(runTime, CEngine, tSize, useCEngine=true, tileMovement=false, maxPerSeg=20, shaderPath="shaders/")
+    constructor(runTime, CEngine, tSize = 50, useCEngine=true, tileMovement=false, maxPerSeg=20, shaderPath="shaders/")
     {
         /** @type {Entity[]} */
         this.entities     = [];

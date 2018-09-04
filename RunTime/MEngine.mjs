@@ -43,7 +43,7 @@ import DataStream from "data-stream";
  * @export
  * @class MEngine
  */
-export class MEngine
+export default class MEngine
 {
     /**
      * Creates an instance of MEngine.

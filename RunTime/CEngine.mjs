@@ -39,8 +39,15 @@ CEngine is designed to:
 - doesn't really work alone at the moment #FinishMe
 */
 
-//primary class for external use
-export class CEngine
+/**
+ * CEngine handles collisions between objects in 2d space
+ * currently handles SEngine sprites and MEngine tiles,
+ * triggers, zones and map edges
+ *
+ * @export
+ * @class CEngine
+ */
+export default class CEngine
 {
     /**
      * Creates an instance of CEngine.
