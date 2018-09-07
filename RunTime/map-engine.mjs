@@ -55,6 +55,10 @@ export default class MapEngine
     constructor(runTime={})
     {
         this.runTime = runTime;
+        if (!runTime.hasOwnProperty("engine"))
+        {
+            runTime.engine = this;
+        }
         this.CEngine = new CEngine();
         this.SEngine = new SEngine(runTime, this.CEngine);//initiate SEngine
         this.MEngine = new MEngine(runTime, this.SEngine, this.CEngine);//initiate MEngine
