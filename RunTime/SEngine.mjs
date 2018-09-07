@@ -996,10 +996,10 @@ export default class SEngine
         const end_y2   = Math.ceil((y + max_h + d_y) * tFract);
 
         let i = Math.max(Math.min(start_x1, end_x1) - 1, 0);
-        max_w = Math.max(start_x2, end_x2) + 1;
+        max_w = Math.min(Math.max(start_x2, end_x2) + 1, this.tilesAccross);
 
         const min_h = Math.max(Math.min(start_y1, end_y1) - 1, 0);
-        max_h  = Math.max(start_y2, end_y2) + 1;
+        max_h  = Math.min(Math.max(start_y2, end_y2) + 1, this.tilesAccross);
 
         for (let j = min_h; i < max_w; ++ i, j = min_h)
         {
