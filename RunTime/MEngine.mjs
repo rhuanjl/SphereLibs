@@ -605,11 +605,20 @@ export default class MEngine
             scripts = {};
         }
 
-        const loadedScripts = Object.assign({zoneScripts : {}, triggerScripts : {}, mapScripts : templateScripts, entityScripts : {}}, scripts);
+        const loadedScripts = Object.assign({zoneScripts : {}, triggerScripts : {}, entityScripts : {}}, scripts);
 
-        if (scripts.hasOwnProperty("mapScripts"))
+        if (Object.prototype.hasOwnProperty.call(scripts, "mapScripts"))
         {
-            Object.assign(loadedScripts.mapScripts, templateScripts, scripts.mapScripts);
+            loadedScripts.mapScripts = Object.assign({}, templateScripts, scripts.mapScripts);
+        }
+        else
+        {
+            loadedScripts.mapScripts = templateScripts;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(scripts, "triggerScripts"))
+        {
+            loadedScripts.triggerScripts = Object.assign({}, scripts.triggerScripts);
         }
 
         if (this.useSEngine === true)
@@ -651,6 +660,61 @@ export default class MEngine
             }
         }
         return true;
+    }
+
+    /**
+     * Add a trigger to the currently active map at
+     * specified x, y tile coordinates and on the specified layer
+     * 
+     * With func as the function to call when it's triggered
+     * 
+     * Mode determines how to handle duplicates:
+     * mode = 0 (default) - throw error for duplicate
+     * mode = 1 when there is a duplicate create the new trigger
+     *          but have it share the existing trigger's calback
+     * mode = 2 overwrite the function used by the duplicate
+     * 
+     * @param {string} name
+     * @param {number} x
+     * @param {number} y
+     * @param {number} layer
+     * @param {function} onPlayer
+     * @param {function} onOther
+     * @param {number} [mode=0]
+     * @memberof MEngine
+     */
+    addTrigger(name, x, y, layer, onPlayer, onOther = function () {}, mode = 0)
+    {
+        const dup = this.map.triggerScripts.hasOwnProperty.call(this.map.triggerScripts, name);
+
+        if (mode === 0 && dup === true) // mode 0 don't accept duplicate
+        {
+            throw new MEngineError ("Duplicate trigger name '" + name + "' duplicate names not accepted when adding trigger with mode 0");
+        }
+        if (mode !== 1 || dup === false)
+        {
+            this.map.triggerScripts[name] = {
+                onPlayer : onPlayer,
+                onOther  : onOther
+            };
+        }
+        const index = x + y * this.map.layers[layer].width;
+        const triggers = this.map.layers[layer].triggers;
+        const position = triggers.indexOf((trigger) => { return trigger.index > index; });
+        const newTrigger = {
+            name      : name,
+            x         : x,
+            triggerID : name.length,
+            index     : index
+        };
+        if (position === -1)
+        {
+            triggers.push(newTrigger);
+        }
+        else
+        {
+            triggers.splice(position, 0, newTrigger);
+        }
     }
 }
 
