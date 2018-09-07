@@ -559,10 +559,12 @@ export default class MEngine
                     triggerID = triggerNames.length;
                     triggerNames.push(name);
                 }
+                const x = inputFile.readUint16(true);
                 layers[i].triggers[j] = {
                     name  : name,
                     id    : triggerID,
-                    index : inputFile.readUint16(true) + inputFile.readUint16(true) * width
+                    x     : x,
+                    index : x + inputFile.readUint16(true) * width
                 };
             }
             layers[i].triggers.sort((a, b) =>

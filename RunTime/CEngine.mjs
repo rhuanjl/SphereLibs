@@ -254,10 +254,10 @@ export default class CEngine
                     if (i < length)
                     {
                         const triggerScripts = this.MEngine.map.triggerScripts;
-                        let xOffset = triggers[i].index % width;
+                        let xOffset = triggers[i].x;
                         for (; i < length; ++i, ++xOffset)
                         {
-                            if (triggers[i].index < last )
+                            if (triggers[i].index < last)
                             {
                                 if (xOffset === width)
                                 {
@@ -457,7 +457,8 @@ const zoneCollision = 3;
 function findFirst(array, target)
 {
     let result = 0;
-    for (let min = 0, max = array.length; max - min < 2; result = min + (max - min >> 1))
+    const len = array.length;
+    for (let min = 0, max = len - 1; max - min > 1; result = min + (max - min >> 1))
     {
         if (array[result].index < target)
         {
@@ -467,6 +468,17 @@ function findFirst(array, target)
         {
             max = result - 1;
         }
+    }
+    if (result >= 0)
+    {
+        while (result < len && array[result].index < target)
+        {
+            result = result + 1;
+        }
+    }
+    else
+    {
+        result = 0;
     }
     return result;
 }
