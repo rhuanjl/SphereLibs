@@ -109,16 +109,6 @@ export default class MapEngine
         return this.SEngine.addEntity(name, loadSES(spriteSet), true, x, y, layer);
     }
 
-    takeInput()
-    {
-        this.SEngine.input.takeInput();
-    }
-
-    yieldInput()
-    {
-        this.SEngine.input.yieldInput();
-    }
-
     /**
      * attachInput(character)
      * Add default input (4 directional arrows + talk key) to provided character
@@ -193,6 +183,7 @@ export default class MapEngine
             this._camera.zoom = 1;
         }
         await this.MEngine.setMap(firstMap);
+        this.blockInput = true;
 
         this.update = Dispatch.onUpdate(()=>
         {
@@ -200,25 +191,46 @@ export default class MapEngine
         });
         this.render = Dispatch.onRender(()=>this.MEngine.render());
         this.started = true;
-        this.takeInput();
+        this.blockInput = false;
     }
 
     /**
-     * changeMap(newMap)
-     * Change map - note this is an async function
+     * changeMap changes the current map. It requires that a map is currently running
+     * it awaits that map's onExit script then awaits setMap for the new map
+     * returns a promise that resolves after awaiting the new map's onEnter script
      * 
-     * @returns {Promise<boolean>} set - was the map set
+     * @returns {Promise<void>} set - was the map set
      * @param {string} newMap name of mapFile to change to ".mem" format
      */
     async changeMap(newMap)
     {
         if (this.started === true)
         {
-            return this.MEngine.setMap(newMap);
+            await this.MEngine.setMap(newMap);
+            return this.MEngine.changing;
         }
         else
         {
             throw new Error("Attempt to change map when the map-engine is not running.");
+        }
+    }
+
+    /**
+     * set this to true to block the map engine from taking input
+     * set to false to re-enable input
+     *
+     * @param {boolean} value
+     * @memberof MapEngine
+     */
+    set blockInput (value)
+    {
+        if (value === true)
+        {
+            this.SEngine.input.yieldInput();
+        }
+        else
+        {
+            this.SEngine.input.takeInput();
         }
     }
 
@@ -291,7 +303,7 @@ export default class MapEngine
                     this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
                 });
                 this.paused = false;
-                this.takeInput();
+                this.blockInput = false;
             }
         }
         else
@@ -403,7 +415,7 @@ export default class MapEngine
             {
                 this.render.cancel();
             }
-            this.yieldInput();
+            this.blockInput = true;
             this.MEngine.map = null;//let the map get GC'd
             //#FIX ME enable GC'ing SEngine data here to
         }
