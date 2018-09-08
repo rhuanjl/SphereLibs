@@ -66,7 +66,7 @@ export default class MEngine
         this.transformation = null;
         this.map            = null;//current map - null at first
         this.folder         = "@";
-        this.rmpScheme      = null;
+        this.changing       = null;
         this.DEBUG_MODE     = false;
         this.col_tile_size  = 100;
         this.useSEngine     = false;
@@ -111,8 +111,14 @@ export default class MEngine
         //handle map Scripts
         if (this.map.entered === false)
         {
-            this.map.mapScripts.onEnter(this.runTime, this.map);
             this.map.entered = true;
+            Promise.all([
+                this.map.mapScripts.onEnter(this.runTime, this.map),
+                this.onEnter(this.runTime, this.map)]
+            ).then (() =>
+            {
+                this.changing.done();
+            });
         }
         else if (this.map.leaving === true)
         {
@@ -133,6 +139,7 @@ export default class MEngine
             }
         }
         this.map.mapScripts.onUpdate(this.runTime, this.map);
+        this.onUpdate(this.runTime, this.map);
 
         //update animated tiles
         const animations = this.map.animations;
@@ -192,6 +199,7 @@ export default class MEngine
             this.map.layers[1].obsModel.draw();
         }
         this.map.mapScripts.onRender(this.runTime, this.map);
+        this.onRender(this.runTime, this.map);
     }
 
     /**
@@ -369,7 +377,10 @@ export default class MEngine
         {
             if (this.map.entered === true)
             {
-                await this.map.mapScripts.onExit(this.runTime, this.map);
+                await Promise.all([
+                    this.map.mapScripts.onExit(this.runTime, this.map),
+                    this.onExit(this.runTime, this.map)
+                ]);
             }
         }
         //#optimise me - considering doing one read at start and virtualising the rest
@@ -382,6 +393,11 @@ export default class MEngine
         const tiles        = new Array(numTiles);
         let triggerID    = 0;
         const triggerNames = [];
+        let cachedDone;
+        this.changing = new Promise ((done) =>{
+            cachedDone = done;
+        });
+        this.changing.done = cachedDone;
 
         for (let i = 0, j = 0; i < numTiles; ++i, j = 0)
         {
@@ -716,6 +732,13 @@ export default class MEngine
             triggers.splice(position, 0, newTrigger);
         }
     }
+
+    // Methods to call when various events happen
+    // intended to be overwritten
+    onExit   (runTime, map) {}
+    onEnter  (runTime, map) {}
+    onUpdate (runTime, map) {}
+    onRender (runTime, map) {}
 }
 
 
