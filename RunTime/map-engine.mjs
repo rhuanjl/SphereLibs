@@ -28,12 +28,16 @@
  * dealings in this Software without prior written authorization.
  */
 
+//@ts-check
+/// <reference path="../SphereV2.d.ts" />
+/// <reference path="./SphereLibs.d.ts" />
+
 //Import the components of the map-engine
 import MEngine from "./MEngine";//core map-engine
 import SEngine, {loadSES} from "./SEngine";//Sprite/Entity handling and function for loading a sprite
 import CEngine from "./CEngine";//collision handling
 
-//Note there are additional dependencies imported through tha above files:
+//Note there are additional dependencies imported through the above files:
 //The following two modules must be in the same folder as these modules
 //PixelBuffer.mjs - is used by MEngine and SEngine for manipulating and loading sprite/map graphics
 //input.mjs is used by SEngine for handling input checks
@@ -47,6 +51,7 @@ export default class MapEngine
 {
     /**
      * Creates an instance of MapEngine.
+     * 
      * The runtime object is a pseduo-global object it will be provided as a parameter to all map and sprite scripts
      * Use it to hand around functions/properties you need access to in mulitple map/sprite scripts
      * @param {any} [runTime={}] 
@@ -67,13 +72,15 @@ export default class MapEngine
         this.hidden = false;
         this.update = null;
         this.render = null;
+        /**@type camera */
         this._camera = null;
     }
 
     /**
-     * set the path for map scripts
-     * note expected to be relative to map files
-     * 
+     * set the path for map scripts either:
+     * - relative to the map files OR
+     * - prefixed with a SphereFS prefix
+     * @param {string} value
      * @memberof MapEngine
      */
     set mapScriptsPath (value)
@@ -85,7 +92,6 @@ export default class MapEngine
     /**
      * set the path for map scripts
      * note expected to be relative to map files
-     * 
      * @memberof MapEngine
      */
     get mapScriptsPath ()
@@ -94,7 +100,6 @@ export default class MapEngine
     }
 
     /**
-     * createCharacter(name, spriteSet, x=0, y=0, layer=0)
      * Create an entity and add them to the map
      * Returns the entity object
      * @param {string} name //name of the entity
@@ -110,11 +115,9 @@ export default class MapEngine
     }
 
     /**
-     * attachInput(character)
      * Add default input (4 directional arrows + talk key) to provided character
      * the parameter should be the character object, not their name
-     * 
-     * @param {object} character 
+     * @param {Entity} character 
      */
     attachInput(character)
     {
@@ -122,17 +125,16 @@ export default class MapEngine
     }
 
     /**
-     * addInput(key, onPress, continuous=false, parameter=null, onRelease)
      * Add another input of some kind to be monitored whilst the map is running
      * Only first two parameters are required, the other 3 are optional
      * 
-     * @param {number} key - key to check for
+     * @param {Key} key - key to check for
      * @param {function} onPress - function to call when it's pressed
      * @param {boolean} [continuous=false] - allow continuous input - function can trigger every frame
      *                                       or false to only call the function once for each press
      * @param {any} [parameter=null] - parameter to pass to the function, e.g. a person object
      * @param {function} onRelease - function to call when the key is released
-     * @returns - the number of inputs added in total (will be one higher each time this is called)
+     * @returns {number} - the number of inputs added in total (will be one higher each time this is called)
      * @memberof MapEngine
      */
     addInput(key, onPress, continuous = false, parameter = null, onRelease = function(){})
@@ -140,14 +142,11 @@ export default class MapEngine
         return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
     }
 
-
     /**
-     * getEntity(id)
      * Return the entity object that has the given name
      * Throws an error if there is no entity with that name
-     * 
      * @param {string} name 
-     * @returns {object} Entity
+     * @returns {Entity} Entity
      */
     getEntity(name)
     {
@@ -157,7 +156,6 @@ export default class MapEngine
     /**
      * Readonly property, true if all entities on the map have empty movement queues
      * false if any entity is doing anything
-     * 
      * @returns {boolean} idle
      * @readonly 
      */
@@ -168,12 +166,10 @@ export default class MapEngine
 
 
     /**
-     * start(firstMap, cameraObject = {x: 0, y: 0, zoom: 1})
      * Start the map engine - note this is an async function
-     * Note: to centre the map on a character supply that character's object as the second parameter
-     * 
+     * To centre the map on a character supply that character's object as the second parameter
      * @param {string} firstMap //name of mapFile to use as first map ".mem" format
-     * @param {any} [cameraObject={x: 0, y: 0, zoom: 1}] //object with x and y (and optionally zoom properties) where to focus the camera on the map
+     * @param {camera} [cameraObject={x: 0, y: 0, zoom: 1}] //object with x and y (and optionally zoom properties) where to focus the camera on the map
      */
     async start(firstMap, cameraObject = {x : 0, y : 0, zoom : 1})
     {
@@ -202,12 +198,11 @@ export default class MapEngine
      * Optionally takes x and y coordinates to move the camera object to
      * Also optionally takes a layer parameter - if your camera object is an entity this
      * can set it to a different layer on the new map.
-     *
      * @param {string} newMap - name of map file to change to
      * @param {number} [x=this._camera.x] - x coordinate to set the camera to
      * @param {number} [y=this._camera.y] - y coordinate to set the camera to
      * @param {number} [layer=-1] - layer coordinate to set the "camera" to
-     * @returns
+     * @returns {Promise<void>} 
      * @memberof MapEngine
      */
     async changeMap(newMap, x = this._camera.x, y = this._camera.y, layer = -1)
@@ -229,7 +224,6 @@ export default class MapEngine
     /**
      * set this to true to block the map engine from taking input
      * set to false to re-enable input
-     *
      * @param {boolean} value
      * @memberof MapEngine
      */
@@ -245,11 +239,12 @@ export default class MapEngine
         }
     }
 
-    /**
-     * camera
-     * Supply a new camera object
-     * use as mapEngine.camera = newCameraObject;
-     * @param {any} cameraObject 
+    /* Camera object
+     * 
+     * The screen will be centered on the map x and y coordinates of this object
+     * and this object's "zoom" property will be applied as a zoom to the map
+     * 
+     * By default you would set the camera to your player character
      */
     set camera (cameraObject)
     {
@@ -277,9 +272,9 @@ export default class MapEngine
     }
 
     /**
-     * pause()
      * Pause the map engine - only if it's running
      * A no-op if the map engine is already paused
+     * @memberof MapEngine
      */
     pause()
     {
@@ -299,9 +294,9 @@ export default class MapEngine
     }
 
     /**
-     * resume()
      * Resume the map engine - ONLY if it's running
      * A no-op if the map engine is not paused
+     * @memberof MapEngine
      */
     resume()
     {
@@ -324,10 +319,10 @@ export default class MapEngine
     }
 
     /**
-     * hide()
-     * hide the map-engine (stop drawing it) - only if it's running
+     * Hide the map-engine (stop drawing it) - only if it's running
      * Note this doesn't stop updating
      * This is a no-op if it's already hidden
+     * @memberof MapEngine
      */
     hide()
     {
@@ -346,9 +341,9 @@ export default class MapEngine
     }
 
     /**
-     * show()
-     * start drawing the map-engine again - only if it's running
+     * Start drawing the map-engine again - only if it's running
      * A no-op if it's not hidden
+     * @memberof MapEngine
      */
     show()
     {
@@ -367,11 +362,11 @@ export default class MapEngine
     }
 
     /**
-     * hideLayer(number=0)
      * Stop drawing a specific layer of the map
      * Can only call this when the map-engine is running
      * 
-     * @param {number} [number=0] 
+     * @param {number} [number=0]
+     * @memberof MapEngine
      */
     hideLayer(number=0)
     {
@@ -386,12 +381,12 @@ export default class MapEngine
     }
 
     /**
-     * showLayer(number=0)
      * Start drawing a specific layer of the map
      * Can only call this when the map-engine is running
      * Note - if the map has not first been hidden with hideLayer this is a no-op
      * 
-     * @param {number} [number=0] 
+     * @param {number} [number=0]
+     * @memberof MapEngine
      */
     showLayer(number=0)
     {
@@ -406,13 +401,13 @@ export default class MapEngine
     }
 
     /**
-     *stop() 
      * Stop the map-engine
-     * Note after using this you would need to start() again
-     * Note this method isn't entirely finished - it disposes of the map but not the entities
-     * This means if you follow it with start() you will keep any entities created with createCharacter
+     * - Note after using this you would need to start() again
+     * - Note this method isn't entirely finished - it disposes of the map but not the entities
+     * - This means if you follow it with start() you will keep any entities created with createCharacter
      * (though it will correctly dispose of map specific entities)
      * 
+     * @memberof MapEngine
      */
     stop()
     {
@@ -437,5 +432,10 @@ export default class MapEngine
     }
 }
 
-
+/**@typedef {object} camera
+ * @property {number} x
+ * @property {number} y
+ * @property {number} [zoom]
+ * @property {number} [layer]
+ */
 
