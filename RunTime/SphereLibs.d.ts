@@ -214,3 +214,30 @@ declare class Entity
      */
     queueMove (dir: string, units?: number, type?: number, script?: Function)
 }
+
+declare class CEngine
+{
+    constructor(cType?: number)
+    SEngine : SEngine
+    MEngine : MEngine
+    cType   : number
+    tFract  : number
+
+    /**
+     * Function for colliding an entity from SEngine with other entities and Map Obstructions
+     * Returns an array of all found collisions
+     * 
+     * #needs better documentation
+     */
+    collide(ref: number, layer: number, x: number, y: number, d_x: number, d_y: number, polygons: Polygon[]): Collision[]
+
+    /**
+     * Static method for colliding two polys
+     * the first poly is translated by x, y before the comparison
+     * 
+     * Supports rectangles and circles only
+     * 
+     */
+    static polysCollide(x: number, y: number, _one: Polygon, two: Polygon): boolean
+
+}
