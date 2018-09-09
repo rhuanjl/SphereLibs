@@ -1,4 +1,3 @@
-
 /**Global namespace containing  properties about the game and engine and a few general methods.*/
 declare namespace Sphere
 {
@@ -301,7 +300,7 @@ declare class Texture
 
     /**
      * Downloads the 32-bit RGBA pixel data from the texture and returns it as a
-	 * new Uint8ClampedArray.
+     * new Uint8ClampedArray.
      *
      * Note this is a slow operation.
      */
@@ -325,11 +324,11 @@ declare class Shader
      * Constructs a shader program from a set of GLSL shader sources.
      * 
      * `options` specifies the shader sources.
-     * - vertexShader the path and file name for the glsl vertexShader to use
-     * - fragmentShader the path and file name for the glsl fragment Shader to use 
+     * - vertexFile the path and file name for the glsl vertexShader to use
+     * - fragmentFile the path and file name for the glsl fragment Shader to use 
      * 
      */
-    constructor(options : {vertexShader : string, fragmentShader : string})
+    constructor(options : {vertexFile : string, fragmentFile : string})
     /**Set a Float uniform value with `name` to `value`*/
     setFloat (name : string, value : number) : void
     /**Set an Int uniform value with `name` to `value`*/
@@ -351,12 +350,6 @@ declare namespace Color
     const Blue : Color
     const Green : Color
 
-    /**
-     * Create a new Color object by mixing two Colors
-     * 
-     * The factor parameters indicate the weighting to give each color
-     */
-    function mix (color1 : Color, color2 : Color, factor1 : number, factor2 : number) : Color
 }
 
 declare namespace Keyboard
@@ -450,6 +443,13 @@ declare class Color
     g : number
     b : number
     a : number
+
+    /**
+     * Create a new Color object by mixing two Colors
+     * 
+     * The factor parameters indicate the weighting to give each color
+     */
+    static mix (color1 : Color, color2 : Color, factor1 : number, factor2 : number) : Color
 }
 
 /**
@@ -479,6 +479,7 @@ declare type Vertex =
 {
     x : number,
     y : number,
+    z? : nummber,
     u? : number,
     v? : number,
     color? : Color
@@ -622,7 +623,7 @@ declare namespace FS
      * - returns the string
      */
     function readFile (path : string) : string
-    
+
     /**
      * Writes a string out to a UTF-8 text file.  If a file already exists with
      * the specified filename, it will be overwritten.
@@ -723,6 +724,9 @@ declare namespace Dispatch
     * Sets up a one-time job to call `callback` from the event loop during the
     * current frame.  This is useful for performing operations that need to be
     * done from the event loop with minimal delay.
+    * 
+    * Equivalent to Promise.resolve().then(fn) except that the provided JobToken
+    * allows you to cancel this.
     */
    function now(fn : Function) : JobToken
    /**
@@ -758,7 +762,6 @@ declare class JobToken
      * and can be resumed at any time without the need to dispatch a new job.
      */
     pause() : void
-
     /**
      * Resumes the job associated with this token after it's been paused with
      * JobToken#pause().  If the job is not currently paused, this does nothing.
@@ -799,11 +802,11 @@ declare module "data-stream"
 
         readInt8() : number
 
-	    readInt16(littleEndian : boolean) : number
+        readInt16(littleEndian : boolean) : number
 
-	    readInt32(littleEndian : boolean) : number
+        readInt32(littleEndian : boolean) : number
 
-	    readStringRaw(length : number) : string
+        readStringRaw(length : number) : string
 
         readString8() : string
 
@@ -811,36 +814,36 @@ declare module "data-stream"
 
         readString32(littleEndian : boolean) : string
 
-	    readStruct(desc : object) : object
+        readStruct(desc : object) : object
 
         readUint8() : number
 
-	    readUint16(littleEndian : boolean) : number
+        readUint16(littleEndian : boolean) : number
 
         readUint32(littleEndian : boolean) : number
 
-	    writeFloat32(value : number, littleEndian : boolean) : void
-	    writeFloat64(value : number, littleEndian : boolean) : void
-	    writeInt8(value : number) : void
-	    writeInt16(value : number, littleEndian : boolean) : void
+        writeFloat32(value : number, littleEndian : boolean) : void
+        writeFloat64(value : number, littleEndian : boolean) : void
+        writeInt8(value : number) : void
+        writeInt16(value : number, littleEndian : boolean) : void
 
-	    writeInt32(value : number, littleEndian : boolean) : void
+        writeInt32(value : number, littleEndian : boolean) : void
 
-	    writeStringRaw(value : string, length : number) : void
+        writeStringRaw(value : string, length : number) : void
 
-	    writeString8(value : string) : void
+        writeString8(value : string) : void
 
-	    writeString16(value : string, littleEndian : boolean) : void
+        writeString16(value : string, littleEndian : boolean) : void
 
-	    writeString32(value : string, littleEndian : boolean) : void
+        writeString32(value : string, littleEndian : boolean) : void
 
-	    writeStruct(object : object, desc : object) : void
+        writeStruct(object : object, desc : object) : void
 
-	    writeUint8(value : number) : void
+        writeUint8(value : number) : void
 
-	    writeUint16(value : number, littleEndian : boolean) : void
+        writeUint16(value : number, littleEndian : boolean) : void
 
-	    writeUint32(value : number, littleEndian : boolean) : void
+        writeUint32(value : number, littleEndian : boolean) : void
     }
 }
 
@@ -848,11 +851,11 @@ declare module "focus-target"
 {
     export default class FocusTarget
     {
-	    constructor(options : { })
-	    readonly hasFocus : boolean
-	    dispose() : void
-	    takeFocus() : void
-	    yield() : void
+        constructor(options : { })
+        readonly hasFocus : boolean
+        dispose() : void
+        takeFocus() : void
+        yield() : void
     }
 }
     
