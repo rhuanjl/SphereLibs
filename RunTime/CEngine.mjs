@@ -28,7 +28,7 @@
  * dealings in this Software without prior written authorization.
  */
 
-
+//@ts-check
 /*
 
 CEngine is designed to:
@@ -80,7 +80,7 @@ export default class CEngine
      * @param {number} [d_x=0] 
      * @param {number} [d_y=0] 
      * @param {polygon[]} polygons 
-     * @returns {Collision[]} collisions
+     * @returns {collision[]} collisions
      * @memberof CEngine
      */
     collide(ref, layer, x, y, d_x=0, d_y=0, polygons)
@@ -521,21 +521,24 @@ function placeHolder(name, type)
  * @property {number} type - 0 = circle, 1 = rectangle
 */
 
-/**@typedef {Object} Collision  
+/**@typedef {Object} collision  
  * @property {number} type
- * @property {string} ref
+ * @property {string|number} ref
  * @property {object} scripts
 */
+
+const emptyScripts = {};
 
 //#ENHANCE ME - should this record above/below etc? if yes need to implement above
 /**
  * 
  *
  * @param {number} type
- * @param {string} ref
+ * @param {string|number} ref
  * @param {any} [scripts={}]
+ * @returns {void}
  */
-function Collision(type, ref, scripts={})//ES5 style intentionally (performance issue)
+function Collision(type, ref, scripts=emptyScripts)//ES5 style intentionally (performance issue)
 {
     this.type      = type;
     this.ref       = ref;
