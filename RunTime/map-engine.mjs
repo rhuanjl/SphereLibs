@@ -199,20 +199,31 @@ export default class MapEngine
      * it awaits that map's onExit script then awaits setMap for the new map
      * returns a promise that resolves after awaiting the new map's onEnter script
      * 
-     * @returns {Promise<void>} set - was the map set
-     * @param {string} newMap name of mapFile to change to ".mem" format
+     * Optionally takes x and y coordinates to move the camera object to
+     * Also optionally takes a layer parameter - if your camera object is an entity this
+     * can set it to a different layer on the new map.
+     *
+     * @param {string} newMap - name of map file to change to
+     * @param {number} [x=this._camera.x] - x coordinate to set the camera to
+     * @param {number} [y=this._camera.y] - y coordinate to set the camera to
+     * @param {number} [layer=-1] - layer coordinate to set the "camera" to
+     * @returns
+     * @memberof MapEngine
      */
-    async changeMap(newMap)
+    async changeMap(newMap, x = this._camera.x, y = this._camera.y, layer = -1)
     {
-        if (this.started === true)
-        {
-            await this.MEngine.setMap(newMap);
-            return this.MEngine.changing;
-        }
-        else
+        if (this.started !== true)
         {
             throw new Error("Attempt to change map when the map-engine is not running.");
         }
+        await this.MEngine.setMap(newMap);
+        this._camera.x = x;
+        this._camera.y = y;
+        if (layer > -1)
+        {
+            this._camera.layer = layer;
+        }
+        return this.MEngine.changing;
     }
 
     /**
