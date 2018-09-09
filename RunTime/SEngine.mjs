@@ -28,6 +28,7 @@
  * dealings in this Software without prior written authorization.
  */
 
+/// <reference path="../SphereV2.d.ts" />
 
 /*Direct dependencies
 input.mjs - for input handling
@@ -50,7 +51,6 @@ const spriteX = 9;
 const spriteLAYER = 10;
 
 /**
- * SEngine
  * An instance of SEngine is an environment for Sprites
  * Any given map can only use one instance at a time
  * In most games just one instance will be required
@@ -114,7 +114,7 @@ export default class SEngine
     /**
      * Add an entity to your SEngine
      * This is a wrapper around new Entity that supplies certain required environment variables
-     * use this instead of calling new Entity diretly
+     * use this instead of calling new Entity directly
      * 
      * @param {string} id -id/name for the entity, 
      * @param {Sprite} sprite - sprite object (see Sprite class below)
@@ -152,12 +152,15 @@ export default class SEngine
 
 
     /**
-     * reset(mapWidth, mapHeight,mapLayers, surface)
      * Initialises/Resets SEngine for a new map
+     * 
      * When using SEngine with MEngine
-     * MEngine will call this when yous et a map
+     * MEngine will call this when you set a map
+     * 
      * If not using MEngine you must call this yourself
+     * 
      * Use it to set the width, height and number of layers of the map your sprites can move on
+     * 
      * This initialises collision detection and sets this.ready to true
      * calling it also deletes any entities for whom persist = false
      * 
@@ -201,7 +204,6 @@ export default class SEngine
     }
 
     /**
-     * getEntity(id)
      * Returns the entity object represented by the supplied id
      * 
      * @param {string} id 
@@ -222,20 +224,19 @@ export default class SEngine
     }
 
     /**
-     * addInput(key, continuous, parameter, script)
      * Binds the function: script to the key: key
-     * if continuous is false the function will only be called once each time the key is pressed
-     * if continous is true the function will be called every frame as long as the key is pressed
-     * the parameter object will be passed to the function as its second parameter the runtime
+     * 
+     * - if continuous is false the function will only be called once each time the key is pressed
+     * - if continous is true the function will be called every frame as long as the key is pressed
+     * - the parameter object will be passed to the function as its second parameter the runtime
      * object as its first
      * 
      * Note you must call SEngine.input.takeInput() to enable the input
-     * 
      * @param {Key} key 
      * @param {boolean} continuous 
      * @param {object} parameter 
-     * @param {function} onPress
-     * @param {function} onRelease 
+     * @param {function():void} onPress
+     * @param {function():void} onRelease 
      * @returns {number}
      * @memberof SEngine
      */
@@ -276,7 +277,6 @@ export default class SEngine
     }
 
     /**
-     * idle ()
      * this.waiting = number of entities with no action queued
      * this returns true if that is all entities - i.e. if nothing is happening
      * 
@@ -289,8 +289,13 @@ export default class SEngine
     }
 
     /**
-     * Adds simple 4 directional movement + talk activation to the supplied entity
-     * Note you must call SEngine.input.takeInput() to enable the input
+     * Adds simple 4 directional movement + talk activation to the supplied entity.
+     * 
+     * Additionally makes the engine treat the specified entity as the player character wherever that is relevant.
+     * 
+     * If this is called on two entities the call to the second one replaces the call to the first one.
+     * 
+     * Note you must call SEngine.input.takeInput() to enable the input.
      * 
      * @param {Entity} entity - object representing an entity within this SEngine instance
      * @memberof SEngine
@@ -321,6 +326,14 @@ export default class SEngine
         }
     }
 
+    /**
+     * Removes the input added with addDefaultInput
+     * 
+     * Returns false if nothing found to remove
+     *
+     * @returns
+     * @memberof SEngine
+     */
     removeDefaultInput()
     {
         if (this._default === true)
@@ -345,12 +358,11 @@ export default class SEngine
     }
 
     /**
-     * update 
      * updates the system this does the following things
      * 1. checks for any inputs added with addInput above
      * 2. loops through all entities processing the first action in their queues
-     *         - if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
-     *         - i.e. the next action is processed too
+     *     - if the action is a teleport (type spriteX/spriteY/spriteLayer) it's free
+     *     - i.e. the next action is processed too
      * 
      * NOTE when using MEngine with SEngine MEngine.update calls this function
      * Only call this yourself if not using MENgine
@@ -724,16 +736,15 @@ export default class SEngine
     }
 
     /**
-     * Draw one layer of entities
-     * Self explanatory
+     * Draw the entities on the specified layer
+     * To the specified surface at the provided offset and with the provide zoom
+     *
+     * When using MEngine this will be called from within MEngine#render
      * 
-     * Note when using MEngine this is called by MEngine#render
-     * Only call it yourself if using SEngine without MEngine
-     * 
-     * If you have multiple layers of entities and are not using MEngine
-     * You will need to call it once per layer
-     * @param {object} [surface=Surface.Screen] 
-     * @param {number} [layer=0] 
+     * @param {[number, number]} [offset=[0, 0]]
+     * @param {number} [zoom=1]
+     * @param {Surface} [surface=Surface.Screen]
+     * @param {number} [layer=0]
      * @memberof SEngine
      */
     renderLayer(offset = [0, 0], zoom = 1, surface = Surface.Screen, layer = 0)
@@ -799,7 +810,6 @@ export default class SEngine
     }
 
     /**
-     * loadMapEntities (list, scripts)
      * This is called when setting a map in MEngine to load all the map entities
      * 
      * #DOCUMENT me - this needs better explanation for use without MEngine
@@ -826,7 +836,6 @@ export default class SEngine
     }
 
     /**
-     * lazyLoadSprite (fileName)
      * Checks an array of pre-loaded spritesets for the requested sprite
      * If the sprite is found returns it
      * If not found loads the sprite, adds it to the array and returns it
@@ -845,11 +854,10 @@ export default class SEngine
         return this.sprites[name];
     }
 
-    //Remaining SENgine functions are internal use only
-    //scroll down to Entity class to see more external use functions
-
     /**
-     * for internal use only - this function initialises collision information
+     * For internal use only
+     * 
+     * this function initialises collision information
      * pulled out into a seperate function from reset() for neatness/intelligibility
      * @param {number} mapWidth
      * @param {number} mapHeight
@@ -912,12 +920,10 @@ export default class SEngine
         this.CEngine.tFract = this._tFract;
     }
 
-    //function for internal use only
-    //used when adding new entities to the engine AND when changing map
-    //called from SEngine#addEntity and from SEngine#reset, should not be used anywhere else
-
     /**
-     *
+     * For internal use only
+     * 
+     * called from SEngine#addEntity and from SEngine#reset, should not be used anywhere else
      *
      * @param {Entity} entity
      * @memberof SEngine
@@ -943,13 +949,15 @@ export default class SEngine
         this._renders[layer].push(entity);
     }
 
-
-    //function for internal use only
-    //updates which collision segment an entity is in
-    //note this does not check for collisions
     /**
-     *
-     *
+     * For internal use only
+     * 
+     * Called when:
+     * - creating an entity to put them into the collision system
+     * - after an entity moves to update where they are for future collision checks
+     * - when destroying an entity to remove them from the collision system
+     * - upon calling reset() to reset all collsiion information
+     * 
      * @param {number} ref
      * @param {number} x
      * @param {number} y
@@ -1020,12 +1028,10 @@ export default class SEngine
         }
     }
 
-    //popSegment and pushSegment - these are part of updateColisions
-    //should never be used anywhere else
-    //inlining these two functions in the above could optimise
-    //but would be a pain - particularly if supporting layer changes
-    //hopefully JIT should inline these
     /**
+     * For internal use only
+     * 
+     * called only from updateCollisions seperated only for neatness
      * @param {number} i
      * @param {number} j
      * @param {number} layer
@@ -1051,6 +1057,9 @@ export default class SEngine
     }
 
     /**
+     * For internal use only
+     * 
+     * called only from updateCollisions seperated only for neatness
      * @param {number} i
      * @param {number} j
      * @param {number} layer
@@ -1119,15 +1128,14 @@ export function loadSES(inputFile)
 }
 
 
-//this class is intentionally not exported
-//always create Entities via the SEngine#addEntity method
-//it uses this constructor and returns the object but sets lots of default values based on the SEngine instance
 /**
  * A class representing an Entity
+ * 
  * this class is intentionally not exported
  * always create Entities via the SEngine#addEntity method
  * 
- * However each entity you create that way will be an instance of this class
+ * However each entity you create will be an instance of this class
+ * 
  * Read down for methods and properties available for use
  * 
  * @class Entity
@@ -1277,7 +1285,9 @@ class Entity
 
 
     /**
-     * get the sprite object
+     * Sprites may be updated via direct assignment: Entity#Sprite = newSprite
+     * 
+     * Warning there is a lot of hidden cost when doing this - so don't do it every frame
      * 
      * @memberof Entity
      */
@@ -1287,9 +1297,6 @@ class Entity
     }
 
     /**
-     * Set the sprite object
-     * entityObject.sprite = spriteObject;
-     * Supply the new spriteObject as the parameter
      * 
      * @param {Sprite} sprite
      * @memberof Entity
@@ -1376,6 +1383,26 @@ class Entity
         }
     }
 
+    /**
+     * Speed of a given entity
+     * 
+     * Stored as Vectors per frame * 128
+     * 
+     * Update to make the entitiy move faster/slower
+     * 
+     * Value is always an integer if a float is provided it will be rounded down
+     *
+     * @memberof Entity
+     */
+    get speed()
+    {
+        return this._speed;
+    }
+
+    /**
+     * @param {number} value
+     * @memberof Entity
+     */
     set speed(value)
     {
         const flooredValue = value |0;
@@ -1391,15 +1418,11 @@ class Entity
         }
     }
 
-    get speed()
-    {
-        return this._speed;
-    }
-
     /**
-     * faceEntity(entity, immediate = true)
-     * makes this Entity face towards entity
+     * makes this Entity face towards the specified entity
+     * 
      * if immediate is true this is done by setting properties immediately
+     * 
      * if immediate is false it is queued to happen after any other queued movements
      * 
      * @param {Entity} entity 
@@ -1438,9 +1461,7 @@ class Entity
 
     }
 
-    //#FIX Me this will show triggers as obstructions, could that be misleading?
     /**
-     * Entity#obstructions
      * an array of items obstructing the entity
      * 
      * @readonly
@@ -1448,33 +1469,32 @@ class Entity
      */
     get obstructions ()
     {
-        if (this.inUse === true)
-        {
-            const dirs = this._sprite.dirs;
-            const obstructions = [];
-            const collisionTest = this.SEngine.CEngine.collide;
-            const id = this.id;
-            const layer = this.internalLayer;
-            const x = this._x;
-            const y = this._y;
-            const poly = this.poly;
-            for (let i = 0, length = dirs.length; i < length; ++i)
-            {
-                obstructions.push({direction : dirs[i].id, collisions : collisionTest(id, layer, x, y, dirs[i].vector[0], dirs[i].vector[1], poly)});
-            }
-            return obstructions;
-        }
-        else
+        if (this.inUse !== true)
         {
             throw new SEngineError("obstructions requested for entity that is not in use.");
         }
+
+        const dirs = this._sprite.dirs;
+        const obstructions = [];
+        const collisionTest = this.SEngine.CEngine.collide;
+        const id = this.id;
+        const layer = this.internalLayer;
+        const x = this._x;
+        const y = this._y;
+        const poly = this.poly;
+        for (let i = 0, length = dirs.length; i < length; ++i)
+        {
+            obstructions.push({direction : dirs[i].id, collisions : collisionTest(id, layer, x, y, dirs[i].vector[0], dirs[i].vector[1], poly)});
+        }
+        return obstructions;
     }
 
-    //#Finalise me - experimental method
     /**
-     * Specifies whether the entity would be obstructed with it's current x,y on the specified layer
+     * Experimental method
      * 
-     * @param {any} layer 
+     * Specifies whether the entity would be obstructed with it's current x, y if it was on the specified layer
+     * 
+     * @param {number} layer 
      * @returns 
      * @memberof Entity
      */
@@ -1500,11 +1520,10 @@ class Entity
     }
 
     /**
-     * obstructionsInDirection(direction)
      * Specifies whether the entity would be obstructed
      * if it attempted to move in the specified direction
      * 
-     * @param {any} direction 
+     * @param {string} direction 
      * @returns 
      * @memberof Entity
      */
@@ -1533,8 +1552,11 @@ class Entity
     }
 
     /**
-     * Entity#layer
-     * queues a teleport to the specified layer
+     * Getter/Setter for coordinate
+     * 
+     * Reading returns current value
+     * 
+     * Writing queues a teleport to the specified location
      * 
      * @memberof Entity
      */
@@ -1548,8 +1570,11 @@ class Entity
     }
 
     /**
-     * Entity#x
-     * queues a teleport to the specified x
+     * Getter/Setter for coordinate
+     * 
+     * Reading returns current value
+     * 
+     * Writing queues a teleport to the specified location
      * 
      * @memberof Entity
      */
@@ -1567,9 +1592,11 @@ class Entity
     }
 
     /**
-     * Entity#y
-     * queues a teleport to the specified y
+     * Getter/Setter for coordinate
      * 
+     * Reading returns current value
+     * 
+     * Writing queues a teleport to the specified location
      * @memberof Entity
      */
     set y (value)
@@ -1591,7 +1618,6 @@ class Entity
     }
 
     /**
-     * Entity#waiting
      * True if the entity has no actions queued
      * Teleports are not counted as they are executed for free
      * 
@@ -1616,7 +1642,7 @@ class Entity
     }
 
     /**
-     * Returns number of actions queued excluding teleports
+     * Number of actions queued excluding teleports
      * 
      * @readonly
      * @memberof Entity
@@ -1644,9 +1670,7 @@ class Entity
 
 
     /**
-     * Entity#fullQueueLength
-     * Returns the number of actions queued
-     * Including teleports
+     * Number of actions queued including teleports
      * 
      * @readonly
      * @memberof Entity
@@ -1656,18 +1680,22 @@ class Entity
         return this.insert - this.end;
     }
 
-    //wipe out an entity's queue - cancels any planned actions
+    /**
+     * Wipe out an entity's queue - cancels any planned actions
+     *
+     * @memberof Entity
+     */
     clearQueue()
     {
         this.insert = 0;
         this.end = 0;
     }
 
+    // #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
+
     /**
-     * Entity#direction
      * The name of the direction the entity is facing e.g. "north"
      * 
-     * #OPTIMISE_ME - next two methods could probably be faster with a WeakMap
      * @memberof Entity
      */
     get direction()
@@ -1685,10 +1713,9 @@ class Entity
     }
 
     /**
-     * Entity#destroy()
-     * "remove" entity from SEngine
-     * if processQueue is true any remaining actions are completed first
-     * if it's false or omitted remaining actions are cancelled 
+     * Queue removal of entity from SEngine
+     * - if processQueue is true any remaining actions are completed first
+     * - if it's false or omitted remaining actions are cancelled 
      * 
      * Entity is not fully removed, however it is removed from:
      * - collision detection and
@@ -1710,19 +1737,23 @@ class Entity
     }
 
     /**
-     * queueMove (dir, units = 1, type = 0, script)
-     * function for queuing movement commands
+     * Queue an Entity command
+     * 
      * dir = name of direction
+     * 
      * units = how far to move
-     * note specifying 0 (or negative )units = move forever or until clearQueue is called
-     * type 0 (or no specified type) = move
-     * type 1 = animate without moving
-     * type 2 = execute the function passed as the script parameter
-     *             - note 1 : assumed to be a function already - don't pass a string,
-     *             - note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
-     * type 3 = face specified direction
+     * note specifying 0 (or negative) units = move forever or until clearQueue is called
+     * 
+     * - type 0 (or no specified type) = move
+     * - type 1 = animate without moving
+     * - type 2 = execute the function passed as the script parameter
+     *     - note 1 : assumed to be a function already - don't pass a string,
+     *     - note 2 : it will be executed with runTime passed as a parameter (property of SEngine object)
+     * - type 3 = face specified direction
+     * 
      * ...space for future options
-     * Note 7-10 are reserved for features used through other Entity methods, don't use directly
+     * 
+     * Types 7-10 are reserved for features used through other Entity methods, don't use directly
      * @param {string} dir 
      * @param {number} [units=1] 
      * @param {number} [type=0] 
@@ -1763,7 +1794,9 @@ class Entity
 
 /**
  * Action factory method used to ensure that queue actions retain same signiture
- * required for performance. Note this an ES5 function not a class also for performance.
+ * required for performance.
+ * 
+ * Note this an ES5 function not a class also for performance.
  * @param {number} type
  * @param {string} direction
  * @param {number} ticks
@@ -1779,14 +1812,17 @@ function Action (type, direction, ticks, pos, script)
     this.script = script;
 }
 
+/**
+ * Default method for certain actions when no method specified
+ *
+ */
 function doNothing () {}
 
 /**
- * a sprite object
- * atlas = texture object containing all the frames
- * template = template object to use - see below
- * id = id for referencing (not currently used afaik)
- * Look further down for LoadSES function - to load sprite from file
+ * - atlas = texture object containing all the frames
+ * - template = template object to use - see below
+ * - id = id for referencing (not currently used afaik)
+ * 
  * @export
  * @class Sprite
  */
@@ -2110,3 +2146,4 @@ class SEngineInput
         this.active     = false;
     }
 }
+

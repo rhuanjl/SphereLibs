@@ -79,8 +79,8 @@ export default class CEngine
      * @param {number} y 
      * @param {number} [d_x=0] 
      * @param {number} [d_y=0] 
-     * @param {any[]} polygons 
-     * @returns {array} collisions
+     * @param {polygon[]} polygons 
+     * @returns {Collision[]} collisions
      * @memberof CEngine
      */
     collide(ref, layer, x, y, d_x=0, d_y=0, polygons)
@@ -340,8 +340,8 @@ export default class CEngine
      * @static
      * @param {number} [x=0] 
      * @param {number} [y=0] 
-     * @param {any} _one 
-     * @param {any} two 
+     * @param {polygon} _one 
+     * @param {polygon} two 
      * @returns {boolean} collided
      * @memberof CEngine
      */
@@ -446,13 +446,12 @@ const triggerCollision = 2;
 const zoneCollision = 3;
 //add more here
 
-
 /**
  * Simple binary chop function - searches through an ordered array of objects
  * looks for the first item with index property greater than or equal to specified value
- * @param {{index : number}[]} array
+ * @param {{index: number}[]} array
  * @param {number} target
- * @returns
+ * @returns {number}
  */
 function findFirst(array, target)
 {
@@ -492,7 +491,7 @@ const terminal = SSj.now() > 0 ? true : false;
  * Used when mapScript is missing the relevant zone or trigger
  * @param {string} name
  * @param {string} type
- * @returns
+ * @returns {{onPlayer : function(): void, onOther : function(): void}}
  */
 function placeHolder(name, type)
 {
@@ -514,7 +513,28 @@ function placeHolder(name, type)
     }
 }
 
+/**@typedef {Object} polygon
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w - for a circle this is the radius
+ * @property {number} h - unused for circles
+ * @property {number} type - 0 = circle, 1 = rectangle
+*/
+
+/**@typedef {Object} Collision  
+ * @property {number} type
+ * @property {string} ref
+ * @property {object} scripts
+*/
+
 //#ENHANCE ME - should this record above/below etc? if yes need to implement above
+/**
+ * 
+ *
+ * @param {number} type
+ * @param {string} ref
+ * @param {any} [scripts={}]
+ */
 function Collision(type, ref, scripts={})//ES5 style intentionally (performance issue)
 {
     this.type      = type;

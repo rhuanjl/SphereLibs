@@ -28,17 +28,14 @@
  * dealings in this Software without prior written authorization.
  */
 
+/// <reference path="../SphereV2.d.ts" />
 
 import {MapBuffer, TileBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
-
-//key class for external use
 /**
- * Map Engine class
- * One MEngine can only draw one map at a time
- * create an instance - normally just one for your game
- * See documentaiton below
+ * MEngine is the core of the MapEngine.
+ * This class handles storing, updating and drawing maps
  * 
  * @export
  * @class MEngine
@@ -46,13 +43,13 @@ import DataStream from "data-stream";
 export default class MEngine
 {
     /**
-     * Creates an instance of MEngine.
      * @param {Object} runTime - object to be given to map scripts when they're called - not currently used
      * @param {Object} SEngine - instance of SEngine class to handle sprites
      * @param {Object} [CEngine=null] - instance of CENgine class to handle collisions (must be shared with the SEngine instance)
      * @param {string} [shaderPath="shaders/"] - path to customised shaders
-     * @param {number} [width=Surface.Screen.width] -dimensions of the surface this will draw on
+     * @param {number} [width=Surface.Screen.width] - dimensions of the surface this will draw on
      * @param {number} [height=Surface.Screen.height]
+     * @param {string} [scriptsPath="scripts/"] - path to map scripts either relative to maps or with a sphereFS prefix
      * @memberof MEngine
      */
     constructor(runTime, SEngine=null, CEngine=null, shaderPath="shaders/", width = Surface.Screen.width, height = Surface.Screen.height, scriptsPath = "scripts/")
@@ -66,6 +63,7 @@ export default class MEngine
         this.transformation = null;
         this.map            = null;//current map - null at first
         this.folder         = "@";
+        /**@type Promise<void> &{done: function(): void} */
         this.changing       = null;
         this.DEBUG_MODE     = false;
         this.col_tile_size  = 100;
@@ -84,8 +82,9 @@ export default class MEngine
     }
 
     /**
-     * update(centre=[0,0], zoom=1)
-     * Called to update the map should be done every frame designed to be used via Dispatch.onUpdate
+     * Called to update the map should be done every frame
+     * 
+     * This is designed to be used via Dispatch.onUpdate
      * 
      * If using SEngine this automatically calls SEngine#update
      * 
@@ -164,12 +163,13 @@ export default class MEngine
     }
 
     /**
-     * render(surface=Surface.Screen, start_layer=0, end_layer=(this.map.layers.length-1))
      * Draw the whole map onto surface
+     * 
      * Intended to be used via Dispatch.onRender
+     * 
      * start_layer and end_layer allow you to draw a specified range of layers only if wanted
-     * Note if using SEngine the call to this.renderLayer calls on to SEngine.renderLayer as well
-     * See below for more detail
+     * 
+     * Note if using SEngine the call to this.renderLayer within this method calls on to SEngine.renderLayer as well
      * @param {any} [surface=Surface.Screen] 
      * @param {number} [start_layer=0] 
      * @param {number} [end_layer=(this.map.layers.length-1)] 
@@ -207,7 +207,7 @@ export default class MEngine
      * 
      * If using SEngine this also draws the entities for the layer via calling SEngine#renderLayer
      * 
-     * @param {any} [surface=Surface.Screen] 
+     * @param {Surface} [surface=Surface.Screen] 
      * @param {number} [layer=0] 
      * @memberof MEngine
      */
@@ -285,7 +285,7 @@ export default class MEngine
      * 
      * #EXPERIMENTAL feature - not fully tested
      * 
-     * @param {object} transformation - a Sphere Transform object
+     * @param {Transform} transformation - a Sphere Transform object
      * @memberof MEngine
      */
     attachTransformation(transformation)
@@ -316,8 +316,6 @@ export default class MEngine
     }
 
     /**
-     * changeRes(width, height)
-     * 
      * Change the standard width and height of the box the map is drawn in
      * 
      * #Experimental feature, not fully tested
@@ -355,18 +353,13 @@ export default class MEngine
     }
 
     /**
-     * setMap(fileName)
+     * Set a map - used to set the first map and to change map later.
      * 
-     * Set a map - used to set the first map and to change map later
      * Note this is an async function use it with an await or a .then
      * if you wish to schedule anything to happen after the map loads
      * 
-     * This should take 1 tick of the event loop/one frame to resolve 
-     * I note however that if you do
-     * MEngine#setMap("new map");
-     * //other function calls
-     * 
-     * That the "other function calls" will resolve BEFORE the map is set
+     * Additionally the promise MEngine#changing will resolve after the
+     * new map's onEnter script has completed
      * 
      * @param {string} fileName -path/name of map to load
      * @memberof MEngine
@@ -393,11 +386,7 @@ export default class MEngine
         const tiles        = new Array(numTiles);
         let triggerID    = 0;
         const triggerNames = [];
-        let cachedDone;
-        this.changing = new Promise ((done) =>{
-            cachedDone = done;
-        });
-        this.changing.done = cachedDone;
+        this.changing = new Changing(()=>{});
 
         for (let i = 0, j = 0; i < numTiles; ++i, j = 0)
         {
@@ -675,7 +664,6 @@ export default class MEngine
                 this.map.layers[i].obsModel.transform = this.map.obsTransform;
             }
         }
-        return true;
     }
 
     /**
@@ -743,7 +731,7 @@ export default class MEngine
 
 
 /**
- * set up a map animation
+ * set up a map animation - function for internal use
  *
  * @param {array} animationsArray
  * @param {number} x
@@ -825,6 +813,19 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
         x    : x,
         y    : y
     };
+}
+
+class Changing extends Promise
+{
+    constructor (method)
+    {
+        let cache;
+        super ((resolve) => {
+            method ();
+            cache = resolve;
+        });
+        this.done = cache;
+    }
 }
 
 
