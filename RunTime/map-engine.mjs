@@ -284,7 +284,7 @@ export default class MapEngine
             {
                 this.update.cancel();
                 this.paused = true;
-                this.yieldInput();
+                this.blockInput = true;
             }
         }
         else
