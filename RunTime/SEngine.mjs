@@ -29,6 +29,7 @@
  */
 
 /// <reference path="../SphereV2.d.ts" />
+//@ts-check
 
 /*Direct dependencies
 input.mjs - for input handling
@@ -235,7 +236,7 @@ export default class SEngine
      * @param {Key} key 
      * @param {boolean} continuous 
      * @param {object} parameter 
-     * @param {function():void} onPress
+     * @param {function(any, any):void} onPress
      * @param {function():void} onRelease 
      * @returns {number}
      * @memberof SEngine
@@ -702,7 +703,7 @@ export default class SEngine
                 else if (action.type === spriteDESTROY)
                 {
                     entity.scripts.onDestroy(this.runTime, entity);
-                    if (this.CEngine.ctype === 1)
+                    if (cType === 1)
                     {
                         this.updateCollisions(i, entity._x, entity._y, 0, 0, entity.internalLayer, entity.internalLayer, false, true);
                     }
@@ -1305,7 +1306,7 @@ class Entity
     {
         const shader   = this._shader;
         this._sprite = sprite;
-        this.model   = new Model(sprite.shape, shader);
+        this.model   = new Model([sprite.shape], shader);
 
         this.model.transform = this.trans;
         let DEBUG_MODE = false;
@@ -1477,17 +1478,32 @@ class Entity
         const dirs = this._sprite.dirs;
         const obstructions = [];
         const collisionTest = this.SEngine.CEngine.collide;
-        const id = this.id;
+        const index = this.index;
         const layer = this.internalLayer;
         const x = this._x;
         const y = this._y;
         const poly = this.poly;
         for (let i = 0, length = dirs.length; i < length; ++i)
         {
-            obstructions.push({direction : dirs[i].id, collisions : collisionTest(id, layer, x, y, dirs[i].vector[0], dirs[i].vector[1], poly)});
+            obstructions.push({direction : dirs[i].id, collisions : collisionTest(index, layer, x, y, dirs[i].vector[0], dirs[i].vector[1], poly)});
         }
         return obstructions;
     }
+
+    get index ()
+    {
+        const entities = this.SEngine.entities;
+        const length = entities.length;
+        for (let index = 0; index < length; ++index)
+        {
+            if (entities[index].id === this.id)
+            {
+                return index;
+            }
+        }
+        throw new SEngineError("Index requested for entity that can not be found.");
+    }
+
 
     /**
      * Experimental method
@@ -1565,7 +1581,7 @@ class Entity
         if (value !== this.internalLayer)
         {
             //need SEngine to process this so queue it
-            this.queueMove(this.dir, value, spriteLAYER);
+            this.queueMove(this.direction, value, spriteLAYER);
         }
     }
 
@@ -1582,7 +1598,7 @@ class Entity
     {
         if (value !== this._x || this.waiting === false)
         {
-            this.queueMove(this.dir, value, spriteX);
+            this.queueMove(this.direction, value, spriteX);
         }
     }
 
@@ -1603,7 +1619,7 @@ class Entity
     {
         if (value !== this._y || this.waiting === false)
         {
-            this.queueMove(this.dir, value, spriteY);
+            this.queueMove(this.direction, value, spriteY);
         }
     }
 
@@ -1707,7 +1723,7 @@ class Entity
     {
         if (value !== this._sprite.dirs[this.dir].id)
         {
-            this.dir = this._sprite.dirs_ID[value];
+            this.dir = this._sprite.dir_Id[value];
             this.needsUpdate = true;//have to set this so that the render function knows to update the sprite
         }
     }
@@ -1733,7 +1749,7 @@ class Entity
         {
             this.clearQueue();
         }
-        this.queueMove(this.dir, 1, spriteDESTROY);
+        this.queueMove(this.direction, 1, spriteDESTROY);
     }
 
     /**
@@ -1840,7 +1856,6 @@ export class Sprite
         this.id     = id;
         this.dirs   = template.dirs;
         this.dir_Id = template.dirs_Id;
-        /** @type {[number, number]} */
         this.o      = [template.x_o,template.y_o];
         this.w      = template.w;
         this.h      = template.h;

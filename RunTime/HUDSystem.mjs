@@ -37,6 +37,8 @@
  * dealings in this Software without prior written authorization.
  */
 
+//@ts-check
+
 import {DrawingBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
 
@@ -52,6 +54,7 @@ export default class HUDSystem
     constructor(enableDynamic = false)
     {
         this.staticShapes  = [];
+        /**@type {number[]} */
         this.types         = [];
         this.staticIDs     = [];
         this.ids           = [];
@@ -509,14 +512,14 @@ export class WindowStyle
      * Use via renderWindow for simple cases
      * @param {any} width 
      * @param {any} height 
-     * @param {any} [mask=Color.White] 
+     * @param {{r: number, g:number, b:number, a:number}} [mask=Color.White] 
      * @returns 
      * @memberof WindowStyle
      */
     compose(width, height, mask=Color.White)
     {
         if (this.upper_left.width  + this.upper_right.width > width ||
-            this.upper_left.height + this.lower_left,height > height)
+            this.upper_left.height + this.lower_left.height > height)
         {
             throw new HUDSystemError("window requested smaller than can be drawn with this style.");
         }
@@ -535,35 +538,34 @@ export class WindowStyle
             {
                 output.drawBuffer(
                     this.upper_left.width  + i * this.background.width,
-                    this.upper_left.height + j * this.background.height, this.background);
+                    this.upper_left.height + j * this.background.height, this.background, false);
             }
         }
 
         //draw top and bottom
         for (let i = 0; i < widthCount; ++i)
         {
-            output.drawBuffer(this.upper_left.width + i * this.top.width, 0, this.top);
-            output.drawBuffer(this.lower_left.width + i * this.top.width, height - this.bottom.height, this.bottom);
+            output.drawBuffer(this.upper_left.width + i * this.top.width, 0, this.top, false);
+            output.drawBuffer(this.lower_left.width + i * this.top.width, height - this.bottom.height, this.bottom, false);
         }
 
         //draw left and right
         for (let i = 0; i < heightCount; ++i)
         {
-            output.drawBuffer(0, this.upper_left.height + i * this.left.height, this.left);
-            output.drawBuffer(width - this.right.width, this.upper_right.height + i * this.right.height, this.right);
+            output.drawBuffer(0, this.upper_left.height + i * this.left.height, this.left, false);
+            output.drawBuffer(width - this.right.width, this.upper_right.height + i * this.right.height, this.right, false);
         }
 
         //draw corners
-        output.drawBuffer(0,                              0,                                this.upper_left);
-        output.drawBuffer(width - this.upper_right.width, 0,                                this.upper_right);
-        output.drawBuffer(0,                              height - this.lower_left.height,  this.lower_left);
-        output.drawBuffer(width - this.lower_right.width, height - this.lower_right.height, this.lower_right);
+        output.drawBuffer(0,                              0,                                this.upper_left, false);
+        output.drawBuffer(width - this.upper_right.width, 0,                                this.upper_right, false);
+        output.drawBuffer(0,                              height - this.lower_left.height,  this.lower_left, false);
+        output.drawBuffer(width - this.lower_right.width, height - this.lower_right.height, this.lower_right, false);
 
         //mask it
         if (mask !== Color.White)
         {
-            const maskArray = [mask.r, mask.g, mask.b, mask.a];
-            output.mask(maskArray);
+            output.mask([mask.r, mask.g, mask.b, mask.a]);
         }
         return output;
     }
