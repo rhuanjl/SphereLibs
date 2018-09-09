@@ -80,6 +80,11 @@
 declare class PixelBuffer
 {
     constructor(buffer : ArrayBuffer, width : number, height : number)
+    data   : ArrayBuffer
+    pixels : Uint32Array
+    rgba   : Uint8Array
+    width  : number
+    height : number
 }
 
 //Internal class do not use directly
@@ -117,7 +122,7 @@ export class TileBuffer extends internalTileBuffer
  */
 export class DrawingBuffer extends PixelBuffer
 {
-    constructor(width : number, height : number, preFilled : boolean, source : DataStream | Texture)
+    constructor(width : number, height : number, preFilled : boolean, source? : DataStream | Texture)
 
     drawBuffer(x : number, y : number, buffer : PixelBuffer, add : boolean) : void
 

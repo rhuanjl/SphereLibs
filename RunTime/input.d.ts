@@ -50,11 +50,15 @@ export default class Input
     disposeInput() : void
 
     /**
-     * Ask to start recieving input
-     * Won't succeed if there is a higher priority input ahead in the queue
+     * Ask to start recieving input.
+     * 
+     * Won't succeed if there is a higher priority input ahead in the queue.
      */
     takeInput() : void
 
+    /**
+     * Stop taking input/yield to another Input.
+     */
     yieldInput() : void
 
     /**
