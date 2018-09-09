@@ -1,4 +1,3 @@
-import { zoneCollision } from "./typings/CEngine";
 
 /**Global namespace containing  properties about the game and engine and a few general methods.*/
 declare namespace Sphere
@@ -216,53 +215,132 @@ declare enum FileOp
 
 declare namespace Surface
 {
+    /**
+     * The backbuffer for the screen
+     * 
+     * Anything drawn to this will be displayed
+     */
     const Screen : Surface
 }
 
-declare class Surface 
+/**
+ * A Surface is a Sphere v2 Texture
+ * that can be drawn to
+ * 
+ * It can also be used to texture a shape
+ */
+declare class Surface extends Texture
 {
+    /**The width in pixels of this Surface */
     width : number
+    /**The height in pixels of this Surface */
     height : number
+    /**The Transform object applied to this Surface */
     transform : Transform
 
+    /**Create a Surface by loading an image file */
+    constructor(filename : string)
+    /**
+     * Create a Surface of specified width and height filled with a Color or
+     * an ArrayBuffer of RGBA Pixel data.
+     * 
+     * Note if using an ArrayBuffer there must be enough data in the buffer or a RangeError will be thrown.
+     */
     constructor(width : number, height : number, content? : Color | ArrayBuffer)
 
+    /**
+     * Copy the data from the surface into a new Texture object 
+     * 
+     * This function should not be used unless you explicitly need to copy the data
+     */
     toTexture() : Texture;
 }
 
 declare class Transform
 {
+    /**Reset this Transform matrix object to an identity matrix*/
     identity() : void
+    /**Compose this  Transform matrix with another one - this one is overwritten with the result*/
     compose (transform : Transform) : void
+    /**Apply a Scale transformation to this Transform */
     scale (sx : number, sy : number, sz? : number) : void
+    /**Apply a Translation transformation to this Transform */
     translate (x : number, y : number, z? : number) : void
+    /**Apply a Rotation transformation to this Transform */
     rotate (angle : number, vx? : number, vy? : number, vz? : number) : void
+    /**Appl */
     project2D(left : number, top : number, right : number, bottom : number, near? : number, far?  : number) : void
     project3D(fov : number, aspect : number, near : number, far : number) : void
     matrix : number [][]
 }
 
+/**
+ * A `Texture` is an image which can used as a texture for shapes drawn using
+ * the Sphere v2 graphics API.
+ */
 declare class Texture
 {
+    /**Construct a Texture object by loading an image file*/
     constructor(filename : string)
+    /**Construct a Texture object from the specified surface object*/
     constructor(surface : Surface)
+    /**
+     * Construct a Texture with the specified width and height either filled
+     * with the specified Color or using the provided ArrayBuffer as RGBA pixel data
+     */
     constructor(width : number, height : number, content : Color | ArrayBuffer)
 
+    /**
+     * Uploads 32-bit RGBA pixel data from `content` (an ArrayBuffer or typed
+     * array) to the texture.  Enough data must be provided to completely rewrite
+     * the texture or a RangeError will be thrown.
+     * 
+     * Note this is a slow operation.
+     */
     upload (data : ArrayBuffer) : void
+
+    /**
+     * Downloads the 32-bit RGBA pixel data from the texture and returns it as a
+	 * new Uint8ClampedArray.
+     *
+     * Note this is a slow operation.
+     */
     download() : Uint8ClampedArray
+
+    /**The name of the image file the texture was loaded from*/
     fileName : string
+    /**The width of the texture in pixels*/
     width : number
+    /**The height of the texture in pixels*/
     height : number
 }
 
+/**
+ * A shader programme used when drawing Shapes and Models
+ * */
 declare class Shader
 {
-    constructor(options : object)
+    /**
+     * Construct a new Shader
+     * Constructs a shader program from a set of GLSL shader sources.
+     * 
+     * `options` specifies the shader sources.
+     * - vertexShader the path and file name for the glsl vertexShader to use
+     * - fragmentShader the path and file name for the glsl fragment Shader to use 
+     * 
+     */
+    constructor(options : {vertexShader : string, fragmentShader : string})
+    /**Set a Float uniform value with `name` to `value`*/
     setFloat (name : string, value : number) : void
+    /**Set an Int uniform value with `name` to `value`*/
     setInt (name : string, value : number) : void
+    /**Set a Float vector uniform with `name` to the supplied `values` */
     setFloatVector(name : string, values : [number, number] | [number, number, number] | [number, number, number, number]) : void
+    /**Set an Int vector uniform with `name` to the supplied `values` */
     setIntVector(name : string, values : [number, number] | [number, number, number] | [number, number, number, number]) : void
+    /**Set a Float 4vector uniform with `name` to the rgba values of the supplied `color` */
     setColorVector(name : string, color : Color) : void
+    /**Create and return a copy of this Shader */
     clone() : Shader
 }
 
@@ -273,6 +351,11 @@ declare namespace Color
     const Blue : Color
     const Green : Color
 
+    /**
+     * Create a new Color object by mixing two Colors
+     * 
+     * The factor parameters indicate the weighting to give each color
+     */
     function mix (color1 : Color, color2 : Color, factor1 : number, factor2 : number) : Color
 }
 
@@ -447,11 +530,30 @@ declare enum ShapeType
     TriStrip
 }
 
+
+/**
+ * A `Shape` represents a group of textured triangles, line segments, or points to
+ * be drawn to a surface.  Shapes can be drawn directly, or added to a `Model` to
+ * group related rendering operations together.
+ */
 declare class Shape
 {
+    /** Constructs a primitive shape from a vertex list and optional index list,
+     * textured with a specified `Texture` image, provide null if you do not want
+     * to texture the shape.
+     * 
+     * `type` specifies the type of primitive to draw (see `ShapeType` enum).
+     */
     constructor(type: number, texture : Texture | null, vertexlist : VertexList, indexlist? : IndexList)
 
+    /**The Image to use when texturing the shape. This can be null. */
     texture : Texture
+    /**The IndexList being used by the shape */
+    indexList : IndexList
+    /**The vertex list containing the vertices for this shape. */
+    vertexList : VertexList
+
+    static drawImediate()
 }
 
 /** 
