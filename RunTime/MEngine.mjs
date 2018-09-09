@@ -63,8 +63,9 @@ export default class MEngine
         this.transformation = null;
         this.map            = null;//current map - null at first
         this.folder         = "@";
-        /**@type Promise<void> &{done: function(): void} */
+        /**@type Promise<void> */
         this.changing       = null;
+        this._changingDone  = function () {};
         this.DEBUG_MODE     = false;
         this.col_tile_size  = 100;
         this.useSEngine     = false;
@@ -116,7 +117,7 @@ export default class MEngine
                 this.onEnter(this.runTime, this.map)]
             ).then (() =>
             {
-                this.changing.done();
+                this._changingDone();
             });
         }
         else if (this.map.leaving === true)
@@ -386,7 +387,9 @@ export default class MEngine
         const tiles        = new Array(numTiles);
         let triggerID    = 0;
         const triggerNames = [];
-        this.changing = new Changing(()=>{});
+        this.changing = new Promise((r)=>{
+            this._changingDone =  r;
+        });
 
         for (let i = 0, j = 0; i < numTiles; ++i, j = 0)
         {
@@ -814,20 +817,6 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
         y    : y
     };
 }
-
-class Changing extends Promise
-{
-    constructor (method)
-    {
-        let cache;
-        super ((resolve) => {
-            method ();
-            cache = resolve;
-        });
-        this.done = cache;
-    }
-}
-
 
 //template for map scripts also used as blank version if none supplied
 const templateScripts =
