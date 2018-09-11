@@ -60,7 +60,9 @@ export default class CEngine
      */
     constructor(cType=1)
     {
+        /**@type {SEngine|null} */
         this.SEngine    = null;
+        /**@type {MEngine|null} */
         this.MEngine    = null;
         this.cType      = cType;
         this.tFract     = 0.1;
@@ -535,6 +537,7 @@ const emptyScripts = {};
  * @param {number} type
  * @param {string|number} ref
  * @param {any} [scripts={}]
+ * @this {{type:number, ref:string|number, scripts:any}}
  * @returns {void}
  */
 function Collision(type, ref, scripts=emptyScripts)//ES5 style intentionally (performance issue)
@@ -546,6 +549,11 @@ function Collision(type, ref, scripts=emptyScripts)//ES5 style intentionally (pe
 
 class CEngineError extends Error
 {
+    /**
+     *Creates an instance of CEngineError.
+     * @param {string} message
+     * @memberof CEngineError
+     */
     constructor(message)
     {
         super("CEngine Error: " + message);

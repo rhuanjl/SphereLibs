@@ -19,9 +19,10 @@ declare class Entity
     trans   : Transform
     _shader : Shader
     model   : Model
-    _scale  : number
+    _scale  : [number, number]
     poly    : {type : number, x : number, y : number, w : number, h : number}[]
     zoom    : number
+    readonly index : number
 
     tile_x  : number
     tile_y  : number
@@ -52,7 +53,7 @@ declare class Entity
     frozen : boolean
     /**when visible is false the entity will not be drawn*/
     visible : boolean
-    scale : number
+    scale : [number, number]
     frame : number
     ticks : number
     dir : number
@@ -70,6 +71,7 @@ declare class Entity
     data : object
     SEngine : SEngine
     inUse : boolean
+    obs_model : Model // only availabel in debug mode
 
     /**
      * Sprites may be updated via direct assignment: Entity#Sprite = newSprite
@@ -105,7 +107,7 @@ declare class Entity
     /**
      * Experimental method
      * 
-     * Returns whether the entity would be obstructed by with it's current x, y if it was on the specified layer
+     * Returns whether the entity would would be obstructed by with it's current x, y if it was on the specified layer
      */ 
     obstructedOnLayer(layer: number) : boolean
 
@@ -213,6 +215,34 @@ declare class Entity
      * Types 7-10 are reserved for features used through other Entity methods, don't use directly
      */
     queueMove (dir: string, units?: number, type?: number, script?: Function)
+}
+
+declare type mapAnimation = {
+    ref : number;
+    start : number;
+    data : {
+        model : Model;
+        list : animTile[];
+        current : number;
+        needsUpdate : boolean;
+        last : number ;
+        trans : Transform;
+        shader : Shader;
+    }
+}
+
+declare type animTile = {
+    index : number;
+    offset : number;
+    delay : number;
+    next : number;
+}
+
+declare type trigger = {
+    name : string
+    id : number
+    x : number
+    index : number
 }
 
 declare class CEngine

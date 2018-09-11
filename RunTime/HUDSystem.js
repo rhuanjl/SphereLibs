@@ -125,6 +125,7 @@ export default class HUDSystem
         {
             this.ids.push(this.nextID);
             this.dynamics.push(dynamicData);
+            dynamicData.token = this.nextID;
             this.dynamicIDs.push(this.nextID);
             this.types.push(1);
             this.nextID += 1;
@@ -476,15 +477,15 @@ export class WindowStyle
         this.corners[3] = data.read(4);
         data.position = data.position + 40;
 
-        this.upper_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.top         = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.upper_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.right       = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.lower_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.bottom      = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.lower_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.left        = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
-        this.background  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), true, data);
+        this.upper_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.top         = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.upper_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.right       = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.lower_right = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.bottom      = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.lower_left  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.left        = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
+        this.background  = new DrawingBuffer(data.readUint16(true), data.readUint16(true), data);
 
     }
 
@@ -522,7 +523,7 @@ export class WindowStyle
         {
             throw new HUDSystemError("window requested smaller than can be drawn with this style.");
         }
-        const output = new DrawingBuffer(width, height, false);
+        const output = new DrawingBuffer(width, height);
 
 
         const widthCount  = Math.ceil((width  - this.upper_left.width  - this.upper_right.width) / this.top.width);

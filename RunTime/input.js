@@ -44,6 +44,12 @@ export default class Input
         this.value = 0;
         this.focus = new Focus({priority});
     }
+
+    get hasPriority ()
+    {
+        return this.focus.hasFocus;
+    }
+
     /**
      * 
      * 

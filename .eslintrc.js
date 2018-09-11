@@ -23,6 +23,7 @@ module.exports = {
         "Color": false,
         "Font": false,
         "Texture": false,
+        "FileStream": false,
         "FileOp": false,
         "Key": false,
         "Keyboard": false,
