@@ -95,7 +95,6 @@ export default class SEngine
         this.folder       = "@";
         /*** @type {[name : string]: Sprite } */
         this.sprites      = {};
-        /*** @type {[number, number]} */
         this.offset       = [0,0];
         this.width        = 0;
         this.height       = 0;

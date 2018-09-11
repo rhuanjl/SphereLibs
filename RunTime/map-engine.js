@@ -218,7 +218,7 @@ export default class MapEngine
         {
             this._camera.layer = layer;
         }
-        return this.MEngine.changing;
+        await this.MEngine.changing;
     }
 
     /**
