@@ -28,8 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-//@ts-check
-/// <reference path="../SphereV2.d.ts" />
 
 import {MapBuffer, TileBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";

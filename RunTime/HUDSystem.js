@@ -37,7 +37,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-//@ts-check
 
 import {DrawingBuffer} from "./PixelBuffer";
 import DataStream from "data-stream";
