@@ -28,9 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-/// <reference path="../SphereV2.d.ts" />
-//@ts-check
-
 /*Direct dependencies
 input.mjs - for input handling
 DataStream (from sphere Run time) for loading sprite files

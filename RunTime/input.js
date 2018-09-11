@@ -28,8 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-//@ts-check
-
 import Focus from "focus-target";
 const kb = Keyboard.Default;
 

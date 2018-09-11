@@ -74,8 +74,6 @@
 
 //#FIX ME needs blend modes so you can draw multiple things on one buffer properly
 
-//@ts-check
-
 //Internal class do not use directly
 class PixelBuffer
 {

@@ -28,7 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-//@ts-check
 /*
 
 CEngine is designed to:

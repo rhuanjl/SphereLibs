@@ -28,10 +28,6 @@
  * dealings in this Software without prior written authorization.
  */
 
-//@ts-check
-/// <reference path="../SphereV2.d.ts" />
-/// <reference path="./SphereLibs.d.ts" />
-
 //Import the components of the map-engine
 import MEngine from "./MEngine";//core map-engine
 import SEngine, {loadSES} from "./SEngine";//Sprite/Entity handling and function for loading a sprite
