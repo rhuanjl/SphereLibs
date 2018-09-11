@@ -29,8 +29,6 @@
  */
 
 //@ts-check
-
-/// <reference path="../SphereV2.d.ts" />
 import SEngine from "./SEngine";
 import MEngine from "./MEngine";
 
@@ -69,7 +67,7 @@ export default class CEngine
      * Supports rectangles and circles only
      * 
      */
-    static polysCollide(x: number, y: number, _one: Polygon, two: Polygon): boolean
+    //static polysCollide(x: number, y: number, _one: Polygon, two: Polygon): boolean
 
 }
 
