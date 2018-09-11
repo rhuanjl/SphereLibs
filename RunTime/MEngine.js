@@ -56,13 +56,16 @@ export default class MEngine
         this.shader         = new Shader({
             fragmentFile : shaderPath + "customised.frag.glsl",
             vertexFile   : shaderPath + "customised.vert.glsl"});
+
+        /**@type {number} */
         this.s_width        = width;
         this.s_height       = height;
+        this.maxLayer       = 0;
         this.useTransform   = false;
         this.transformation = null;
         this.map            = null;//current map - null at first
         this.folder         = "@";
-        /**@type Promise<void> */
+        /**@type {Promise<void>|null} */
         this.changing       = null;
         this._changingDone  = function () {};
         this.DEBUG_MODE     = false;
@@ -95,6 +98,10 @@ export default class MEngine
      */
     update(x = 0, y = 0, zoom = 1)
     {
+        if (this.map === null)
+        {
+            throw new MEngineError("Attempting to update map when there is no map");
+        }
         //update the offset coordinates
         const surfaceHeight = this.s_height;
         const surfaceWidth = this.s_width;
@@ -175,9 +182,12 @@ export default class MEngine
      * @param {number} [end_layer=(this.map.layers.length-1)] 
      * @memberof MEngine
      */
-    render(surface=Surface.Screen, start_layer=0, end_layer=(this.map.layers.length-1))
+    render(surface=Surface.Screen, start_layer=0, end_layer=(this.maxLayer))
     {
-
+        if (this.map === null)
+        {
+            throw new MEngineError ("Attempting to render a map when there is no map");
+        }
         if (this.DEBUG_MODE === true)
         {
             this.map.obsTransform.identity();
@@ -213,6 +223,10 @@ export default class MEngine
      */
     renderLayer(surface=Surface.Screen, layer=0)
     {
+        if (this.map === null)
+        {
+            throw new MEngineError ("Attempting to render a map when there is no map");
+        }
         const thisLayer = this.map.layers[layer];
         if (thisLayer.visible === true)
         {
@@ -290,6 +304,10 @@ export default class MEngine
      */
     attachTransformation(transformation)
     {
+        if (this.map === null)
+        {
+            throw new MEngineError ("Attempting to transform a map when there is no map");
+        }
         this.useTransformation = true;
         this.transformation = transformation;
         for (let i = 0; i < this.map.layers.length; ++i)
@@ -306,6 +324,10 @@ export default class MEngine
      */
     detachTransformation()
     {
+        if (this.map === null)
+        {
+            throw new MEngineError ("Attempting to remove a transform from a map when there is no map");
+        }
         this.useTransformation = false;
         this.transformation = null;
         for (let i = 0; i < this.map.layers.length; ++i)
@@ -327,6 +349,10 @@ export default class MEngine
      */
     changeRes(width, height)
     {
+        if (this.map === null)
+        {
+            throw new MEngineError ("Attempting to change resolution of a map when there is no map");
+        }
         if (width >= this.map.width && height >= this.map.height)
         {
             if (width === this.s_width && height === this.s_height)
@@ -456,6 +482,7 @@ export default class MEngine
             {x : 0,           y : screenHeight, u : 0,                       v : 1 - screenHeight / fullHeight },
             {x : screenWidth, y : screenHeight, u : screenWidth / fullWidth, v : 1 - screenHeight / fullHeight }]);
         const debugColour = new Color(0.9, 0.6, 0);
+        /**@type {mapAnimation[]} */
         const inUseAnimations = [];
         for (let i = 0, j = 0, k = 0, l = 0, tileIndex = 0; i < numLayers; ++i, j = 0, k = 0, l = 0)
         {
@@ -472,6 +499,7 @@ export default class MEngine
                 reflective : inputFile.readUint8(),//#FIX ME implement reflective
                 segments   : new Array(inputFile.readUint32(true)),
                 zones      : new Array(inputFile.readUint16(true)),
+                /**@type {trigger[]} */
                 triggers   : new Array(inputFile.readUint16(true)),
                 tileMap    : new Array(height),
                 visible    : true,
@@ -574,6 +602,7 @@ export default class MEngine
                     index : x + inputFile.readUint16(true) * width
                 };
             }
+            //@ts-ignore
             layers[i].triggers.sort((a, b) =>
             {
                 return a.index - b.index;
@@ -634,6 +663,7 @@ export default class MEngine
             this.SEngine.loadMapEntities(entities, loadedScripts.entityScripts);
         }
 
+        this.maxLayer = numLayers -1;
         this.map =
         {
             layers         : layers,
@@ -691,6 +721,10 @@ export default class MEngine
      */
     addTrigger(name, x, y, layer, onPlayer, onOther = function () {}, mode = 0)
     {
+        if (this.map === null)
+        {
+            throw new MEngineError("Attempt to add a trigger to map when there is no map.");
+        }
         const dup = this.map.triggerScripts.hasOwnProperty.call(this.map.triggerScripts, name);
 
         if (mode === 0 && dup === true) // mode 0 don't accept duplicate
@@ -705,13 +739,15 @@ export default class MEngine
             };
         }
         const index = x + y * this.map.layers[layer].width;
+        /**@type {trigger[]} */
         const triggers = this.map.layers[layer].triggers;
-        const position = triggers.indexOf((trigger) => { return trigger.index > index; });
+        //@ts-ignore
+        const position = triggers.indexOf((trig) => {return trig.index > index;});
         const newTrigger = {
-            name      : name,
-            x         : x,
-            triggerID : name.length,
-            index     : index
+            name  : name,
+            x     : x,
+            id    : name.length,
+            index : index
         };
         if (position === -1)
         {
@@ -725,9 +761,37 @@ export default class MEngine
 
     // Methods to call when various events happen
     // intended to be overwritten
+    /**
+     *
+     *
+     * @param {unknown} runTime
+     * @param {*} map
+     * @memberof MEngine
+     */
     onExit   (runTime, map) {}
+    /**
+     *
+     *
+     * @param {unknown} runTime
+     * @param {*} map
+     * @memberof MEngine
+     */
     onEnter  (runTime, map) {}
+    /**
+     *
+     *
+     * @param {unknown} runTime
+     * @param {*} map
+     * @memberof MEngine
+     */
     onUpdate (runTime, map) {}
+    /**
+     *
+     *
+     * @param {unknown} runTime
+     * @param {*} map
+     * @memberof MEngine
+     */
     onRender (runTime, map) {}
 }
 
@@ -740,7 +804,7 @@ export default class MEngine
  * @param {number} y
  * @param {number} firstTile
  * @param {Shader} shader
- * @param {array} inUseAnimations
+ * @param {mapAnimation[]} inUseAnimations
  * @returns
  */
 function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
@@ -820,13 +884,21 @@ function MapAnimation(animationsArray, x, y, firstTile, shader, inUseAnimations)
 //template for map scripts also used as blank version if none supplied
 const templateScripts =
 {
+    //@ts-ignore
     onExit       : function (runTime, map) {},
+    //@ts-ignore
     onEnter      : function (runTime, map) {},
+    //@ts-ignore
     onUpdate     : function (runTime, map) {},
+    //@ts-ignore
     onRender     : function (runTime, map) {},
+    //@ts-ignore
     onLeaveEast  : function (runTime, map, player) {},
+    //@ts-ignore
     onLeaveWest  : function (runTime, map, player) {},
+    //@ts-ignore
     onLeaveNorth : function (runTime, map, player) {},
+    //@ts-ignore
     onLeaveSouth : function (runTime, map, player) {}
 };
 

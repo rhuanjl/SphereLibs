@@ -90,6 +90,7 @@ export default class SEngine
         this._tFract      = 1 / tSize;
         this.layers       = 0;
         this.tileMovement = tileMovement;
+        this.tilesAccross = 0;
         this.runTime      = runTime;
         this.folder       = "@";
         /*** @type {[name : string]: Sprite } */
@@ -99,9 +100,8 @@ export default class SEngine
         this.width        = 0;
         this.height       = 0;
         this._default     = false;
-        /** @type {Transform} */
+        /** @type {Transform | null} */
         this.transform    = null;
-        this.transformed  = false;
         this.DEBUG_MODE   = false;
         this.input        = new Input();
         /** @type {SEngineInput[]} */
@@ -234,11 +234,11 @@ export default class SEngine
      * @param {boolean} continuous 
      * @param {object} parameter 
      * @param {function(any, any):void} onPress
-     * @param {function():void} onRelease 
+     * @param {function(any, any):void} onRelease 
      * @returns {number}
      * @memberof SEngine
      */
-    addInput(key, continuous, parameter, onPress=function(){}, onRelease=function(){})
+    addInput(key, continuous, parameter, onPress=doNothing, onRelease=doNothing)
     {
         const inputs = this.inputs;
         const length = inputs.length;
@@ -750,18 +750,13 @@ export default class SEngine
         const thisLength = this._renders[layer].length;
         let currentRender;
         const coords = [0, 0];
-        const transformed = this.transformed;
         const renderQueue = this._renders[layer];
         const sWidth = this.width;
         const sHeight = this.height;
         const uZoom = Math.floor(1024 / zoom);
         const zFract = 1 / zoom;
-        /** @type {Transform} */
-        let transformation;
-        if (transformed === true)
-        {
-            transformation = this.transform;
-        }
+        const transformation = this.transform;
+
         for (let j = 0; j < thisLength; ++j)
         {
             currentRender = renderQueue[j];
@@ -786,7 +781,7 @@ export default class SEngine
                     currentRender.trans.identity();
                     currentRender.trans.scale(w_scale, h_scale);
                     currentRender.trans.translate(coords[0], coords[1]);
-                    if (transformed === true)
+                    if (transformation !== null)
                     {
                         currentRender.trans.compose(transformation);
                     }
@@ -796,7 +791,7 @@ export default class SEngine
                         currentRender.trans.identity();
                         currentRender.trans.scale(zFract, zFract);
                         currentRender.trans.translate(currentRender._x * zFract - offset[0], currentRender._y * zFract - offset[1]);
-                        if (transformed === true)
+                        if (transformation !== null)
                         {
                             currentRender.trans.compose(transformation);
                         }
@@ -1176,9 +1171,12 @@ class Entity
         this._px = x * 128;
         this._py = y * 128;
 
+        /**@type {number} */
         this._speed = speed;
 
+        /**@type {[number,number][]} */
         this._pVectors = [];
+        /**@type {[number,number][]} */
         this._vectors = [];
 
         //set various generic properties
@@ -1194,7 +1192,7 @@ class Entity
 
         /** @type {number} */
         this.dir = 0;
-        /** @type {Action[]} */
+        /** @type {action[]} */
         this.queue = [];//movement queue
 
 
@@ -1202,7 +1200,10 @@ class Entity
         this.needsUpdate = true;//change of frame or direction
         this.attached = false;//is this player controlled
 
-        let obs_shapes, debugColour;
+        /**@type {Shape[]} */
+        let obs_shapes;
+        /**@type {Color} */
+        let debugColour;
 
         if (DEBUG_MODE)
         {
@@ -1223,15 +1224,21 @@ class Entity
             };
             if (DEBUG_MODE)
             {
+                //@ts-ignore
                 obs_shapes[i] = new Shape(ShapeType.LineLoop, null, new VertexList([
+                    //@ts-ignore
                     {x : this.poly[i].x                  - x, y : this.poly[i].y - y,                  color : debugColour},
+                    //@ts-ignore
                     {x : this.poly[i].x                  - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    //@ts-ignore
                     {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
+                    //@ts-ignore
                     {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y - y,                  color : debugColour}]));
             }
         }
         if (DEBUG_MODE)
         {
+            //@ts-ignore
             this.obs_model = new Model(obs_shapes);
             this.obs_model.transform = this.trans;
         }
@@ -1335,6 +1342,7 @@ class Entity
             };
             if (DEBUG_MODE)
             {
+                //@ts-ignore
                 obs_shapes[i] = new Shape(ShapeType.LineLoop, null, new VertexList([
                     {x : this.poly[i].x                  - x, y : this.poly[i].y - y,                  color : debugColour},
                     {x : this.poly[i].x                  - x, y : this.poly[i].y + this.poly[i].h - y, color : debugColour},
@@ -1342,8 +1350,10 @@ class Entity
                     {x : this.poly[i].x + this.poly[i].w - x, y : this.poly[i].y - y,                  color : debugColour}]));
             }
         }
+
         if (DEBUG_MODE)
         {
+            //@ts-ignore
             this.obs_model = new Model(obs_shapes);
             this.obs_model.transform = this.trans;
         }
@@ -1456,7 +1466,6 @@ class Entity
         {
             this.queueMove(dirs[targetIndex].id, 0, spriteFACE);
         }
-
     }
 
     /**
@@ -1508,7 +1517,7 @@ class Entity
      * Specifies whether the entity would be obstructed with it's current x, y if it was on the specified layer
      * 
      * @param {number} layer 
-     * @returns 
+     * @returns {boolean}
      * @memberof Entity
      */
     obstructedOnLayer(layer)
@@ -1795,6 +1804,10 @@ class Entity
         }
         else if (type === spriteSCRIPT)
         {
+            if (script === undefined)
+            {
+                throw new SEngineError("attempt to queue a function for an entity but no function provided");
+            }
             this.queue[this.insert] = new Action (spriteSCRIPT, dir, units, 0, script);
         }
         else
@@ -1815,6 +1828,7 @@ class Entity
  * @param {number} ticks
  * @param {number} pos
  * @param {function} script
+ * @this {action}
  */
 function Action (type, direction, ticks, pos, script)
 {
@@ -1824,6 +1838,14 @@ function Action (type, direction, ticks, pos, script)
     this.pos = pos;
     this.script = script;
 }
+
+/**@typedef action
+ * @property {number} type
+ * @property {string} direction
+ * @property {number} ticks
+ * @property {number} pos 
+ * @property {function} script
+ */
 
 /**
  * Default method for certain actions when no method specified

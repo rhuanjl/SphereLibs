@@ -77,6 +77,13 @@
 //Internal class do not use directly
 class PixelBuffer
 {
+    /**
+     *Creates an instance of PixelBuffer.
+     * @param {ArrayBuffer} buffer
+     * @param {number} width
+     * @param {number} height
+     * @memberof PixelBuffer
+     */
     constructor(buffer, width, height)
     {
         this.data    = buffer;
@@ -90,6 +97,15 @@ class PixelBuffer
 //Internal class do not use directly
 class internalTileBuffer extends PixelBuffer
 {
+    /**
+     *Creates an instance of internalTileBuffer.
+     * @param {ArrayBuffer} buffer
+     * @param {number} tileWidth
+     * @param {number} tileHeight
+     * @param {number} tilesWide
+     * @param {number} tilesHigh
+     * @memberof internalTileBuffer
+     */
     constructor(buffer, tileWidth, tileHeight, tilesWide, tilesHigh)
     {
         super(buffer, tileWidth * tilesWide, tileHeight * tilesHigh);
@@ -116,7 +132,8 @@ class internalTileBuffer extends PixelBuffer
         const tileWidth   = this.tileWidth |0;
         const width       = this.width |0;
         const strip       = this.strip |0;
-        const output      = new Uint32Array(length);
+        const data        = new ArrayBuffer(length * 4);
+        const output      = new Uint32Array(data);
         for (let i = 0, x = 0, a = 0, b = 0, c = 0; i < length; c += strip, b = 0)
         {
             for (; b < width; b += tileWidth, a = 0)
@@ -133,7 +150,7 @@ class internalTileBuffer extends PixelBuffer
         return {
             width  : width,
             height : this.height,
-            data   : output.buffer
+            data   : data
         };
     }
 }
@@ -141,6 +158,13 @@ class internalTileBuffer extends PixelBuffer
 
 export class MapBuffer extends internalTileBuffer
 {
+    /**
+     *Creates an instance of MapBuffer.
+     * @param {number} tilesWide
+     * @param {number} tilesHigh
+     * @param {TileBuffer} tileBuffer
+     * @memberof MapBuffer
+     */
     constructor(tilesWide, tilesHigh, tileBuffer)
     {
         super(new ArrayBuffer(tileBuffer.tileWidth * tilesWide * tileBuffer.tileHeight * tilesHigh * 4),
@@ -165,6 +189,14 @@ export class MapBuffer extends internalTileBuffer
 
 export class TileBuffer extends internalTileBuffer
 {
+    /**
+     *Creates an instance of TileBuffer.
+     * @param {FileStream} source
+     * @param {number} tileWidth
+     * @param {number} tileHeight
+     * @param {number} numTiles
+     * @memberof TileBuffer
+     */
     constructor(source, tileWidth, tileHeight, numTiles)
     {
         const shortBuffer = source.read(tileWidth * tileHeight * numTiles * 4);
@@ -182,21 +214,20 @@ export class DrawingBuffer extends PixelBuffer
     /**
     * Creates an instance of DrawingBuffer.
     * @param {number} width 
-    * @param {number} height 
-    * @param {boolean} preFilled 
-    * @param {any} source 
+    * @param {number} height
+    * @param {FileStream|Texture|null} source 
     * @memberof DrawingBuffer
     */
-    constructor(width, height, preFilled, source)
+    constructor(width, height, source=null)
     {
         let data;
-        if (preFilled === true)
+        if (source !== null)
         {
-            try
+            if (source instanceof FileStream)
             {
                 data = source.read(width * height * 4);
             }
-            catch (e)
+            else
             {
                 data = source.download();
                 if (data.length !== width * height * 4)
@@ -204,12 +235,14 @@ export class DrawingBuffer extends PixelBuffer
                     throw new RangeError(`DrawingBuffer provided with ${data.length} sized source` +
                                          `but source of size ${width * height * 4} required`);
                 }
+                data = data.buffer;
             }
         }
         else
         {
             data = new ArrayBuffer(width * height * 4);
         }
+        //@ts-ignore
         super(data, width, height);
         this._texture = null;
     }
@@ -285,9 +318,19 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} x1
+     * @param {number} y1
+     * @param {number} x2
+     * @param {number} y2
+     * @param {{r:number, g:number, b:number, a:number}} colour
+     * @memberof DrawingBuffer
+     */
     solidRectangle(x1, y1, x2, y2, colour)
     {
-        const cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(colour.r, colour.g, colour.b, colour.a);
         for (let i = x1, j = 0; i <= x2; ++i)
         {
             for (j = y1; j <= y2; ++j)
@@ -297,9 +340,20 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} x1
+     * @param {number} y1
+     * @param {number} x2
+     * @param {number} y2
+     * @param {number} thickness
+     * @param {{r:number, g:number, b:number, a:number}} colour
+     * @memberof DrawingBuffer
+     */
     outlinedRectangle(x1, y1, x2, y2, thickness, colour)
     {
-        const cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(colour.r, colour.g, colour.b, colour.a);
         for (let k = 0; k < thickness; ++ k)
         {
             this.internalLine(x1, y1 + k, x2, y1 + k, cColour);
@@ -309,6 +363,15 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {number} r
+     * @param {{r:number, g:number, b:number, a:number}} colour
+     * @memberof DrawingBuffer
+     */
     solidCircle(x, y, r, colour)
     {
         const x1 = x - r;
@@ -319,7 +382,7 @@ export class DrawingBuffer extends PixelBuffer
         let xi = 0;
         let yi = 0;
 
-        const cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(colour.r, colour.g, colour.b, colour.a);
 
         for (let i = x1; i < x2; ++i)
         {
@@ -335,13 +398,23 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {number} r
+     * @param {number} thickness
+     * @param {{r:number, g:number, b:number, a:number}} colour
+     * @memberof DrawingBuffer
+     */
     outlinedCircle(x, y, r, thickness, colour)
     {
         const x1 = x - r;
         const x2 = x + r;
         const r2 = r * r;
 
-        const cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(colour.r, colour.g, colour.b, colour.a);
 
         for (let k = 0, xt2 = x2; k < thickness; ++k, --xt2)
         {
@@ -352,11 +425,21 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} x1
+     * @param {number} x2
+     * @param {number} y1
+     * @param {number} y2
+     * @param {{r:number, g:number, b:number, a:number}} colour
+     * @memberof DrawingBuffer
+     */
     line(x1, x2, y1, y2, colour)
     {
         const m = Math.floor((y2 - y1) / (x2 - x1));
         const c = y1 - m * x1;
-        const cColour = DrawingBuffer.combineColour(...colour);
+        const cColour = DrawingBuffer.combineColour(colour.r, colour.g, colour.b, colour.a);
 
         for (let i = x1; i <= x2; ++i)
         {
@@ -364,6 +447,12 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @param {number} radians
+     * @memberof DrawingBuffer
+     */
     rotate (radians)
     {
         const sin    = Math.sin(radians);
@@ -405,6 +494,14 @@ export class DrawingBuffer extends PixelBuffer
     }
 
     //set the pixel at (x, y) to colour
+    /**
+     *
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {*} colour
+     * @memberof DrawingBuffer
+     */
     setPixel(x, y, colour)
     {
         const offset = x + y * this.width * 4;
@@ -424,11 +521,29 @@ export class DrawingBuffer extends PixelBuffer
     }
 
     //methods below this point are for internal use only
+    /**
+     *
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {*} combinedColour
+     * @memberof DrawingBuffer
+     */
     internalSetPixel(x, y, combinedColour)
     {
         this.pixels[x + y * this.width] = combinedColour;
     }
 
+    /**
+     *
+     *
+     * @param {number} x1
+     * @param {number} x2
+     * @param {number} y1
+     * @param {number} y2
+     * @param {*} cColour
+     * @memberof DrawingBuffer
+     */
     internalLine(x1, x2, y1, y2, cColour)
     {
         const m = Math.floor((y2 - y1) / (x2 - x1));
@@ -440,6 +555,17 @@ export class DrawingBuffer extends PixelBuffer
         }
     }
 
+    /**
+     *
+     *
+     * @static
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} a
+     * @returns
+     * @memberof DrawingBuffer
+     */
     static combineColour(r, g, b, a)
     {
         const colour = new Uint8Array(4);

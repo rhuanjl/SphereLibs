@@ -340,9 +340,9 @@ declare class Entity
     /**
      * Experimental method
      * 
-     * Returns an array of items the entity would be obstructed by with it's current x, y if it was on the specified layer
+     * Returns whether the entity would be obstructed by with it's current x, y if it was on the specified layer
      */ 
-    obstructedOnLayer(layer: number) : Collision[]
+    obstructedOnLayer(layer: number) : boolean
 
     /**
      * Returns an array of items the entity would be obstructed by

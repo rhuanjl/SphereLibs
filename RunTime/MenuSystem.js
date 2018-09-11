@@ -62,19 +62,26 @@ export class MenuSystem extends HUDSystem
     constructor(x = 0, y = 0, font = Font.Default)
     {
         super(true);
-        this.options       = [];
-        this.selection     = 0;
-        this.lastSelection = 0;
-        this.input         = new Input();
-        this.font          = font;
-        this.tokens        = [];
-        this.waiting       = false;
-        this.keys          = [];
-        this.effects       = [];
         this.x             = x;
         this.y             = y;
         this.nextX         = x;
+        /**@type {number} */
         this.nextY         = y;
+
+        /**@type {{selected:function, unselected:function, token:number}[]} */
+        this.options       = [];
+        this.selection     = 0;
+        /**@type {number} */
+        this.lastSelection = 0;
+        this.input         = new Input();
+        this.font          = font;
+        /**@type {JobToken[]} */
+        this.tokens        = [];
+        this.waiting       = false;
+        /**@type {Key[]} */
+        this.keys          = [];
+        /**@type {function[]} */
+        this.effects       = [];
         this.direction     = 0;
         this.executing     = false;
         this.handler       = null;
@@ -303,6 +310,10 @@ export class MenuSystem extends HUDSystem
         {
             this.tokens[i].cancel();
         }
+        if (this.handler === null)
+        {
+            throw new MenuSystemError("MenuSystem#end called when menu has not been started");
+        }
         this.handler.resolve(this.selection);
     }
 
@@ -385,6 +396,16 @@ export class MenuSystem extends HUDSystem
  */
 class TextOption
 {
+    /**
+     *Creates an instance of TextOption.
+     * @param {MenuSystem} menu
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {Color} [unselectedColour=Color.White]
+     * @param {Color} [selectedColour=Color.Blue]
+     * @memberof TextOption
+     */
     constructor(menu, text, x, y, unselectedColour = Color.White, selectedColour = Color.Blue)
     {
         this.token = menu.addVariableText(text, x, y, Surface.Screen.width, menu.font, unselectedColour);

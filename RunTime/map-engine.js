@@ -56,7 +56,11 @@ export default class MapEngine
     constructor(runTime={})
     {
         this.runTime = runTime;
-        if (!runTime.hasOwnProperty("engine"))
+        if (typeof runTime !== "object")
+        {
+            throw new Error("runTime object should be an object");
+        }
+        if (Object.prototype.hasOwnProperty.call(runTime, "engine") === false)
         {
             runTime.engine = this;
         }
@@ -69,7 +73,7 @@ export default class MapEngine
         this.update = null;
         this.render = null;
         /**@type camera */
-        this._camera = null;
+        this._camera = {x : 0, y : 0, zoom : 0};
     }
 
     /**
@@ -103,7 +107,7 @@ export default class MapEngine
      * @param {number} [x=0] 
      * @param {number} [y=0] 
      * @param {number} [layer=0] 
-     * @returns {object} entity
+     * @returns {Entity} entity
      */
     createCharacter(name, spriteSet, x=0, y=0, layer=0)
     {
@@ -125,15 +129,15 @@ export default class MapEngine
      * Only first two parameters are required, the other 3 are optional
      * 
      * @param {Key} key - key to check for
-     * @param {function} onPress - function to call when it's pressed
+     * @param {function(any, any)} onPress - function to call when it's pressed
      * @param {boolean} [continuous=false] - allow continuous input - function can trigger every frame
      *                                       or false to only call the function once for each press
      * @param {any} [parameter=null] - parameter to pass to the function, e.g. a person object
-     * @param {function} onRelease - function to call when the key is released
+     * @param {function(any, any)} onRelease - function to call when the key is released
      * @returns {number} - the number of inputs added in total (will be one higher each time this is called)
      * @memberof MapEngine
      */
-    addInput(key, onPress, continuous = false, parameter = null, onRelease = function(){})
+    addInput(key, onPress, continuous = false, parameter = null, onRelease)
     {
         return this.SEngine.addInput(key, continuous, parameter, onPress, onRelease);
     }
@@ -227,7 +231,10 @@ export default class MapEngine
     {
         if (value === true)
         {
-            this.SEngine.input.yieldInput();
+            if (this.SEngine.input.hasPriority)
+            {
+                this.SEngine.input.yieldInput();
+            }
         }
         else
         {
@@ -274,18 +281,15 @@ export default class MapEngine
      */
     pause()
     {
-        if (this.started === true)
-        {
-            if (this.paused === false)
-            {
-                this.update.cancel();
-                this.paused = true;
-                this.blockInput = true;
-            }
-        }
-        else
+        if (this.started !== true)
         {
             throw new Error("Attempt to pause the map-engine when it is not running.");
+        }
+        if (this.update !== null)
+        {
+            this.update.cancel();
+            this.paused = true;
+            this.blockInput = true;
         }
     }
 
@@ -296,21 +300,18 @@ export default class MapEngine
      */
     resume()
     {
-        if (this.started === true)
-        {
-            if (this.paused === true)
-            {
-                this.update = Dispatch.onUpdate(()=>
-                {
-                    this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
-                });
-                this.paused = false;
-                this.blockInput = false;
-            }
-        }
-        else
+        if (this.started !== true)
         {
             throw new Error("Attempt to resume the map-engine when it is not running or is not paused.");
+        }
+        if (this.paused === true)
+        {
+            this.update = Dispatch.onUpdate(()=>
+            {
+                this.MEngine.update(this._camera.x, this._camera.y, this._camera.zoom);
+            });
+            this.paused = false;
+            this.blockInput = false;
         }
     }
 
@@ -322,17 +323,14 @@ export default class MapEngine
      */
     hide()
     {
-        if (this.started === true)
-        {
-            if (this.hidden === false)
-            {
-                this.render.cancel();
-                this.hidden = true;
-            }
-        }
-        else
+        if (this.started !== true)
         {
             throw new Error("Attempt to hide the map-engine when it is not running.");
+        }
+        if (this.render !== null)
+        {
+            this.render.cancel();
+            this.hidden = true;
         }
     }
 
@@ -366,14 +364,15 @@ export default class MapEngine
      */
     hideLayer(number=0)
     {
-        if (this.started === true)
-        {
-            this.MEngine.map.layers[number].visible = false;
-        }
-        else
+        if (this.started !== true || this.MEngine.map === null)
         {
             throw new Error("Attempt to hide a layer in the map when the map-engine is not running.");
         }
+        if (number >= this.MEngine.map.layers.length)
+        {
+            throw new Error("Attempt to hide a layer that does not exist.");
+        }
+        this.MEngine.map.layers[number].visible = false;
     }
 
     /**
@@ -386,14 +385,15 @@ export default class MapEngine
      */
     showLayer(number=0)
     {
-        if (this.started === true)
-        {
-            this.MEngine.map.layers[number].visible = true;
-        }
-        else
+        if (this.started !== true || this.MEngine.map === null)
         {
             throw new Error("Attempt to show a layer in the map when the map-engine is not running.");
         }
+        if (number >= this.MEngine.map.layers.length)
+        {
+            throw new Error("Attempt to show a layer that does not exist.");
+        }
+        this.MEngine.map.layers[number].visible = true;
     }
 
     /**
@@ -407,24 +407,21 @@ export default class MapEngine
      */
     stop()
     {
-        if (this.started === true)
-        {
-            if (this.paused === false)
-            {
-                this.update.cancel();
-            }
-            if (this.hidden === false)
-            {
-                this.render.cancel();
-            }
-            this.blockInput = true;
-            this.MEngine.map = null;//let the map get GC'd
-            //#FIX ME enable GC'ing SEngine data here to
-        }
-        else
+        if (this.started !== true)
         {
             throw new Error("Attempt to stop the map-engine when it is not running.");
         }
+        if (this.update !== null)
+        {
+            this.update.cancel();
+        }
+        if (this.render !== null)
+        {
+            this.render.cancel();
+        }
+        this.blockInput = true;
+        this.MEngine.map = null;//let the map get GC'd
+        //#FIX ME enable GC'ing SEngine data here to
     }
 }
 
