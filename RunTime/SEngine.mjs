@@ -632,6 +632,10 @@ export class SEngine
                             this.tObs[entity.internalLayer][entity.tile_x][newTileY] = i + 1;
                             this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
                         }
+                        for (let j = 0; j < entity.poly.length; ++j)
+                        {
+                            entity.poly[j].y += action.pos - entity._y;
+                        }
                         entity._y = action.pos;
                         entity._py = action.pos * 128;
                     }
@@ -651,6 +655,10 @@ export class SEngine
                             const newTileX = Math.floor(action.pos * this._tFract);
                             this.tObs[entity.internalLayer][newTileX][entity.tile_y] = i + 1;
                             this.tObs[entity.internalLayer][entity.tile_x][entity.tile_y] = 0;
+                        }
+                        for (let j = 0; j < entity.poly.length; ++j)
+                        {
+                            entity.poly[j].x += action.pos - entity._x;
                         }
                         entity._x = action.pos;
                         entity._px = action.pos * 128;
