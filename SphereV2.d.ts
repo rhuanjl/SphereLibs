@@ -479,7 +479,7 @@ declare type Vertex =
 {
     x : number,
     y : number,
-    z? : nummber,
+    z? : number,
     u? : number,
     v? : number,
     color? : Color
@@ -554,7 +554,7 @@ declare class Shape
     /**The vertex list containing the vertices for this shape. */
     vertexList : VertexList
 
-    static drawImediate()
+    static drawImmediate() : void
 }
 
 /** 
