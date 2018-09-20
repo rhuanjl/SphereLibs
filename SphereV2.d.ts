@@ -267,9 +267,11 @@ declare class Transform
     translate (x : number, y : number, z? : number) : void
     /**Apply a Rotation transformation to this Transform */
     rotate (angle : number, vx? : number, vy? : number, vz? : number) : void
-    /**Appl */
+    /**Apply a 2D projection transformation to this Transform */
     project2D(left : number, top : number, right : number, bottom : number, near? : number, far?  : number) : void
+    /**Apply a 3d projection transformation to this Transform */
     project3D(fov : number, aspect : number, near : number, far : number) : void
+    /**The 4x4 matrix underlying this transformation note this is a 2d array of getters and setters*/
     matrix : number [][]
 }
 
@@ -352,14 +354,11 @@ declare namespace Color
 
 }
 
-declare namespace Keyboard
-{
-    /**Gets a `Keyboard` object for the default keyboard device. */
-    const Default : Keyboard
-}
-
 declare class Keyboard
 {
+    /**Gets a `Keyboard` object for the default keyboard device. */
+    static Default : Keyboard
+
     /** 
      * Gets the character(s) that would be generated if a specified key is pressed
      * on this keyboard.  For example, `Key.A` becomes "a" (or "A" if shifted).
@@ -393,18 +392,14 @@ declare class Keyboard
     readonly scrollLock : boolean
 }
 
-
-declare namespace Font
-{
-    /**Provides the engines default font */
-    const Default : Font
-}
-
 /**
  * The Font class represents fonts for use in drawing text
  */
 declare class Font
 {
+    /**Provides the engines default font */
+    static Default : Font
+    
     /**The height of the font */
     readonly height : number
     /**The fileName for the font */
@@ -479,7 +474,7 @@ declare type Vertex =
 {
     x : number,
     y : number,
-    z? : nummber,
+    z? : number,
     u? : number,
     v? : number,
     color? : Color
@@ -554,7 +549,19 @@ declare class Shape
     /**The vertex list containing the vertices for this shape. */
     vertexList : VertexList
 
-    static drawImediate()
+    /**
+     * Draws the shape onto `surface`, or the backbuffer if no surface is specified. 
+     * `transform` is the Transform to use.
+     */
+    draw(surface? : Surface, transform? : Transform)
+
+    /**Create and immediately draw a shape without storing it and without creating the VertexList seperately first
+     * This is significantly faster than making a use once VertexList and use once Shape.
+     * Note this is significantly slower than making a VertexList and Shape once and drawing them many times.
+     * 
+     * Experimental Method
+     */
+    static drawImediate(surface : Surface | null, type : ShapeType, texture : Texture | null, vertices : Vertex[]) : void
 }
 
 /** 
