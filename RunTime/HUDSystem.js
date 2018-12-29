@@ -48,9 +48,10 @@ export default class HUDSystem
      * All instances support static objects (objects that once added never change)
      * Enable Dynamic to also support dynamic objects which you can edit
      * @param {boolean} [enableDynamic=false]
+     * @param {string} [shaderPath="shaders/"] - path to where image shaders can be found - needed for Dynamic support
      * @memberof HUDSystem
      */
-    constructor(enableDynamic = false)
+    constructor(enableDynamic = false, shaderPath="shaders/")
     {
         this.staticShapes  = [];
         /**@type {number[]} */
@@ -69,8 +70,8 @@ export default class HUDSystem
             this.dynamics = [];
             this.dynamicsAfterStatics = true;
             this.shader = new Shader({
-                fragmentFile : "#/shaders/image.frag.glsl",
-                vertexFile   : "#/shaders/image.vert.glsl"
+                fragmentFile : shaderPath + "image.frag.glsl",
+                vertexFile   : shaderPath + "image.vert.glsl"
             });
         }
 

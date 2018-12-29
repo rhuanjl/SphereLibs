@@ -115,6 +115,7 @@ export default class Input
             return false;
         }
     }
+
     /**
      * Wait for input - returns a promise
      * that resolves when the specified key is pressed
@@ -124,7 +125,7 @@ export default class Input
      * @returns {Promise<number>} key
      * @memberof Input
      */
-    async waitForKey(key, allowContinuous = false)
+    waitForKey(key, allowContinuous = false)
     {
         return this.waitForInput([key], allowContinuous);
     }

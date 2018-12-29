@@ -173,11 +173,11 @@ export default class MapEngine
      */
     async start(firstMap, cameraObject = {x : 0, y : 0, zoom : 1})
     {
-        this._camera = cameraObject;
-        if (!this._camera.zoom)//if this supplied camera object doesn't have a zoom property give it one
+        if (!cameraObject.zoom)//if this supplied camera object doesn't have a zoom property give it one
         {
-            this._camera.zoom = 1;
+            cameraObject.zoom = 1;
         }
+        this._camera = cameraObject;
         await this.MEngine.setMap(firstMap);
         this.blockInput = true;
 

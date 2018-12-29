@@ -626,7 +626,9 @@ export default class MEngine
 
         const startingName = inputFile.fileName;
         const splitPoint = startingName.lastIndexOf("/")+1;
-        const identifier = FS.fullPath(this.scriptsPath + startingName.slice(splitPoint, startingName.length - 4) + ".mjs", startingName.slice(0,splitPoint));
+        let identifier = FS.fullPath(this.scriptsPath + startingName.slice(splitPoint, startingName.length - 3), startingName.slice(0,splitPoint));
+
+        identifier = FS.fileExists(identifier + "js") ? identifier + "js" : identifier + "mjs";
 
         //bring in the scripts
         let scripts;
@@ -741,7 +743,6 @@ export default class MEngine
         const index = x + y * this.map.layers[layer].width;
         /**@type {trigger[]} */
         const triggers = this.map.layers[layer].triggers;
-        //@ts-ignore
         const position = triggers.indexOf((trig) => {return trig.index > index;});
         const newTrigger = {
             name  : name,
