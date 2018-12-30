@@ -83,10 +83,10 @@ export function loadRSS(filename)
     for (let i = 0; i < header.numDirections; ++i)
     {
         outputDirections[i] =
-        {//#FIX ME - speed, ignores rss frame delay
+        {//#FIX ME - speed, uses first frames delay, ignores subsequent frames
             id     : rssDirections[i].name,
             vector : [0,0,0],
-            speed  : 5,
+            speed  : rssDirections[i].frames[0].delay,
             frames : rssDirections[i].numFrames,
             reset  : 5
         };
